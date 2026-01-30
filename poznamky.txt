@@ -1,0 +1,42 @@
+GH_REPOS:
+https://github.com/ravihuang/robotframework-excellibrary/tree/master
+NEJVETSI: https://rpaframework.org/libraries/excel_files/python.html   https://github.com/robocorp/rpaframework
+https://github.com/bartkl/robotframework-excellentlibrary
+https://pypi.org/project/robotframework-excelutil
+NOVA EXCEL SAGE: https://github.com/deekshith-poojary98/robotframework-excelsage
+
+LIBRARIOS TO WORK WITH EXCEL:
+    XLSX:
+        https://openpyxl.readthedocs.io/en/stable/ ------ TATO SE BUDE POUZIVAT PRO NOVE XLSX soubory
+            api: https://openpyxl.readthedocs.io/en/stable/api/openpyxl.html
+        https://xlsxwriter.readthedocs.io/
+
+    XLS:
+        https://xlrd.readthedocs.io/en/latest/
+        https://xlwt.readthedocs.io/en/latest/
+        https://pypi.org/project/pyxlsb/
+
+    CSV:
+        build in python library
+        pandas
+        https://clevercsv.readthedocs.io/en/latest/source/clevercsv.html
+
+DESIGN PATTERNS:
+    Factory Method: https://refactoring.guru/design-patterns/factory-method
+    Facade: https://refactoring.guru/design-patterns/facade
+    Strategy: https://refactoring.guru/design-patterns/strategy
+    Adapter: https://refactoring.guru/design-patterns/adapter
+
+OTHER:
+    PYEXCEL:
+        working with excel in python: https://www.python-excel.org/
+        implementace vice formatu: xlsx, xls, ods, csv
+        inspirace X pouziti teto knihovny (nikdo jiny ji pro rf jeste nepouzil)
+        knihovna se zameruje ciste na data processing, zadne charts, fonty, colors
+        BIG DATA PROBLEM - https://docs.pyexcel.org/en/latest/bigdata.html
+
+knihovny pro RF: https://www.youtube.com/watch?v=DxqCP_EJJXc&t=16s
+
+RPA - Optimalizovanejsi, ale take je to spis pro r/w operace, nejsou tam testovaci funkce optimalizovane
+Sage - testovaci, ale funguje jen s xlsx + nacita vsechno pres pandu -> Memory heavy a pomale
+Oba - chybi testovani metadat
