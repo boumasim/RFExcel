@@ -4,16 +4,12 @@ from .backend.writer.i_writer import IWriter
 from .backend.metadata.i_metadata import IMetadata
 
 class RFExcel:
-    _writer: IWriter
-    _reader: IReader
-    _style: IStyle
-    _metadata: IMetadata
 
     def __init__(self, writer: IWriter, reader: IReader, style: IStyle, metadata: IMetadata):
-        self._writer = writer
-        self._reader = reader
-        self._style = style
-        self._metadata = metadata
+        self._writer: IWriter = writer
+        self._reader: IReader = reader
+        self._style: IStyle = style
+        self._metadata: IMetadata = metadata
 
     def print(self):
         self._writer.print()

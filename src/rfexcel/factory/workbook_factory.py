@@ -7,7 +7,7 @@ from rfexcel.backend.style.null_style import NullStyle
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.null_writer import NullWriter
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
-from src.rfexcel.RFExcel import RFExcel
+from rfexcel.RFExcel import RFExcel
 
 class WorkbookFactory:
 

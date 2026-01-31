@@ -5,9 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04a37d2c-0cf6-4eb5-93b9-6281063ea780" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/RobotProjectPreferences.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/RFExcel.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RFExcel.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/sanity_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/workbook_factory_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/pyth/workbook_factory_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,21 +43,62 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "Python tests.Python tests for tests.sanity_test.MyTestCase.test_something.executor": "Run",
     "Python tests.Python tests for tests.workbook_factory_test.MyTestCase.executor": "Run",
+    "Python tests.Python tests for workbook_factory_test.MyTestCase.executor": "Run",
     "Python.__main__.executor": "Run",
+    "Robot Framework.run [Verify Workbook Creation].executor": "Run",
+    "Robot Framework.run current file.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "dev",
     "last_opened_file_path": "/home/bouma1/PycharmProjects/RFExcel",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+    "settings.editor.selected.configurable": "preferences.editor.code.editing"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests/pyth" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
   </component>
-  <component name="RunManager" selected="Python tests.Python tests for tests.workbook_factory_test.MyTestCase">
+  <component name="RunManager">
+    <configuration name="Python tests for pyth.workbook_factory_test.MyTestCase" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="RFExcel" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;pyth.workbook_factory_test.MyTestCase&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for pyth.workbook_factory_test.MyTestCase" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="RFExcel" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONPATH" value="src" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;pyth.workbook_factory_test.MyTestCase&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
     <configuration name="Python tests for tests.sanity_test.MyTestCase.test_something" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="RFExcel" />
       <option name="ENV_FILES" value="" />
@@ -82,9 +129,14 @@
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python tests.Python tests for pyth.workbook_factory_test.MyTestCase" />
+      <item itemvalue="Python tests.Python tests for tests.sanity_test.MyTestCase.test_something" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python tests.Python tests for tests.workbook_factory_test.MyTestCase" />
+        <item itemvalue="Python tests.Python tests for pyth.workbook_factory_test.MyTestCase" />
+        <item itemvalue="Python tests.Python tests for pyth.workbook_factory_test.MyTestCase" />
         <item itemvalue="Python tests.Python tests for tests.sanity_test.MyTestCase.test_something" />
       </list>
     </recent_temporary>

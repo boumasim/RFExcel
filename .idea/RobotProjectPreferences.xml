@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RobotProjectPreferences">
+    <option name="robotLanguageServerPython" value="$PROJECT_DIR$/.venv/bin/python3.13" />
+    <option name="robotPythonExecutable" value="$PROJECT_DIR$/.venv/bin/python3.13" />
+    <option name="robotPythonpath" value="[&quot;/home/bouma1/PycharmProjects/RFExcel/src&quot;]" />
+  </component>
+</project>
