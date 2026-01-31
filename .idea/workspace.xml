@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="04a37d2c-0cf6-4eb5-93b9-6281063ea780" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/RobotProjectPreferences.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/RFExcel.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/RFExcel.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/sanity_test.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/workbook_factory_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/pyth/workbook_factory_test.py" afterDir="false" />
-    </list>
+    <list default="true" id="04a37d2c-0cf6-4eb5-93b9-6281063ea780" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
