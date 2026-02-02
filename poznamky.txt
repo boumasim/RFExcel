@@ -40,3 +40,8 @@ knihovny pro RF: https://www.youtube.com/watch?v=DxqCP_EJJXc&t=16s
 RPA - Optimalizovanejsi, ale take je to spis pro r/w operace, nejsou tam testovaci funkce optimalizovane
 Sage - testovaci, ale funguje jen s xlsx + nacita vsechno pres pandu -> Memory heavy a pomale
 Oba - chybi testovani metadat
+
+Sage research:
+    - sice jde zapnout read only mod, ale nepracuje s tim tak, ze to bude vzdy fungovat, muze spadnout, nebo pouzite funkce nebudou fungovat
+        funkce pro iteratory nefunguji -> napriklad Find Row With Value "Target" sice napoprve najde vysledek, potom ale kdyz budu cist neco co bylo driv, tak to spade (proste funkce s nahodnym pristupem)
+        potencialni nehandlovani close() pro read_only a write_only mod

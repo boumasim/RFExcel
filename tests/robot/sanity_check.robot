@@ -6,5 +6,5 @@ Library        rfexcel.RFExcelLibrary
 Verify Workbook Creation
     [Documentation]    Checks if we can create a workbook without crashing
 
-    Create Workbook    path=data.xlsx    read_only=${False}
+    Create Workbook   path=/home/bouma1/PycharmProjects/RFExcel/resources/xddd.xlsx
     Print
