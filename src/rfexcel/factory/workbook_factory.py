@@ -20,7 +20,7 @@ from rfexcel.backend.writer.null_writer import NullWriter
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import FileAlreadyExistsException, FileFormatNotSupportedException
 from rfexcel.exception.library_exceptions import FileDoesNotExistException
-from rfexcel.rfexcel_constants import VALID_SUFFIXES, XLS_SUFFIX, XLSX_SUFFIX
+from rfexcel.rfexcel_constants import CSV_SUFFIX, VALID_SUFFIXES, XLS_SUFFIX, XLSX_SUFFIX
 
 
 class WorkbookFactory:
@@ -57,6 +57,10 @@ class WorkbookFactory:
             return self._load_xls_on_demand(path=file_path, **kwargs)
         elif extension == XLS_SUFFIX and not read_only:
             return self._load_xls_standard(path=file_path, **kwargs)
+        elif extension == CSV_SUFFIX and read_only:
+            pass
+        elif extension == CSV_SUFFIX and not read_only:
+            pass
         else:
             raise Exception("Exception in load_workbook occured")
 

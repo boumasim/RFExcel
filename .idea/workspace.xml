@@ -6,11 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="04a37d2c-0cf6-4eb5-93b9-6281063ea780" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/poznamky.txt" beforeDir="false" afterPath="$PROJECT_DIR$/poznamky.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/rfexcel_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/rfexcel_constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/robot/sanity_check.robot" beforeDir="false" afterPath="$PROJECT_DIR$/tests/robot/sanity_check.robot" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
