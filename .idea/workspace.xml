@@ -5,18 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04a37d2c-0cf6-4eb5-93b9-6281063ea780" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/poznamky.txt" beforeDir="false" afterPath="$PROJECT_DIR$/poznamky.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/RFExcel.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/RFExcelLibrary.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/RFExcelLibrary.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/backend/metadata/xlsx_metadata.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/backend/metadata/xlsx_metadata.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/backend/reader/xlsx_edit_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/backend/reader/xlsx_edit_reader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/backend/reader/xlsx_stream_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/backend/reader/xlsx_stream_reader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/backend/style/xlsx_style.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/backend/style/xlsx_style.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/rfexcel/backend/writer/xlsx_writer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/backend/writer/xlsx_writer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/factory/workbook_factory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/rfexcel/rfexcel_constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/rfexcel/rfexcel_constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/robot/sanity_check.robot" beforeDir="false" afterPath="$PROJECT_DIR$/tests/robot/sanity_check.robot" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -59,12 +52,13 @@
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "dev",
-    "last_opened_file_path": "/home/bouma1/PycharmProjects/RFExcel/resources",
+    "last_opened_file_path": "/home/bouma1/PycharmProjects/RFExcel/tests/resources",
     "settings.editor.selected.configurable": "actions.on.save"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/tests/resources" />
       <recent name="$PROJECT_DIR$/resources" />
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -175,6 +169,10 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/src/rfexcel/backend/style/null_style.py</url>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/rfexcel/backend/metadata/xlsx_metadata.py</url>
+          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
