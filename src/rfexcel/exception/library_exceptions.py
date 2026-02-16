@@ -16,3 +16,25 @@ class FileAlreadyExistsException(RFExcelException):
 class FileDoesNotExistException(RFExcelException):
     def __init__(self, path: str):
         super().__init__(f"File {path} does not exist")
+
+class LibraryException(RFExcelException):
+    """Exception for invalid operations on library objects"""
+    def __init__(self, msg: str):
+        super().__init__(msg)
+
+class RowIndexOutOfBoundsException(RFExcelException):
+    """Exception when row index is out of valid range"""
+    def __init__(self, row_index: int, msg: str = ""):
+        if msg:
+            super().__init__(msg)
+        else:
+            super().__init__(f"Row index {row_index} is out of bounds")
+
+class StreamingViolationException(RFExcelException):
+    """Exception when trying to read backwards in streaming mode"""
+    def __init__(self, row_index: int, last_read: int):
+        super().__init__(
+            f"Cannot read row {row_index} in streaming mode. "
+            f"Already read up to row {last_read}. "
+            f"Streaming only supports forward-only sequential access."
+        )

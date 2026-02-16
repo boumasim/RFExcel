@@ -53,3 +53,5 @@ XLS rozhodnuti:
     excely na xls -> https://github.com/robocorp/rpaframework/tree/master/packages/main/tests/resources/excels
 
 generovani docs - python -m robot.libdoc src/rfexcel docs/RFExcel.html
+
+1-base indexing koncept pro reach do dat

@@ -1,4 +1,9 @@
 from typing import override
+
+from rfexcel.backend.resource.i_resource import IResource
+from rfexcel.exception.library_exceptions import LibraryException
+from rfexcel.utlis.types import Data
+
 from .i_reader import IReader
 
 
@@ -6,4 +11,8 @@ class NullReader(IReader):
 
     @override
     def print(self):
-        print("will throw reader exception\n")
+        raise LibraryException("Invalid operation: reader not available")
+
+    @override
+    def get_rows(self, resource: IResource) -> Data:
+        raise LibraryException("Invalid operation: reader not available")

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 Row = Dict[str, str]
-CsvData = List[Row]
+Data = List[Row]

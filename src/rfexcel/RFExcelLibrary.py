@@ -3,6 +3,7 @@ from robot.api.deco import keyword, not_keyword  # type: ignore
 
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.RFExcel import RFExcel
+from rfexcel.utlis.types import Data
 
 
 class RFExcelLibrary:
@@ -36,7 +37,7 @@ class RFExcelLibrary:
         logger.info("Workbook successfully created")
 
     @keyword("Load Workbook")
-    def load_workbook(self, path: str, read_only: bool = False, **kwargs) -> None:
+    def load_workbook(self, path: str, read_only: bool = False, header_row: int = 1, **kwargs) -> None:
         """
         Opens an existing workbook.
 
@@ -46,13 +47,15 @@ class RFExcelLibrary:
         *Arguments:*
         - ``path``: Path to the existing file.
         - ``read_only``: If set to True, opens the file in read-only (stream) mode. Defaults to False.
+        - ``header_row``: Row number where headers are located (1-based). Defaults to 1.
 
         *Examples:*
 
-        | Load Workbook | data.xlsx |   |
-        | Load Workbook | large_dataset.xlsx | read_only=True |
+        | Load Workbook | data.xlsx |   |   |
+        | Load Workbook | large_dataset.xlsx | read_only=True |   |
+        | Load Workbook | data.xlsx | read_only=False | header_row=1 |
         """
-        self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
+        self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, header_row=header_row, **kwargs)
         logger.info("Workbook successfully opened")
 
     @keyword("Print")
@@ -70,3 +73,9 @@ class RFExcelLibrary:
         if self._active_workbook: self._active_workbook.close()
         logger.info("File successfully closed")
         self._active_workbook = None
+
+    @keyword("Get Rows")
+    def get_rows(self) -> Data:
+        if self._active_workbook: return self._active_workbook.get_rows()
+        return []
+

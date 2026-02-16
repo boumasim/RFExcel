@@ -53,3 +53,9 @@ Create New CSV File
     Create Workbook    path=${RESULTS}/test_created.csv
     Print
     Close Workbook
+
+Get Rows from Workbook
+    [Documentation]     Get rows from workbook and verify data structure
+    Load Workbook    path=${RESOURCES}/data.csv   read_only=True
+    ${rows}=    Get Rows
+    Log    ${rows}
