@@ -6,8 +6,8 @@ from rfexcel.backend.style.i_style import IStyle
 
 class XlsStyle(IStyle):
 
-    def __init__(self, wb: Book):
-        self._wb: Book = wb
+    def __init__(self):
+        pass
 
     @override
     def print(self):

@@ -6,8 +6,8 @@ from rfexcel.backend.reader.i_reader import IReader
 
 class XlsOnDemandReader(IReader):
 
-    def __init__(self, wb: Book):
-        self._wb: Book = wb
+    def __init__(self):
+        pass
 
     @override
     def print(self):

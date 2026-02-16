@@ -5,7 +5,7 @@ from rfexcel.utlis.types import CsvData
 
 
 class CsvEditReader(IReader):
-    def __init__(self, wb: CsvData):
+    def __init__(self):
         pass
 
     @override

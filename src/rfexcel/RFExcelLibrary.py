@@ -1,8 +1,8 @@
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
 
-from rfexcel.RFExcel import RFExcel
 from rfexcel.factory.workbook_factory import WorkbookFactory
+from rfexcel.RFExcel import RFExcel
 
 
 class RFExcelLibrary:

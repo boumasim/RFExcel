@@ -6,8 +6,8 @@ from rfexcel.backend.metadata.i_metadata import IMetadata
 
 class XlsMetadata(IMetadata):
 
-    def __init__(self, wb: Book):
-        self._wb: Book = wb
+    def __init__(self):
+        pass
 
     @override
     def print(self):
