@@ -13,43 +13,29 @@ from .i_resource import IResource
 
 
 class XlsEditResource(IResource):
-    """Resource for XLS files in standard mode (on_demand=False).
-    
-    Allows random access to any row. All data is loaded in memory.
-    """
-
     def __init__(self, wb: Book, header_row: int = 1):
-        """Initialize XLS Edit Resource.
-        
-        Arguments:
-        - ``wb``: xlrd Book instance
-        - ``header_row``: The 1-based row number of the header. (e.g., 1 = Top Row).
-        """
         self._wb: Book = wb
-        self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
         self._header_row = header_row
-
-        self._headers: list[str] = []
-        if self._active_sheet:
-            header_idx = header_row - 1
-            
-            if 0 <= header_idx < self._active_sheet.nrows:
-                self._headers = [str(v) for v in self._active_sheet.row_values(header_idx)]
+        self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
+        
+        self._headers = self._load_headers()
+    
+    def _load_headers(self) -> list[str]:
+        if not self._active_sheet:
+            return []
+        
+        header_idx = self._header_row - 1
+        if 0 <= header_idx < self._active_sheet.nrows:
+            return [str(v) for v in self._active_sheet.row_values(header_idx)]
+        return []
 
     @property
     @override
     def header_row(self) -> int:
-        """Return the 1-based row number where headers are located."""
         return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:
-        """Returns row at given index (1-based data index).
-        
-        Arguments:
-        - ``row_index``: 1-based index of the data row.
-                        (1 = The first row AFTER the header row)
-        """
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
@@ -72,38 +58,30 @@ class XlsEditResource(IResource):
 
 
 class XlsStreamResource(IResource):
-    """Resource for XLS files in on-demand mode.
-    
-    Enforces forward-only access based on 1-based data indexing.
-    """
-
     def __init__(self, wb: Book, header_row: int = 1):
         self._wb: Book = wb
-        self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
         self._header_row = header_row
+        self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
         
+        self._headers = self._load_headers()
         self._last_read_data_index: int = 0
+    
+    def _load_headers(self) -> list[str]:
+        if not self._active_sheet:
+            return []
         
-        self._headers: list[str] = []
-        if self._active_sheet:
-            header_idx = header_row - 1
-            
-            if 0 <= header_idx < self._active_sheet.nrows:
-                self._headers = [str(v) for v in self._active_sheet.row_values(header_idx)]
+        header_idx = self._header_row - 1
+        if 0 <= header_idx < self._active_sheet.nrows:
+            return [str(v) for v in self._active_sheet.row_values(header_idx)]
+        return []
 
     @property
     @override
     def header_row(self) -> int:
-        """Return the 1-based row number where headers are located."""
         return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:
-        """Returns row at given index (1-based data index).
-        
-        Arguments:
-        - ``row_index``: 1-based index of the data row.
-        """
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         

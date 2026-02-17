@@ -13,51 +13,35 @@ from .i_resource import IResource
 
 
 class XlsxEditResource(IResource):
-    """Resource for XLSX files in edit mode (read_only=False).
-    
-    Allows random access to any row. All data is loaded in memory.
-    """
-
     def __init__(self, wb: Workbook, header_row: int = 1):
-        """Initialize XLSX Edit Resource.
-        
-        Arguments:
-        - ``wb``: openpyxl Workbook instance (read_only=False)
-        - ``header_row``: Row number where headers are located (1-based). Defaults to 1.
-        """
         self._wb: Workbook = wb
-        self._active_sheet: Worksheet | None = wb.active
         self._header_row = header_row
+        self._active_sheet: Worksheet | None = wb.active
         
-        self._headers: list[str] = []
+        self._headers = self._load_headers()
+    
+    def _load_headers(self) -> list[str]:
+        if not self._active_sheet:
+            return []
         
-        if self._active_sheet:
-            header_generator = self._active_sheet.iter_rows(
-                min_row=header_row,
-                max_row=header_row,
-                values_only=True
-            )
-            
-            header_data = next(header_generator, None)
-            
-            if header_data:
-                self._headers = [str(cell) if cell is not None else "" for cell in header_data]
+        header_generator = self._active_sheet.iter_rows(
+            min_row=self._header_row,
+            max_row=self._header_row,
+            values_only=True
+        )
+        
+        header_data = next(header_generator, None)
+        if header_data:
+            return [str(cell) if cell is not None else "" for cell in header_data]
+        return []
 
     @property
     @override
     def header_row(self) -> int:
-        """Return the 1-based row number where headers are located."""
         return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:
-        """Returns row at given index (1-based data index).
-        
-        Supports random access to any row using direct cell access.
-        
-        Arguments:
-        - ``row_index``: 1-based index of data row (row 1 is first data row after headers)
-        """
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
@@ -82,58 +66,39 @@ class XlsxEditResource(IResource):
 
     @override
     def close(self):
-        """Close the workbook and release resources."""
         self._wb.close()
 
 
 class XlsxStreamResource(IResource):
-    """Resource for XLSX files in streaming mode (read_only=True).
-    
-    Memory efficient for large files. Only supports forward-only sequential access.
-    """
-
     def __init__(self, wb: Workbook, header_row: int = 1):
-        """Initialize XLSX Stream Resource.
-        
-        Arguments:
-        - ``wb``: openpyxl Workbook instance (read_only=True)
-        - ``header_row``: Row number where headers are located (1-based). Defaults to 1.
-        """
         self._wb = wb
-        self._active_sheet = wb.active
-        self._headers = []
         self._header_row = header_row
+        self._active_sheet = wb.active
         
-        self._last_read_data_index = 0
-
-        if self._active_sheet:
-            self._row_generator = self._active_sheet.iter_rows(values_only=True)
-            
-            for i in range(header_row):
-                try:
-                    row_data = next(self._row_generator)
-                    if i == header_row - 1:
-                        self._headers = [str(cell) if cell is not None else "" for cell in row_data]
-                except StopIteration:
-                    self._headers = []
-                    break
-        else:
-            self._row_generator = iter([])
+        self._row_generator = self._active_sheet.iter_rows(values_only=True) if self._active_sheet else iter([])
+        self._headers = self._load_headers()
+        self._last_read_data_index = self.header_row
+    
+    def _load_headers(self) -> list[str]:
+        if not self._active_sheet:
+            return []
+        
+        for i in range(self._header_row):
+            try:
+                row_data = next(self._row_generator)
+                if i == self._header_row - 1:
+                    return [str(cell) if cell is not None else "" for cell in row_data]
+            except StopIteration:
+                break
+        return []
 
     @property
     @override
     def header_row(self) -> int:
-        """Return the 1-based row number where headers are located."""
         return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:
-        """Returns row at given index (1-based, data rows only).
-        
-        Arguments:
-        - ``row_index``: 1-based index of data row.
-        """
-        
         if row_index <= self._last_read_data_index:
             raise StreamingViolationException(row_index, self._last_read_data_index)
 
@@ -153,5 +118,4 @@ class XlsxStreamResource(IResource):
 
     @override
     def close(self):
-        """Close the workbook and release resources."""
         self._wb.close()
