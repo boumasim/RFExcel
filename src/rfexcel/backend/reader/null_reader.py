@@ -12,7 +12,3 @@ class NullReader(IReader):
     @override
     def print(self):
         raise LibraryException("Invalid operation: reader not available")
-
-    @override
-    def get_rows(self, resource: IResource) -> Data:
-        raise LibraryException("Invalid operation: reader not available")

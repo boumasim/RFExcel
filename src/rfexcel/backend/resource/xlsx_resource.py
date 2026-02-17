@@ -1,15 +1,14 @@
 from itertools import zip_longest
-from typing import override, Optional, Any, List
+from typing import Any, List, Optional, override
 
 from openpyxl import Workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
-from rfexcel.exception.library_exceptions import (
-    LibraryException,
-    RowIndexOutOfBoundsException,
-    StreamingViolationException
-)
+from rfexcel.exception.library_exceptions import (LibraryException,
+                                                  RowIndexOutOfBoundsException,
+                                                  StreamingViolationException)
 from rfexcel.utlis.types import Row
+
 from .i_resource import IResource
 
 
@@ -44,6 +43,12 @@ class XlsxEditResource(IResource):
             if header_data:
                 self._headers = [str(cell) if cell is not None else "" for cell in header_data]
 
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
+
     @override
     def get_row(self, row_index: int) -> Row:
         """Returns row at given index (1-based data index).
@@ -56,10 +61,10 @@ class XlsxEditResource(IResource):
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
-        target_excel_row = self._header_row + row_index
+        target_excel_row = row_index
         
         if target_excel_row > self._active_sheet.max_row:
-            raise RowIndexOutOfBoundsException(row_index, f"Data row {row_index} (Excel row {target_excel_row}) out of range")
+            raise StopIteration()
         
         row_values = next(
             self._active_sheet.iter_rows(min_row=target_excel_row, max_row=target_excel_row, values_only=True),
@@ -67,7 +72,7 @@ class XlsxEditResource(IResource):
         )
         
         if row_values is None:
-            raise RowIndexOutOfBoundsException(row_index)
+            raise StopIteration()
 
         return {
             header: str(val) if val is not None else ""
@@ -114,6 +119,12 @@ class XlsxStreamResource(IResource):
                     break
         else:
             self._row_generator = iter([])
+
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:

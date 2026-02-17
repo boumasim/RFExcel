@@ -8,6 +8,11 @@ from .i_resource import IResource
 
 class NullResource(IResource):
 
+    @property
+    @override
+    def header_row(self) -> int:
+        raise LibraryException("Invalid operation: resource not available")
+
     @override
     def close(self):
         raise LibraryException("Invalid operation: resource not available")

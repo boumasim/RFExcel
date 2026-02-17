@@ -43,4 +43,15 @@ class RFExcel:
         Returns:
             List[Dict[str, str]]: List of rows, each row is a dictionary.
         """
-        return self._reader.get_rows(self._resource)
+        result: Data = []
+        row_index = self._resource.header_row + 1
+        
+        while True:
+            try:
+                row = self._resource.get_row(row_index)
+                result.append(row)
+                row_index += 1
+            except StopIteration:
+                break
+        
+        return result

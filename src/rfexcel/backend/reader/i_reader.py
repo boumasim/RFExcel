@@ -9,8 +9,3 @@ class IReader(ABC):
     @abstractmethod
     def print(self) -> None:
         pass
-
-    @abstractmethod
-    def get_rows(self, resource: IResource) -> Data:
-        """Read all rows from resource."""
-        pass

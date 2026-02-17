@@ -1,9 +1,15 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 
 from rfexcel.utlis.types import Row
 
 
 class IResource(ABC):
+
+    @property
+    @abstractmethod
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        pass
 
     @abstractmethod
     def close(self):

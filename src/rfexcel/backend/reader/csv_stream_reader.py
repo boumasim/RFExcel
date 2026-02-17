@@ -12,19 +12,3 @@ class CsvStreamReader(IReader):
     @override
     def print(self):
         print("csv stream reader")
-
-    @override
-    def get_rows(self, resource: IResource) -> Data:
-        """Read all rows using get_row() in a loop - enforces sequential access."""
-        result: Data = []
-        row_index = 0
-        
-        while True:
-            try:
-                row = resource.get_row(row_index)
-                result.append(row)
-                row_index += 1
-            except (IndexError, StopIteration, RuntimeError):
-                break
-        
-        return result

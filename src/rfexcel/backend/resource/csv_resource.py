@@ -31,6 +31,12 @@ class CsvEditResource(IResource):
             else:
                 self._fieldnames = []
                 self._data = []
+
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
                 
     @override
     def get_row(self, row_index: int) -> Row:
@@ -76,6 +82,12 @@ class CsvStreamResource(IResource):
                 break
         
         self._last_read_data_index = 0
+
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:

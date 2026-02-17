@@ -28,13 +28,19 @@ class XlsEditResource(IResource):
         self._wb: Book = wb
         self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
         self._header_row = header_row
-        
+
         self._headers: list[str] = []
         if self._active_sheet:
             header_idx = header_row - 1
             
             if 0 <= header_idx < self._active_sheet.nrows:
                 self._headers = [str(v) for v in self._active_sheet.row_values(header_idx)]
+
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
 
     @override
     def get_row(self, row_index: int) -> Row:
@@ -47,7 +53,7 @@ class XlsEditResource(IResource):
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
-        target_xlrd_index = (self._header_row - 1) + row_index
+        target_xlrd_index = row_index - 1
         
         if target_xlrd_index >= self._active_sheet.nrows:
             raise StopIteration()
@@ -85,6 +91,12 @@ class XlsStreamResource(IResource):
             if 0 <= header_idx < self._active_sheet.nrows:
                 self._headers = [str(v) for v in self._active_sheet.row_values(header_idx)]
 
+    @property
+    @override
+    def header_row(self) -> int:
+        """Return the 1-based row number where headers are located."""
+        return self._header_row
+
     @override
     def get_row(self, row_index: int) -> Row:
         """Returns row at given index (1-based data index).
@@ -100,7 +112,7 @@ class XlsStreamResource(IResource):
         
         self._last_read_data_index = row_index
         
-        target_xlrd_index = (self._header_row - 1) + row_index
+        target_xlrd_index = row_index - 1
         
         if target_xlrd_index >= self._active_sheet.nrows:
             raise StopIteration()
