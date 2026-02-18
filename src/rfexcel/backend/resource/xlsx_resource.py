@@ -2,11 +2,13 @@ from itertools import zip_longest
 from typing import Any, List, Optional, override
 
 from openpyxl import Workbook
+from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import (LibraryException,
-                                                  RowIndexOutOfBoundsException,
                                                   StreamingViolationException)
+from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
+from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 from rfexcel.utlis.types import Row
 
 from .i_resource import IResource
@@ -41,7 +43,7 @@ class XlsxEditResource(IResource):
         return self._header_row
 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
@@ -51,8 +53,7 @@ class XlsxEditResource(IResource):
             raise StopIteration()
         
         row_values = next(
-            self._active_sheet.iter_rows(min_row=target_excel_row, max_row=target_excel_row, values_only=True),
-            None
+            self._active_sheet.iter_rows(min_row=target_excel_row, max_row=target_excel_row, values_only=True)
         )
         
         if row_values is None:
@@ -70,51 +71,26 @@ class XlsxEditResource(IResource):
 
 
 class XlsxStreamResource(IResource):
-    def __init__(self, wb: Workbook, header_row: int = 1):
+    def __init__(self, wb: Workbook):
         self._wb = wb
-        self._header_row = header_row
-        self._active_sheet = wb.active
-        
+        self._active_sheet = self._wb.active
         self._row_generator = self._active_sheet.iter_rows(values_only=True) if self._active_sheet else iter([])
-        self._headers = self._load_headers()
-        self._last_read_data_index = self.header_row
-    
-    def _load_headers(self) -> list[str]:
-        if not self._active_sheet:
-            return []
-        
-        for i in range(self._header_row):
-            try:
-                row_data = next(self._row_generator)
-                if i == self._header_row - 1:
-                    return [str(cell) if cell is not None else "" for cell in row_data]
-            except StopIteration:
-                break
-        return []
+        self._last_read_row_index = 0
 
     @property
     @override
-    def header_row(self) -> int:
-        return self._header_row
-
+    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+        return self._active_sheet
+    
+    @property
     @override
-    def get_row(self, row_index: int) -> Row:
-        if row_index <= self._last_read_data_index:
-            raise StreamingViolationException(row_index, self._last_read_data_index)
-
-        row_data = None
-        
-        while self._last_read_data_index < row_index:
-            try:
-                row_data = next(self._row_generator)
-                self._last_read_data_index += 1
-            except StopIteration:
-                raise StopIteration()
-        
-        if row_data is None:
-            raise StopIteration()
-
-        return dict(zip_longest(self._headers, (str(v) if v is not None else "" for v in row_data), fillvalue=""))
+    def last_read_row_index(self) -> int:
+        return self._last_read_row_index
+    
+    def fetch_row(self, row_index: int) -> IRawRowData:
+        row_data = next(self._row_generator)
+        self._last_read_row_index = self._last_read_row_index + 1
+        return XlsxRawRowData(row_data,True)
 
     @override
     def close(self):

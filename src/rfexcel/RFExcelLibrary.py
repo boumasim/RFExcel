@@ -37,7 +37,7 @@ class RFExcelLibrary:
         logger.info("Workbook successfully created")
 
     @keyword("Load Workbook")
-    def load_workbook(self, path: str, read_only: bool = False, header_row: int = 1, **kwargs) -> None:
+    def load_workbook(self, path: str, read_only: bool = False, **kwargs) -> None:
         """
         Opens an existing workbook.
 
@@ -55,7 +55,7 @@ class RFExcelLibrary:
         | Load Workbook | large_dataset.xlsx | read_only=True |   |
         | Load Workbook | data.xlsx | read_only=False | header_row=1 |
         """
-        self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, header_row=header_row, **kwargs)
+        self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
 
     @keyword("Print")
@@ -75,7 +75,7 @@ class RFExcelLibrary:
         self._active_workbook = None
 
     @keyword("Get Rows")
-    def get_rows(self) -> Data:
-        if self._active_workbook: return self._active_workbook.get_rows()
+    def get_rows(self, header_row: int = 1) -> Data:
+        if self._active_workbook: return self._active_workbook.get_rows(header_row=header_row)
         return []
 

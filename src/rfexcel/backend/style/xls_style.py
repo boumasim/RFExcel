@@ -1,6 +1,4 @@
 from typing_extensions import override
-from xlrd import Book
-
 from rfexcel.backend.style.i_style import IStyle
 
 

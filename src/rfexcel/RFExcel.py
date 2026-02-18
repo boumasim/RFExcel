@@ -34,7 +34,7 @@ class RFExcel:
     def close(self):
         self._resource.close()
 
-    def get_rows(self) -> Data:
+    def get_rows(self, header_row: int) -> Data:
         """Get all rows from the workbook as a list of dictionaries.
         
         The first row in the workbook is treated as column headers.
@@ -44,12 +44,15 @@ class RFExcel:
             List[Dict[str, str]]: List of rows, each row is a dictionary.
         """
         result: Data = []
-        row_index = self._resource.header_row + 1
+
+        headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_headers()
+
+        row_index = header_row + 1
         
         while True:
             try:
-                row = self._resource.get_row(row_index)
-                result.append(row)
+                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
+                result.append(row.get_row_data_value(headers=headers))
                 row_index += 1
             except StopIteration:
                 break

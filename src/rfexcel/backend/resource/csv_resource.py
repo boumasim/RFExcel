@@ -40,7 +40,7 @@ class CsvEditResource(IResource):
         return self._header_row
                 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         list_index = row_index - 1
         
         if list_index < 0 or list_index >= len(self._data):
@@ -88,7 +88,7 @@ class CsvStreamResource(IResource):
         return self._header_row
 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         if row_index <= self._last_read_data_index:
             raise StreamingViolationException(row_index, self._last_read_data_index)
         

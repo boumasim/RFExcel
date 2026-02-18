@@ -1,14 +1,21 @@
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
-from rfexcel.utlis.types import Row
+from openpyxl.chartsheet import Chartsheet
+from openpyxl.worksheet.worksheet import Worksheet
+
+from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 
 
 class IResource(ABC):
 
     @property
     @abstractmethod
-    def header_row(self) -> int:
-        """Return the 1-based row number where headers are located."""
+    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+        pass
+
+    @property
+    @abstractmethod
+    def last_read_row_index(self) -> int:
         pass
 
     @abstractmethod
@@ -16,7 +23,7 @@ class IResource(ABC):
         pass
 
     @abstractmethod
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> IRawRowData:
         """Return a single row by index (0-based). 
         
         For streaming resources, must be called sequentially. Attempting to read

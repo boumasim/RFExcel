@@ -1,10 +1,8 @@
-import re
 from pathlib import Path
 
 import xlrd
 from openpyxl import Workbook
 from openpyxl.reader import excel
-from robot.api import logger
 
 from rfexcel.backend.metadata.xls_metadata import XlsMetadata
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
@@ -53,7 +51,7 @@ class WorkbookFactory:
             raise Exception("Exception in create_workbook occured")
 
 
-    def load_workbook(self, header_row: int, path: str, read_only: bool = False, **kwargs):
+    def load_workbook(self, path: str, read_only: bool = False, **kwargs):
         file_path: Path = Path(path)
         extension: str = file_path.suffix.lower()
 
@@ -62,19 +60,19 @@ class WorkbookFactory:
 
         if extension == XLSX_SUFFIX:
             if read_only:
-                return self._load_xlsx_stream(path=file_path, header_row=header_row, **kwargs)
+                return self._load_xlsx_stream(path=file_path, **kwargs)
             else:
-                return self._load_xlsx_edit(path=file_path, header_row=header_row, **kwargs)
+                return self._load_xlsx_edit(path=file_path, **kwargs)
         elif extension == XLS_SUFFIX:
             if read_only:
-                return self._load_xls_on_demand(path=file_path, header_row=header_row, **kwargs)
+                return self._load_xls_on_demand(path=file_path, **kwargs)
             else:
-                return self._load_xls_standard(path=file_path, header_row=header_row, **kwargs)
+                return self._load_xls_standard(path=file_path, **kwargs)
         elif extension == CSV_SUFFIX:
             if read_only:
-                return self._load_csv_stream(path=file_path, header_row=header_row, **kwargs)
+                return self._load_csv_stream(path=file_path, **kwargs)
             else:
-                return self._load_csv_edit(path=file_path, header_row=header_row, **kwargs)
+                return self._load_csv_edit(path=file_path, **kwargs)
         else:
             raise Exception("Exception in load_workbook occured")
 
@@ -85,33 +83,33 @@ class WorkbookFactory:
         wb.save(filename=path)
         return RFExcel(XlsxWriter(), XlsxEditReader(), XlsxStyle(), XlsxMetadata(), XlsxEditResource(wb=wb))
 
-    def _load_xlsx_stream(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_xlsx_stream(self, path: Path, **kwargs) -> RFExcel:
         _data_only: bool = kwargs.get('data_only', False)
         wb: Workbook = excel.load_workbook(filename=path, read_only=True, data_only=_data_only)
-        return RFExcel(reader=XlsxStreamReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxStreamResource(wb, header_row=header_row))
+        return RFExcel(reader=XlsxStreamReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxStreamResource(wb))
 
-    def _load_xlsx_edit(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_xlsx_edit(self, path: Path, **kwargs) -> RFExcel:
         wb: Workbook = excel.load_workbook(filename=path, read_only=False, **kwargs)
-        return RFExcel(writer=XlsxWriter(), reader=XlsxEditReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxEditResource(wb, header_row=header_row))
+        return RFExcel(writer=XlsxWriter(), reader=XlsxEditReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxEditResource(wb))
 
-    def _load_xls_on_demand(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_xls_on_demand(self, path: Path, **kwargs) -> RFExcel:
         _formating_info: bool = kwargs.get('formatting_info', True)
         wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=True, formatting_info=_formating_info, **kwargs)
-        return RFExcel(reader=XlsOnDemandReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsStreamResource(wb, header_row=header_row))
+        return RFExcel(reader=XlsOnDemandReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsStreamResource(wb))
 
-    def _load_xls_standard(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_xls_standard(self, path: Path, **kwargs) -> RFExcel:
         _formating_info: bool = kwargs.get('formatting_info', True)
         wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=False, formatting_info=_formating_info, **kwargs)
-        return RFExcel(reader=XlsStandardReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsEditResource(wb, header_row=header_row))
+        return RFExcel(reader=XlsStandardReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsEditResource(wb))
     
-    def _load_csv_stream(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_csv_stream(self, path: Path, **kwargs) -> RFExcel:
         """Opens CSV in read-only streaming mode."""
-        resource = CsvStreamResource(path, header_row=header_row, **kwargs)
+        resource = CsvStreamResource(path, **kwargs)
         return RFExcel(reader=CsvStreamReader(), resource=resource)
 
-    def _load_csv_edit(self, path: Path, header_row: int, **kwargs) -> RFExcel:
+    def _load_csv_edit(self, path: Path, **kwargs) -> RFExcel:
         """Opens CSV in buffered edit mode (Read into memory)."""
-        resource = CsvEditResource(path, header_row=header_row, **kwargs)
+        resource = CsvEditResource(path, **kwargs)
         return RFExcel(reader=CsvEditReader(), writer=CsvWriter(), resource=resource)
     
     def _create_csv_edit(self, path: Path, **kwargs) -> RFExcel:

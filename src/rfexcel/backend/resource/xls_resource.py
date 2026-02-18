@@ -5,7 +5,6 @@ import xlrd.sheet
 from xlrd import Book
 
 from rfexcel.exception.library_exceptions import (LibraryException,
-                                                  RowIndexOutOfBoundsException,
                                                   StreamingViolationException)
 from rfexcel.utlis.types import Row
 
@@ -35,7 +34,7 @@ class XlsEditResource(IResource):
         return self._header_row
 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
@@ -81,7 +80,7 @@ class XlsStreamResource(IResource):
         return self._header_row
 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         

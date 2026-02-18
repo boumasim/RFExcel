@@ -1,5 +1,8 @@
 from typing import override
 
+from openpyxl.chartsheet import Chartsheet
+from openpyxl.worksheet.worksheet import Worksheet
+
 from rfexcel.exception.library_exceptions import LibraryException
 from rfexcel.utlis.types import Row
 
@@ -10,7 +13,12 @@ class NullResource(IResource):
 
     @property
     @override
-    def header_row(self) -> int:
+    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+        raise LibraryException("Invalid operation: resource not available")
+
+    @property
+    @override
+    def last_read_row_index(self) -> int:
         raise LibraryException("Invalid operation: resource not available")
 
     @override
@@ -18,5 +26,5 @@ class NullResource(IResource):
         raise LibraryException("Invalid operation: resource not available")
 
     @override
-    def get_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> Row:
         raise LibraryException("Invalid operation: resource not available")
