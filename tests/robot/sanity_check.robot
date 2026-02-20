@@ -21,13 +21,13 @@ Load XLS File Edit Mode
 
 Load XLSX File Read Only
     [Documentation]    Load XLSX file in streaming (read-only) mode
-    Load Workbook    path=${RESOURCES}/rozvrh.xlsx    read_only=True
+    Load Workbook    path=${RESOURCES}/data.xlsx    read_only=True
     Print
     Close Workbook
 
 Load XLSX File Edit Mode
     [Documentation]    Load XLSX file in edit mode
-    Load Workbook    path=${RESOURCES}/rozvrh.xlsx    read_only=False
+    Load Workbook    path=${RESOURCES}/data.xlsx    read_only=False
     Print
     Close Workbook
 
