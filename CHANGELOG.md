@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/boumasim/RFExcel/compare/v0.2.0...v0.3.0) (2026-02-20)
+
+
+### Features
+
+* added create_workbook, load_workbook, close and get_rows keywords; basic architecture and tests ([ae62fce](https://github.com/boumasim/RFExcel/commit/ae62fce1ea09b06c818671dc1ce9addde993b30f))
+
 ## [0.2.0](https://github.com/boumasim/RFExcel/compare/v0.1.0...v0.2.0) (2026-01-30)
 
 
