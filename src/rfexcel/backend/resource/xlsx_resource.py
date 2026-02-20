@@ -1,4 +1,5 @@
-from typing import override
+from collections.abc import Iterator
+from typing import Any, override
 
 from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
@@ -27,15 +28,15 @@ class XlsxEditResource(IResource):
         return -1
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         if row_index > self._active_sheet.max_row:
             raise StopIteration()
         row_values = next(
-            self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=True)
+            self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=data_only)
         )
-        return XlsxRawRowData(row_values, True)
+        return XlsxRawRowData(row_values, data_only)
 
     @override
     def close(self):
@@ -46,7 +47,7 @@ class XlsxStreamResource(IResource):
     def __init__(self, wb: Workbook):
         self._wb = wb
         self._active_sheet = self._wb.active
-        self._row_generator = self._active_sheet.iter_rows(values_only=True) if self._active_sheet else iter([])
+        self._row_generator: Iterator[tuple[Any, ...]] | None = None  # lazily initialised on first fetch_row call
         self._last_read_row_index = 0
 
     @property
@@ -60,10 +61,16 @@ class XlsxStreamResource(IResource):
         return self._last_read_row_index
     
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+        if self._row_generator is None:
+            self._row_generator = (
+                self._active_sheet.iter_rows(values_only=data_only)
+                if self._active_sheet
+                else iter([])
+            )
         row_data = next(self._row_generator)
-        self._last_read_row_index = self._last_read_row_index + 1
-        return XlsxRawRowData(row_data, True)
+        self._last_read_row_index += 1
+        return XlsxRawRowData(row_data, data_only)
 
     @override
     def close(self):

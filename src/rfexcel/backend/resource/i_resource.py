@@ -24,20 +24,19 @@ class IResource(ABC):
         pass
 
     @abstractmethod
-    def fetch_row(self, row_index: int) -> IRawRowData:
-        """Return a single row by index (0-based). 
-        
-        For streaming resources, must be called sequentially. Attempting to read
-        a previously read row will raise an exception.
-        
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+        """Return a single row by index (1-based).
+
         Args:
-            row_index: The row index (0-based, data rows only, headers already read)
-            
-        Returns:
-            Dictionary representing the row with headers as keys
-            
+            row_index: The row index (1-based, matches Excel row numbering).
+            data_only: When ``True`` (default), returns raw Python values.
+                       When ``False``, returns native cell objects (e.g. openpyxl
+                       ``Cell``) preserving formula and style metadata.
+                       Has no effect for formats that do not support formulas
+                       (xls via xlrd, csv).
+
         Raises:
-            IndexError: If row_index is out of bounds
-            RuntimeError: If trying to read backwards in streaming mode
+            StopIteration: If row_index is out of bounds.
+            StreamingViolationException: If trying to read backwards in streaming mode.
         """
         pass

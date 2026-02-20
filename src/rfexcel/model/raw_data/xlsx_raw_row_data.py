@@ -1,6 +1,5 @@
-from typing import Any, override
-
 from itertools import zip_longest
+from typing import Any, override
 
 from openpyxl.cell.cell import Cell
 
@@ -15,8 +14,14 @@ class XlsxRawRowData(IRawRowData):
 
     @override
     def get_headers(self) -> list[str]:
-        return [str(cell) if cell is not None else "" for cell in self._data]
-    
+        if self._value_only:
+            return [str(v) if v is not None else "" for v in self._data]
+        return [str(cell.value) if cell.value is not None else "" for cell in self._data]  # type: ignore[union-attr]
+
     @override
     def get_row_data_value(self, headers: list[str]) -> Row:
-        return dict(zip_longest(headers, (str(v) if v is not None else "" for v in self._data), fillvalue=""))
+        if self._value_only:
+            values = (str(v) if v is not None else "" for v in self._data)
+        else:
+            values = (str(cell.value) if cell.value is not None else "" for cell in self._data)  # type: ignore[union-attr]
+        return dict(zip_longest(headers, values, fillvalue=""))

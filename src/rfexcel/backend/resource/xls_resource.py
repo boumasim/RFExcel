@@ -26,7 +26,7 @@ class XlsEditResource(IResource):
         return -1
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
 
@@ -58,7 +58,7 @@ class XlsStreamResource(IResource):
         return -1
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
 

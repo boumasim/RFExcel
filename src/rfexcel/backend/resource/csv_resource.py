@@ -31,7 +31,7 @@ class CsvEditResource(IResource):
         return -1
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         list_index = row_index - 1
 
         if list_index < 0 or list_index >= len(self._all_rows):
@@ -56,7 +56,7 @@ class CsvStreamResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> None:  # type: ignore[override]
+    def get_active_sheet(self) -> None:
         return None
 
     @property
@@ -65,7 +65,7 @@ class CsvStreamResource(IResource):
         return self._last_read_row_index
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         try:
             raw_row = next(self._reader)
         except StopIteration:

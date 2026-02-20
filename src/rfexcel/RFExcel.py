@@ -45,7 +45,10 @@ class RFExcel:
         """
         result: Data = []
 
-        headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_headers()
+        try:
+            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_headers()
+        except StopIteration:
+            headers = []
 
         row_index = header_row + 1
         

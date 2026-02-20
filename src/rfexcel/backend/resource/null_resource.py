@@ -26,5 +26,5 @@ class NullResource(IResource):
         raise LibraryException("Invalid operation: resource not available")
 
     @override
-    def fetch_row(self, row_index: int) -> IRawRowData:
+    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
         raise LibraryException("Invalid operation: resource not available")
