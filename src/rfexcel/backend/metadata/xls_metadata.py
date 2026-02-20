@@ -1,5 +1,4 @@
 from typing_extensions import override
-from xlrd import Book
 
 from rfexcel.backend.metadata.i_metadata import IMetadata
 

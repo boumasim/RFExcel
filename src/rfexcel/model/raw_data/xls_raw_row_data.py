@@ -11,8 +11,8 @@ class XlsRawRowData(IRawRowData):
 
     @override
     def get_headers(self) -> list[str]:
-        return [str(v) if v is not None else "" for v in self._data]
+        return [str(v) for v in self._data]
 
     @override
     def get_row_data_value(self, headers: list[str]) -> Row:
-        return dict(zip_longest(headers, (str(v) if v is not None else "" for v in self._data), fillvalue=""))
+        return dict(zip_longest(headers, (str(v) for v in self._data), fillvalue=""))

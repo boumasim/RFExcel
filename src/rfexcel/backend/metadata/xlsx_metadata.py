@@ -1,7 +1,5 @@
 from typing import override
 
-from openpyxl import Workbook
-
 from .i_metadata import IMetadata
 
 

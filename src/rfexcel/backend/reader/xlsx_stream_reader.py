@@ -30,6 +30,7 @@ class XlsxStreamReader(IReader):
         if row_idx <= resource.last_read_row_index:
             raise StreamingViolationException(row_idx, resource.last_read_row_index)
         
+        row_data: IRawRowData = NullRawRowData()
         while resource.last_read_row_index < row_idx:
             row_data = resource.fetch_row(row_index=resource.last_read_row_index)
 

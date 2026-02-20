@@ -11,8 +11,8 @@ class CsvRawRowData(IRawRowData):
 
     @override
     def get_headers(self) -> list[str]:
-        return [v if v is not None else "" for v in self._data]
+        return list(self._data)
 
     @override
     def get_row_data_value(self, headers: list[str]) -> Row:
-        return dict(zip_longest(headers, (v if v is not None else "" for v in self._data), fillvalue=""))
+        return dict(zip_longest(headers, self._data, fillvalue=""))

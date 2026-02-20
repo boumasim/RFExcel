@@ -1,3 +1,5 @@
+from typing import Any
+
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
 
@@ -16,13 +18,13 @@ class RFExcelLibrary:
         self._factory = WorkbookFactory()
         self._active_workbook: RFExcel | None = None
 
-    @not_keyword
-    def end_test(self, name, attrs):
+    @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
+    def end_test(self, name: str, attrs: dict[str, Any]) -> None:
         logger.info("Cleanup after test execution...")
         if self._active_workbook: self.close()
 
-    @keyword("Create Workbook")
-    def create_workbook(self, path: str, **kwargs) -> None:
+    @keyword("Create Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def create_workbook(self, path: str, **kwargs: Any) -> None:
         """Creates a new empty workbook at the given path and opens it in edit mode.
 
         Parent directories in the path are created automatically if they do not exist.
@@ -46,8 +48,8 @@ class RFExcelLibrary:
         self._active_workbook = self._factory.create_workbook(path=path, **kwargs)
         logger.info("Workbook successfully created")
 
-    @keyword("Load Workbook")
-    def load_workbook(self, path: str, read_only: bool = False, **kwargs) -> None:
+    @keyword("Load Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Opens an existing workbook for reading or editing.
 
         The ``read_only`` flag controls which mode the file is opened in:
@@ -85,12 +87,12 @@ class RFExcelLibrary:
         self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
 
-    @keyword("Print")
+    @keyword("Print")  # pyright: ignore[reportUntypedFunctionDecorator]
     def print(self):
         if self._active_workbook: self._active_workbook.print()
 
-    @keyword("Close Workbook")
-    def close(self):
+    @keyword("Close Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def close(self) -> None:
         """Closes the active workbook and releases all associated resources.
 
         This releases any open file handles held by the backend (e.g., openpyxl
@@ -113,7 +115,7 @@ class RFExcelLibrary:
         logger.info("File successfully closed")
         self._active_workbook = None
 
-    @keyword("Get Rows")
+    @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self, header_row: int = 1) -> Data:
         """Returns all data rows from the active workbook as a list of dictionaries.
 

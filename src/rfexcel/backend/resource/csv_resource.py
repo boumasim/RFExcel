@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 from robot.api import logger
 
@@ -11,7 +11,7 @@ from rfexcel.rfexcel_constants import BASE_DIALECT, BASE_ENCODING
 
 
 class CsvEditResource(IResource):
-    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs):
+    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
         self._path = path
         self._encoding = encoding
         self._dialect = dialect
@@ -49,7 +49,7 @@ class CsvEditResource(IResource):
 
 
 class CsvStreamResource(IResource):
-    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs):
+    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
         self._handle = open(path, mode='r', newline='', encoding=encoding)
         self._reader = csv.reader(self._handle, dialect=dialect, **kwargs)
         self._last_read_row_index: int = 0

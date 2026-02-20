@@ -1,7 +1,6 @@
 from typing import override
 
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.utlis.types import Data
 
 
 class CsvWriter(IWriter):
