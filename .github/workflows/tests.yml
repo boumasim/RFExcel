@@ -28,5 +28,10 @@ jobs:
       - name: Run Type Checker (Pyright)
         run: pyright
 
-      - name: Run Tests
-        run: pytest
+      - name: Run Python Tests
+        run: pytest tests/pyth/
+
+      - name: Run Robot Tests
+        run: |
+          chmod +x robot-tests.sh
+          ./robot-tests.sh

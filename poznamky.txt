@@ -1,6 +1,6 @@
 GH_REPOS:
 https://github.com/ravihuang/robotframework-excellibrary/tree/master
-NEJVETSI: https://rpaframework.org/libraries/excel_files/python.html   https://github.com/robocorp/rpaframework
+NEJVETSI: https://rpaframework.org/libraries/excel_files/python.html   https://github.com/robocorp/rpaframework   https://github.com/robocorp/rpaframework/blob/master/packages/main/src/RPA/Excel/Files.py
 https://github.com/bartkl/robotframework-excellentlibrary
 https://pypi.org/project/robotframework-excelutil
 NOVA EXCEL SAGE: https://github.com/deekshith-poojary98/robotframework-excelsage
@@ -40,3 +40,18 @@ knihovny pro RF: https://www.youtube.com/watch?v=DxqCP_EJJXc&t=16s
 RPA - Optimalizovanejsi, ale take je to spis pro r/w operace, nejsou tam testovaci funkce optimalizovane
 Sage - testovaci, ale funguje jen s xlsx + nacita vsechno pres pandu -> Memory heavy a pomale
 Oba - chybi testovani metadat
+
+Sage research:
+    - sice jde zapnout read only mod, ale nepracuje s tim tak, ze to bude vzdy fungovat, muze spadnout, nebo pouzite funkce nebudou fungovat
+        funkce pro iteratory nefunguji -> napriklad Find Row With Value "Target" sice napoprve najde vysledek, potom ale kdyz budu cist neco co bylo driv, tak to spade (proste funkce s nahodnym pristupem)
+        potencialni nehandlovani close() pro read_only a write_only mod
+
+XLS rozhodnuti:
+    pouze reader
+    writer zakazeme, je to zbytecne
+    edit -> vynutime konverzi na xslx -> neda se editovat, musela by se delat kopie a ta pak ukladat, stejne ztratime formule tak i tak
+    excely na xls -> https://github.com/robocorp/rpaframework/tree/master/packages/main/tests/resources/excels
+
+generovani docs - python -m robot.libdoc src/rfexcel docs/RFExcel.html
+
+1-base indexing koncept pro reach do dat

@@ -1,5 +1,7 @@
+et_xmlfile==2.0.0
 iniconfig==2.3.0
 nodeenv==1.10.0
+openpyxl==3.1.5
 packaging==26.0
 pluggy==1.6.0
 Pygments==2.19.2
@@ -8,3 +10,4 @@ pytest==9.0.2
 robotframework==7.4.1
 tools==1.0.23
 typing_extensions==4.15.0
+xlrd==2.0.2
