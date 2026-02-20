@@ -4,8 +4,7 @@ from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
-from rfexcel.exception.library_exceptions import (LibraryException,
-                                                  StreamingViolationException)
+from rfexcel.exception.library_exceptions import LibraryException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 

@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import Data
-
 
 class IReader(ABC):
 

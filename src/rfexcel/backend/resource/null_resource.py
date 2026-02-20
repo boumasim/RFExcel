@@ -4,7 +4,7 @@ from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import LibraryException
-from rfexcel.utlis.types import Row
+from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 
 from .i_resource import IResource
 
@@ -26,5 +26,5 @@ class NullResource(IResource):
         raise LibraryException("Invalid operation: resource not available")
 
     @override
-    def fetch_row(self, row_index: int) -> Row:
+    def fetch_row(self, row_index: int) -> IRawRowData:
         raise LibraryException("Invalid operation: resource not available")
