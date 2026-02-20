@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
@@ -10,7 +11,7 @@ class IResource(ABC):
 
     @property
     @abstractmethod
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def get_active_sheet(self) -> Any:
         pass
 
     @property

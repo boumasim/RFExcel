@@ -56,6 +56,6 @@ Create New CSV File
 
 Get Rows from Workbook
     [Documentation]     Get rows from workbook and verify data structure
-    Load Workbook    path=${RESOURCES}/data.xlsx      read_only=False
+    Load Workbook    path=${RESOURCES}/example.xls      read_only=True
     ${rows}=    Get Rows
     Log    ${rows}
