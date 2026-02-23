@@ -58,7 +58,7 @@ Create New CSV File
 Get Rows from Workbook
     [Documentation]     Get rows from workbook and verify data structure
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
-    ${rows}=    Get Rows
+    ${rows}=    Get Rows  one_row=true
     Log    ${rows}
 
 Get Rows by each row
@@ -81,3 +81,10 @@ Switch Source Test
     Switch Source    path=${RESOURCES}/data.xlsx     read_only=true
     ${xlsx_rows}=   Get Rows
     Log    XLSX Rows: ${xlsx_rows}
+
+Get Rows with Search Criteria
+    [Documentation]     Get rows matching search criteria and verify results
+    Load Workbook    path=${RESOURCES}/data.csv      read_only=true
+    ${criteria}=    Create Dictionary    Product ID=P-201    Price=89.99
+    ${matching_rows}=    Get Rows    search_criteria=${criteria}
+    Log    Matching Rows: ${matching_rows}
