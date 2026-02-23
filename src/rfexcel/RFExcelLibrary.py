@@ -183,3 +183,23 @@ class RFExcelLibrary:
         if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved)
         return []
 
+    @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
+        """Switches the active workbook to a different file.
+
+        This is a convenience method that combines ``Close Workbook`` and
+        ``Load Workbook`` into a single step. It first closes the currently
+        active workbook (if any), then opens the new file specified by
+        ``source``.
+
+        Arguments:
+        - ``path``: Path to the new workbook to load.
+        - ``read_only``: Whether to open the workbook in read-only mode. Defaults to ``False``.
+        - ``**kwargs``: Additional keyword arguments passed to ``Load Workbook``.
+
+        Examples:
+        | Switch Source | ${CURDIR}/data.xlsx | read_only=True |
+        | Switch Source | ${CURDIR}/data.csv  | read_only=True |
+        """
+        self.close()
+        self.load_workbook(path=path, read_only=read_only, **kwargs)

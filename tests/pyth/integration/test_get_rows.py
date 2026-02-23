@@ -16,6 +16,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import (FileDoesNotExistException,
                                                   StreamingViolationException)
+from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 # ─── expected data ─────────────────────────────────────────────────────────────
@@ -51,31 +52,31 @@ XLS_LAST_ROW = {
 
 class TestGetRowsXlsxEdit:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         assert len(lib.get_rows()) == 4
 
-    def test_all_rows_match_expected(self, lib):
+    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == XLSX_ROWS
 
-    def test_each_row_has_all_four_keys(self, lib):
+    def test_each_row_has_all_four_keys(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         for row in lib.get_rows():
             assert list(row.keys()) == XLSX_HEADERS
 
-    def test_cell_containing_comma_is_not_split(self, lib):
+    def test_cell_containing_comma_is_not_split(self, lib: RFExcelLibrary):
         """'Warehouse A, Shelf 2' and 'Paris, France' contain commas."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows()
         assert rows[0]["Location"] == "Warehouse A, Shelf 2"
         assert rows[2]["Location"] == "Paris, France"
 
-    def test_default_header_row_equals_explicit_header_row_1(self, lib):
+    def test_default_header_row_equals_explicit_header_row_1(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == lib.get_rows(header_row=1)
 
-    def test_header_row_2_shifts_data_by_one(self, lib):
+    def test_header_row_2_shifts_data_by_one(self, lib: RFExcelLibrary):
         """When row 2 is treated as headers, only 3 data rows remain."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(header_row=2)
@@ -83,7 +84,7 @@ class TestGetRowsXlsxEdit:
         # The key for the first column is now the value of row 2
         assert "P-200" in rows[0]
 
-    def test_header_row_beyond_data_returns_empty_list(self, lib):
+    def test_header_row_beyond_data_returns_empty_list(self, lib: RFExcelLibrary):
         """A header_row past the last row means no data rows exist."""
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(header_row=5) == []
@@ -93,22 +94,22 @@ class TestGetRowsXlsxEdit:
 
 class TestGetRowsXlsxStream:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         assert len(lib.get_rows()) == 4
 
-    def test_all_rows_match_expected(self, lib):
+    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         assert lib.get_rows() == XLSX_ROWS
 
-    def test_produces_identical_result_to_edit_mode(self, lib):
+    def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         stream_rows = lib.get_rows()
         lib.close()
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == stream_rows
 
-    def test_calling_get_rows_twice_raises_streaming_violation(self, lib):
+    def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
         """Stream is exhausted after the first call — a second call must raise."""
         lib.load_workbook(XLSX_FILE, read_only=True)
         lib.get_rows()
@@ -120,33 +121,33 @@ class TestGetRowsXlsxStream:
 
 class TestGetRowsXlsStandard:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         assert len(lib.get_rows()) == 9
 
-    def test_first_row_content(self, lib):
+    def test_first_row_content(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         assert lib.get_rows()[0] == XLS_FIRST_ROW
 
-    def test_last_row_content(self, lib):
+    def test_last_row_content(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         assert lib.get_rows()[-1] == XLS_LAST_ROW
 
-    def test_numeric_values_stringified_as_floats(self, lib):
+    def test_numeric_values_stringified_as_floats(self, lib: RFExcelLibrary):
         """xlrd returns numbers as Python floats; library must stringify them."""
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
         assert rows[0]["Index"] == "1.0"
         assert rows[0]["Age"] == "32.0"
 
-    def test_trailing_empty_columns_produce_empty_string_key(self, lib):
+    def test_trailing_empty_columns_produce_empty_string_key(self, lib: RFExcelLibrary):
         """example.xls has 2 trailing empty columns — their header is ''."""
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
         assert "" in rows[0]
         assert rows[0][""] == ""
 
-    def test_all_rows_contain_expected_name_columns(self, lib):
+    def test_all_rows_contain_expected_name_columns(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         for row in lib.get_rows():
             assert "First Name" in row
@@ -158,11 +159,11 @@ class TestGetRowsXlsStandard:
 
 class TestGetRowsXlsOnDemand:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         assert len(lib.get_rows()) == 9
 
-    def test_produces_identical_result_to_standard_mode(self, lib):
+    def test_produces_identical_result_to_standard_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         on_demand_rows = lib.get_rows()
         lib.close()
@@ -174,22 +175,22 @@ class TestGetRowsXlsOnDemand:
 
 class TestGetRowsCsvEdit:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         assert len(lib.get_rows()) == 4
 
-    def test_all_rows_match_expected(self, lib):
+    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         assert lib.get_rows() == CSV_ROWS
 
-    def test_quoted_field_with_comma_is_single_value(self, lib):
+    def test_quoted_field_with_comma_is_single_value(self, lib: RFExcelLibrary):
         """'Keyboard, Mechanical, RGB' is quoted in CSV and must not be split."""
         lib.load_workbook(CSV_FILE)
         rows = lib.get_rows()
         assert rows[1]["Description"] == "Keyboard, Mechanical, RGB"
         assert rows[0]["Location"] == "Warehouse A, Shelf 2"
 
-    def test_all_rows_have_all_four_header_keys(self, lib):
+    def test_all_rows_have_all_four_header_keys(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         for row in lib.get_rows():
             assert list(row.keys()) == ["Product ID", "Description", "Price", "Location"]
@@ -199,22 +200,22 @@ class TestGetRowsCsvEdit:
 
 class TestGetRowsCsvStream:
 
-    def test_correct_row_count(self, lib):
+    def test_correct_row_count(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
         assert len(lib.get_rows()) == 4
 
-    def test_all_rows_match_expected(self, lib):
+    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
         assert lib.get_rows() == CSV_ROWS
 
-    def test_produces_identical_result_to_edit_mode(self, lib):
+    def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
         stream_rows = lib.get_rows()
         lib.close()
         lib.load_workbook(CSV_FILE)
         assert lib.get_rows() == stream_rows
 
-    def test_calling_get_rows_twice_raises_streaming_violation(self, lib):
+    def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
         """Stream is exhausted after the first call — a second call must raise."""
         lib.load_workbook(CSV_FILE, read_only=True)
         lib.get_rows()
@@ -226,27 +227,27 @@ class TestGetRowsCsvStream:
 
 class TestGetRowsNegative:
 
-    def test_returns_empty_list_when_no_workbook_loaded(self, lib):
+    def test_returns_empty_list_when_no_workbook_loaded(self, lib: RFExcelLibrary):
         assert lib.get_rows() == []
 
-    def test_returns_empty_list_after_close(self, lib):
+    def test_returns_empty_list_after_close(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.close()
         assert lib.get_rows() == []
 
-    def test_load_nonexistent_file_raises(self, lib):
+    def test_load_nonexistent_file_raises(self, lib: RFExcelLibrary):
         with pytest.raises(FileDoesNotExistException):
             lib.load_workbook("/nonexistent/path/missing.xlsx")
 
-    def test_get_rows_on_empty_created_xlsx_returns_empty_list(self, lib, tmp_path):
+    def test_get_rows_on_empty_created_xlsx_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
         lib.create_workbook(str(tmp_path / "empty.xlsx"))
         assert lib.get_rows() == []
 
-    def test_get_rows_on_empty_created_csv_returns_empty_list(self, lib, tmp_path):
+    def test_get_rows_on_empty_created_csv_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
         lib.create_workbook(str(tmp_path / "empty.csv"))
         assert lib.get_rows() == []
 
-    def test_header_row_1_on_single_row_file_returns_empty_list(self, lib, tmp_path):
+    def test_header_row_1_on_single_row_file_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
         """A file with only a header row and no data rows must yield []."""
         path = tmp_path / "headers_only.csv"
         with open(path, "w", newline="") as f:
