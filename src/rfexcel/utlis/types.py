@@ -1,4 +1,5 @@
-from typing import Dict, List
+from typing import List
+from robot.utils import DotDict # type: ignore
 
-DictRowData = Dict[str, str]
+DictRowData = DotDict
 ListRowData = List[str]

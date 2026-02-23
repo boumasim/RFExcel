@@ -21,13 +21,13 @@ class IResource(ABC):
         pass
 
     @abstractmethod
-    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+    def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         """Return a single row by index (1-based).
 
         Args:
             row_index: The row index (1-based, matches Excel row numbering).
-            data_only: When ``True`` (default), returns raw Python values.
-                       When ``False``, returns native cell objects (e.g. openpyxl
+            **kwargs:  Backend-specific options forwarded from the keyword layer
+                       (e.g. ``data_only=True`` for openpyxl).
                        ``Cell``) preserving formula and style metadata.
                        Has no effect for formats that do not support formulas
                        (xls via xlrd, csv).

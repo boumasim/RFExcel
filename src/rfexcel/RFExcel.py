@@ -1,4 +1,9 @@
-from typing import List, Union
+from typing import Any, List, Union
+
+from robot.utils import DotDict  # type: ignore
+
+from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
+                                     search_in_row)
 
 from .backend.metadata.i_metadata import IMetadata
 from .backend.metadata.null_metadata import NullMetadata
@@ -36,37 +41,38 @@ class RFExcel:
     def close(self):
         self._resource.close()
 
-    def get_rows(self, header_row: int) -> List[DictRowData]:
-        """Get all rows from the workbook as a list of dictionaries.
-        
-        The first row in the workbook is treated as column headers.
-        Each subsequent row is returned as a dictionary where keys are column headers.
-        
-        Returns:
-            List[Dict[str, str]]: List of rows, each row is a dictionary.
-        """
-        result: List[DictRowData] = []
+    def get_rows(self, 
+                header_row: int,
+                search_criteria: str | dict[str, str] | None = None,
+                partial_match: bool = False,
+                one_row: bool = False,
+                **kwargs: Any) -> List[DictRowData] | DictRowData:
+        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria else None
 
         try:
-            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_list_row_data()
+            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource, **kwargs).get_list_row_data()
         except StopIteration:
             headers = []
 
+        result: List[DictRowData] = []
         row_index = header_row + 1
-        
+
         while True:
             try:
-                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-                result.append(row.get_dict_row_data(headers=headers))
+                row = self._reader.get_row(row_idx=row_index, resource=self._resource, **kwargs)
+                if not search_criteria_dict or search_in_row(source_row=row.get_dict_row_data(headers=headers), search_criteria=search_criteria_dict, partial_match=partial_match):
+                    result.append(row.get_dict_row_data(headers=headers))
+                    if one_row:
+                        break
                 row_index += 1
             except StopIteration:
                 break
-        
-        return result
 
-    def get_row(self, row: int, headers: list[str]) -> Union[DictRowData, ListRowData]:
+        return result if not one_row else (result[0] if result else DotDict())
+
+    def get_row(self, row: int, headers: list[str], **kwargs: Any) -> Union[DictRowData, ListRowData]:
         try:
-            raw = self._reader.get_row(row_idx=row, resource=self._resource)
+            raw = self._reader.get_row(row_idx=row, resource=self._resource, **kwargs)
         except StopIteration:
             return []
 

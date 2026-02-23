@@ -1,6 +1,8 @@
 from itertools import zip_longest
 from typing import override
 
+from robot.utils import DotDict  # type: ignore
+
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utlis.types import DictRowData, ListRowData
 
@@ -15,4 +17,4 @@ class CsvRawRowData(IRawRowData):
 
     @override
     def get_dict_row_data(self, headers: ListRowData) -> DictRowData:
-        return dict(zip_longest(headers, self._data, fillvalue=""))
+        return DotDict(zip_longest(headers, self._data, fillvalue=""))
