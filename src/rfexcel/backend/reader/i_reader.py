@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
+
 
 class IReader(ABC):
 
@@ -10,9 +12,9 @@ class IReader(ABC):
         pass
 
     @abstractmethod
-    def get_headers(self, header_row_idx: int, resource: IResource) -> IRawRowData:
+    def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         pass
     
     @abstractmethod
-    def get_row(self, row_idx: int, resource: IResource) -> IRawRowData:
+    def get_row(self, row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         pass

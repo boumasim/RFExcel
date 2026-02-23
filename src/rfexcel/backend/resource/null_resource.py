@@ -1,4 +1,4 @@
-from typing import override
+from typing import Any, override
 
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
@@ -26,5 +26,5 @@ class NullResource(IResource):
         raise LibraryException("Invalid operation: resource not available")
 
     @override
-    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+    def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         raise LibraryException("Invalid operation: resource not available")

@@ -28,11 +28,12 @@ class XlsxEditResource(IResource):
         return -1
 
     @override
-    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+    def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         if row_index > self._active_sheet.max_row:
             raise StopIteration()
+        data_only: bool = kwargs.get('data_only', True)  # type: ignore[assignment]
         row_values = next(
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=data_only)
         )
@@ -61,8 +62,9 @@ class XlsxStreamResource(IResource):
         return self._last_read_row_index
     
     @override
-    def fetch_row(self, row_index: int, data_only: bool = True) -> IRawRowData:
+    def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if self._row_generator is None:
+            data_only: bool = kwargs.get('data_only', True)  # type: ignore[assignment]
             self._row_generator = (
                 self._active_sheet.iter_rows(values_only=data_only)
                 if self._active_sheet
@@ -70,7 +72,7 @@ class XlsxStreamResource(IResource):
             )
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
-        return XlsxRawRowData(row_data, data_only)
+        return XlsxRawRowData(row_data, kwargs.get('data_only', True))  # type: ignore[arg-type]
 
     @override
     def close(self):
