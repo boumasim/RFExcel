@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/boumasim/RFExcel/compare/v0.3.0...v0.4.0) (2026-02-23)
+
+
+### Features
+
+* get_rows() extended funcionality, get_row, switch_source ([#9](https://github.com/boumasim/RFExcel/issues/9)) ([193f406](https://github.com/boumasim/RFExcel/commit/193f406933bf4f17a195e18632f99fc82bc4f185))
+
 ## [0.3.0](https://github.com/boumasim/RFExcel/compare/v0.2.0...v0.3.0) (2026-02-20)
 
 
