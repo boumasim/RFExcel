@@ -2,7 +2,7 @@ from itertools import zip_longest
 from typing import override
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import Row
+from rfexcel.utlis.types import DictRowData, ListRowData
 
 
 class CsvRawRowData(IRawRowData):
@@ -10,9 +10,9 @@ class CsvRawRowData(IRawRowData):
         self._data = data
 
     @override
-    def get_headers(self) -> list[str]:
+    def get_list_row_data(self) -> ListRowData:
         return list(self._data)
 
     @override
-    def get_row_data_value(self, headers: list[str]) -> Row:
+    def get_dict_row_data(self, headers: ListRowData) -> DictRowData:
         return dict(zip_longest(headers, self._data, fillvalue=""))

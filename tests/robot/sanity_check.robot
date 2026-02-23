@@ -1,5 +1,6 @@
 *** Settings ***
 Documentation    Testing my custom Python keywords
+Library         Collections
 Library        rfexcel.RFExcelLibrary
 
 *** Variables ***
@@ -59,3 +60,15 @@ Get Rows from Workbook
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
     ${rows}=    Get Rows
     Log    ${rows}
+
+Get Rows by each row
+    [Documentation]     Get rows one by one and verify data structure
+    Load Workbook    path=${RESOURCES}/data.csv      read_only=true
+    ${my_list}=    Create List
+    ${headers}=   Get Row    row=1
+    FOR    ${i}    IN RANGE    2    5
+        ${row}=    Get Row    row=${i}    headers=${headers}
+        Append To List    ${my_list}    ${row}
+        Log    Row ${i}: ${row}
+    END
+    Log    All rows: ${my_list}

@@ -5,7 +5,8 @@ from robot.api.deco import keyword, not_keyword  # type: ignore
 
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.RFExcel import RFExcel
-from rfexcel.utlis.types import Data
+from rfexcel.utlis.types import DictRowData, ListRowData
+from typing import List, Union
 
 
 class RFExcelLibrary:
@@ -116,7 +117,7 @@ class RFExcelLibrary:
         self._active_workbook = None
 
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_rows(self, header_row: int = 1) -> Data:
+    def get_rows(self, header_row: int = 1) -> List[DictRowData]:
         """Returns all data rows from the active workbook as a list of dictionaries.
 
         The row specified by ``header_row`` is used as the column header. Every
@@ -148,5 +149,37 @@ class RFExcelLibrary:
         | ${rows} =     | Get Rows            | header_row=2 |
         """
         if self._active_workbook: return self._active_workbook.get_rows(header_row=header_row)
+        return []
+
+    @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def get_row(self, row: int, headers: ListRowData | None = None) -> Union[DictRowData, ListRowData]:
+        """Returns a single row from the active workbook.
+
+        The ``row`` argument is 1-based. The ``headers`` argument controls the
+        return format:
+
+        - *No headers (default)*: Returns the row as a plain ``list`` of string
+          values. Useful for positional access.
+        - *With headers*: Maps the row values to the provided header names and
+          returns a ``dict``, identical in structure to a row returned by
+          ``Get Rows``.
+
+        Returns an empty list if no workbook is open or the row index is beyond
+        the last row of the file.
+
+        Arguments:
+        - ``row``: Row number to read (1-based).
+        - ``headers``: Optional list of column names to map values against.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
+        | ${row} =       | Get Row             | 2                             |               |
+        | Log            | ${row}[0]           |                               |               |
+        | ${headers} =   | Create List         | Name | Age | Country           |               |
+        | ${row} =       | Get Row             | 2    | headers=${headers}        |               |
+        | Log            | ${row}[Name]        |                               |               |
+        """
+        resolved: list[str] = headers if headers is not None else []
+        if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved)
         return []
 

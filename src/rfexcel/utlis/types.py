@@ -1,4 +1,4 @@
 from typing import Dict, List
 
-Row = Dict[str, str]
-Data = List[Row]
+DictRowData = Dict[str, str]
+ListRowData = List[str]

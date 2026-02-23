@@ -1,3 +1,5 @@
+from typing import List, Union
+
 from .backend.metadata.i_metadata import IMetadata
 from .backend.metadata.null_metadata import NullMetadata
 from .backend.reader.i_reader import IReader
@@ -8,7 +10,7 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utlis.types import Data
+from .utlis.types import DictRowData, ListRowData
 
 
 class RFExcel:
@@ -34,7 +36,7 @@ class RFExcel:
     def close(self):
         self._resource.close()
 
-    def get_rows(self, header_row: int) -> Data:
+    def get_rows(self, header_row: int) -> List[DictRowData]:
         """Get all rows from the workbook as a list of dictionaries.
         
         The first row in the workbook is treated as column headers.
@@ -43,10 +45,10 @@ class RFExcel:
         Returns:
             List[Dict[str, str]]: List of rows, each row is a dictionary.
         """
-        result: Data = []
+        result: List[DictRowData] = []
 
         try:
-            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_headers()
+            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource).get_list_row_data()
         except StopIteration:
             headers = []
 
@@ -55,9 +57,19 @@ class RFExcel:
         while True:
             try:
                 row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-                result.append(row.get_row_data_value(headers=headers))
+                result.append(row.get_dict_row_data(headers=headers))
                 row_index += 1
             except StopIteration:
                 break
         
         return result
+
+    def get_row(self, row: int, headers: list[str]) -> Union[DictRowData, ListRowData]:
+        try:
+            raw = self._reader.get_row(row_idx=row, resource=self._resource)
+        except StopIteration:
+            return []
+
+        if not headers:
+            return raw.get_list_row_data()
+        return raw.get_dict_row_data(headers=headers)

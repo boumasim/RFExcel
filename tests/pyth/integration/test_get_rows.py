@@ -14,7 +14,8 @@ import csv
 
 import pytest
 
-from rfexcel.exception.library_exceptions import FileDoesNotExistException
+from rfexcel.exception.library_exceptions import (FileDoesNotExistException,
+                                                  StreamingViolationException)
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 # ─── expected data ─────────────────────────────────────────────────────────────
@@ -106,6 +107,13 @@ class TestGetRowsXlsxStream:
         lib.close()
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == stream_rows
+
+    def test_calling_get_rows_twice_raises_streaming_violation(self, lib):
+        """Stream is exhausted after the first call — a second call must raise."""
+        lib.load_workbook(XLSX_FILE, read_only=True)
+        lib.get_rows()
+        with pytest.raises(StreamingViolationException):
+            lib.get_rows()
 
 
 # ─── xls standard (edit) mode ───────────────────────────────────────────────────
@@ -205,6 +213,13 @@ class TestGetRowsCsvStream:
         lib.close()
         lib.load_workbook(CSV_FILE)
         assert lib.get_rows() == stream_rows
+
+    def test_calling_get_rows_twice_raises_streaming_violation(self, lib):
+        """Stream is exhausted after the first call — a second call must raise."""
+        lib.load_workbook(CSV_FILE, read_only=True)
+        lib.get_rows()
+        with pytest.raises(StreamingViolationException):
+            lib.get_rows()
 
 
 # ─── negative / edge ─────────────────────────────────────────────────────────────
