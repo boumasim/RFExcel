@@ -239,6 +239,48 @@ class RFExcelLibrary:
         if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
         return []
 
+    @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def list_sheet_names(self) -> list[str]:
+        """Returns the names of all sheets in the active workbook.
+
+        Works for ``.xlsx`` and ``.xls`` formats (both edit and streaming modes).
+        Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook,
+        as CSV files do not have the concept of sheets.
+
+        Returns an empty list if no workbook is currently open.
+
+        Examples:
+        | Load Workbook       | ${CURDIR}/data.xlsx  |
+        | ${sheets} =         | List Sheet Names     |
+        | Should Contain      | ${sheets}            | Sheet1 |
+        | Load Workbook       | ${CURDIR}/data.xls   |
+        | ${sheets} =         | List Sheet Names     |
+        """
+        if self._active_workbook:
+            return self._active_workbook.list_sheet_names()
+        return []
+
+    @keyword("Switch Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def switch_sheet(self, name: str) -> None:
+        """Switches the active sheet within the currently open workbook.
+
+        Supported for ``.xlsx`` and ``.xls`` formats in all modes.
+        Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook.
+        Raises ``LibraryException`` if no workbook is currently open.
+
+        Arguments:
+        - ``name``: The exact name of the sheet to activate.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx |        |
+        | Switch Sheet   | Sheet2              |        |
+        | ${rows} =      | Get Rows            |        |
+        | Load Workbook  | ${CURDIR}/data.xls  |        |
+        | Switch Sheet   | Second              |        |
+        """
+        if self._active_workbook:
+            self._active_workbook.switch_sheet(name)
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.

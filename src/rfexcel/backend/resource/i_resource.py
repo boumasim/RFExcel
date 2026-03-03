@@ -21,6 +21,16 @@ class IResource(ABC):
         pass
 
     @abstractmethod
+    def get_sheet_names(self) -> list[str]:
+        """Return the list of sheet names in the workbook."""
+        pass
+
+    @abstractmethod
+    def switch_sheet(self, name: str) -> None:
+        """Switch the active sheet to the one identified by ``name``."""
+        pass
+
+    @abstractmethod
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         """Return a single row by index (1-based).
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
@@ -12,9 +13,9 @@ XLS_FILE  = str(_RESOURCES / "example.xls")
 
 
 @pytest.fixture
-def lib() -> RFExcelLibrary:
+def lib() -> Generator[RFExcelLibrary, None, None]:
     library = RFExcelLibrary()
-    yield library  # type: ignore[misc]
+    yield library
     if library._active_workbook:
         library.close()
 

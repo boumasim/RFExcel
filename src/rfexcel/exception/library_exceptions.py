@@ -38,3 +38,13 @@ class StreamingViolationException(RFExcelException):
             f"Already read up to row {last_read}. "
             f"Streaming only supports forward-only sequential access."
         )
+
+class OperationNotSupportedForFormat(RFExcelException):
+    """Exception raised when an operation is not supported for a specific file format"""
+    def __init__(self, msg: str = "This operation is not supported for the current file format"):
+        super().__init__(msg)
+        
+class NotSupportedInReadOnlyMode(RFExcelException):
+    """Exception raised when trying to perform a write operation in read-only mode"""
+    def __init__(self, msg: str = "This operation is not supported in read-only mode"):
+        super().__init__(msg)

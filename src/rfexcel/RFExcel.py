@@ -70,6 +70,12 @@ class RFExcel:
 
         return result if not one_row else (result[0] if result else DotDict())
 
+    def list_sheet_names(self) -> list[str]:
+        return self._metadata.get_sheet_names(self._resource)
+
+    def switch_sheet(self, name: str) -> None:
+        self._resource.switch_sheet(name)
+
     def get_row(self, row: int, headers: list[str], **kwargs: Any) -> Union[DictRowData, ListRowData]:
         try:
             raw = self._reader.get_row(row_idx=row, resource=self._resource, **kwargs)

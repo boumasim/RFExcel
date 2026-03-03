@@ -15,7 +15,7 @@ from .i_resource import IResource
 class XlsxEditResource(IResource):
     def __init__(self, wb: Workbook):
         self._wb: Workbook = wb
-        self._active_sheet: Worksheet | None = wb.active
+        self._active_sheet: Worksheet | None = wb.worksheets[0] if wb.worksheets else None
 
     @property
     @override
@@ -40,6 +40,14 @@ class XlsxEditResource(IResource):
         return XlsxRawRowData(row_values, data_only)
 
     @override
+    def get_sheet_names(self) -> list[str]:
+        return list(self._wb.sheetnames)
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        self._active_sheet = self._wb[name]
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -47,7 +55,7 @@ class XlsxEditResource(IResource):
 class XlsxStreamResource(IResource):
     def __init__(self, wb: Workbook):
         self._wb = wb
-        self._active_sheet = self._wb.active
+        self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
         self._row_generator: Iterator[tuple[Any, ...]] | None = None  # lazily initialised on first fetch_row call
         self._last_read_row_index = 0
 
@@ -73,6 +81,16 @@ class XlsxStreamResource(IResource):
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data, kwargs.get('data_only', True))  # type: ignore[arg-type]
+
+    @override
+    def get_sheet_names(self) -> list[str]:
+        return list(self._wb.sheetnames)
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        self._active_sheet = self._wb[name]
+        self._row_generator = None
+        self._last_read_row_index = 0
 
     @override
     def close(self):

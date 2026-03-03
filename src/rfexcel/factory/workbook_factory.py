@@ -95,12 +95,12 @@ class WorkbookFactory:
 
     def _load_xls_on_demand(self, path: Path, **kwargs: Any) -> RFExcel:
         _formating_info: bool = bool(kwargs.get('formatting_info', True))
-        wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=True, formatting_info=_formating_info, **kwargs)
+        wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=True, formatting_info=_formating_info)
         return RFExcel(reader=XlsOnDemandReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsStreamResource(wb))
 
     def _load_xls_standard(self, path: Path, **kwargs: Any) -> RFExcel:
         _formating_info: bool = bool(kwargs.get('formatting_info', True))
-        wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=False, formatting_info=_formating_info, **kwargs)
+        wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=False, formatting_info=_formating_info)
         return RFExcel(reader=XlsStandardReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsEditResource(wb))
     
     def _load_csv_stream(self, path: Path, **kwargs: Any) -> RFExcel:

@@ -38,6 +38,14 @@ class XlsEditResource(IResource):
         return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
 
     @override
+    def get_sheet_names(self) -> list[str]:
+        return list(self._wb.sheet_names())
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        self._active_sheet = self._wb.sheet_by_name(name)
+
+    @override
     def close(self):
         self._wb.release_resources()
 
@@ -68,6 +76,14 @@ class XlsStreamResource(IResource):
             raise StopIteration()
 
         return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
+
+    @override
+    def get_sheet_names(self) -> list[str]:
+        return list(self._wb.sheet_names())
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        self._active_sheet = self._wb.sheet_by_name(name)
 
     @override
     def close(self):

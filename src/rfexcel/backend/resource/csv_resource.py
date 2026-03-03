@@ -5,9 +5,10 @@ from typing import Any, override
 from robot.api import logger
 
 from rfexcel.backend.resource.i_resource import IResource
+from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.rfexcel_constants import BASE_DIALECT, BASE_ENCODING
+from rfexcel.rfexcel_constants import BASE_DIALECT, BASE_ENCODING, CSV_NOT_SUPPORTED_MSG
 
 
 class CsvEditResource(IResource):
@@ -38,6 +39,14 @@ class CsvEditResource(IResource):
             raise StopIteration()
 
         return CsvRawRowData(self._all_rows[list_index])
+
+    @override
+    def get_sheet_names(self) -> list[str]:
+        raise OperationNotSupportedForFormat(CSV_NOT_SUPPORTED_MSG)
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat(CSV_NOT_SUPPORTED_MSG)
 
     @override
     def close(self):
@@ -72,6 +81,14 @@ class CsvStreamResource(IResource):
             raise StopIteration()
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)
+
+    @override
+    def get_sheet_names(self) -> list[str]:
+        raise OperationNotSupportedForFormat()
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat()
 
     @override
     def close(self):

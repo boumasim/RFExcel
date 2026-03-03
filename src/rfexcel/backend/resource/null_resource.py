@@ -26,5 +26,13 @@ class NullResource(IResource):
         raise LibraryException("Invalid operation: resource not available")
 
     @override
+    def get_sheet_names(self) -> list[str]:
+        raise LibraryException("Invalid operation: resource not available")
+
+    @override
+    def switch_sheet(self, name: str) -> None:
+        raise LibraryException("Invalid operation: resource not available")
+
+    @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         raise LibraryException("Invalid operation: resource not available")
