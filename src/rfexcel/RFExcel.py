@@ -41,10 +41,6 @@ class RFExcel(IExcel, ISetExcel):
         self._metadata: IMetadata = metadata
         self._resource: IResource = resource
 
-    @property
-    def resource(self) -> IResource:
-        return self._resource
-
     @override
     def close(self):
         self._resource.close()
@@ -118,5 +114,5 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.add_sheet(name=name, resource=self._resource)
 
     @override
-    def delete_sheet(self, name: str) -> None:
+    def delete_sheet(self, name: str):
         self._writer.delete_sheet(name=name, resource=self._resource)

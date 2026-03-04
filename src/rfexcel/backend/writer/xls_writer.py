@@ -1,4 +1,3 @@
-from re import I
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
@@ -21,9 +20,9 @@ class XlsWriter(IWriter):
     @override
     def add_sheet(self, name: str, resource: IResource):
         self._convert_to_xlsx()
-        self._ref.resource.add_sheet(name)
+        self._ref.add_sheet(name=name)
 
     @override
     def delete_sheet(self, name: str, resource: IResource):
         self._convert_to_xlsx()
-        self._ref.resource.delete_sheet(name)
+        self._ref.delete_sheet(name)
