@@ -4,8 +4,8 @@ from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
 from robot.utils import DotDict  # type: ignore
 
+from rfexcel.backend.lib.i_library import IExcel
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.RFExcel import RFExcel
 from rfexcel.utlis.types import DictRowData, ListRowData
 
 
@@ -17,7 +17,7 @@ class RFExcelLibrary:
 
     def __init__(self):
         self._factory = WorkbookFactory()
-        self._active_workbook: RFExcel | None = None
+        self._active_workbook: IExcel | None = None
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def end_test(self, name: str, attrs: dict[str, Any]) -> None:
@@ -88,10 +88,6 @@ class RFExcelLibrary:
         self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
 
-    @keyword("Print")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def print(self):
-        if self._active_workbook: self._active_workbook.print()
-
     @keyword("Close Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def close(self) -> None:
         """Closes the active workbook and releases all associated resources.
@@ -117,7 +113,7 @@ class RFExcelLibrary:
         self._active_workbook = None
 
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_rows(self, 
+    def get_rows(self,
                 header_row: int = 1,
                 search_criteria: dict[str, str] | str | None = None, 
                 partial_match: bool = False,
@@ -280,6 +276,36 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.switch_sheet(name)
+
+    @keyword("Add Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def add_sheet(self, name: str) -> None:
+        """Adds a new sheet with the given name to the active workbook and switches to it.
+
+        The new sheet becomes the active sheet immediately after creation, so
+        subsequent read/write operations will target the newly added sheet.
+
+        Supported formats and modes:
+        - ``.xlsx`` (edit mode): Full support.
+        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx`` format
+          in memory before the sheet is added. The original ``.xls`` file on disk
+          is *not* modified.
+        - ``.xlsx`` (streaming mode): Raises ``NotSupportedInReadOnlyMode``.
+        - ``.xls`` (streaming/on-demand mode): Not supported; raises ``OperationNotSupportedForFormat``.
+        - ``.csv``: Raises ``OperationNotSupportedForFormat`` — CSV files have no concept of sheets.
+
+        Raises ``LibraryException`` if no workbook is currently open.
+
+        Arguments:
+        - ``name``: The name to assign to the new sheet.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |          |
+        | Add Sheet     | NewSheet            |          |
+        | ${sheets} =   | List Sheet Names    |          |
+        | Should Contain | ${sheets}          | NewSheet |
+        """
+        if self._active_workbook:
+            self._active_workbook.add_sheet(name)
 
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:

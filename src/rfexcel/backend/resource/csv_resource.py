@@ -8,12 +8,13 @@ from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.rfexcel_constants import BASE_DIALECT, BASE_ENCODING, CSV_NOT_SUPPORTED_MSG
+from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
+                                       CSV_NOT_SUPPORTED_MSG)
 
 
 class CsvEditResource(IResource):
     def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
-        self._path = path
+        super().__init__(path)
         self._encoding = encoding
         self._dialect = dialect
         self._edited = False
@@ -46,7 +47,11 @@ class CsvEditResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
-        raise OperationNotSupportedForFormat(CSV_NOT_SUPPORTED_MSG)
+        raise OperationNotSupportedForFormat("This operation is not supported for CSV files")
+
+    @override
+    def add_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
 
     @override
     def close(self):
@@ -59,6 +64,7 @@ class CsvEditResource(IResource):
 
 class CsvStreamResource(IResource):
     def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
+        super().__init__(path)
         self._handle = open(path, mode='r', newline='', encoding=encoding)
         self._reader = csv.reader(self._handle, dialect=dialect, **kwargs)
         self._last_read_row_index: int = 0
@@ -89,6 +95,10 @@ class CsvStreamResource(IResource):
     @override
     def switch_sheet(self, name: str) -> None:
         raise OperationNotSupportedForFormat()
+
+    @override
+    def add_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
 
     @override
     def close(self):

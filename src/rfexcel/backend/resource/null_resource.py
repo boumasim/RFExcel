@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, override
 
 from openpyxl.chartsheet import Chartsheet
@@ -10,6 +11,9 @@ from .i_resource import IResource
 
 
 class NullResource(IResource):
+
+    def __init__(self):
+        super().__init__(Path(""))
 
     @property
     @override
@@ -35,4 +39,8 @@ class NullResource(IResource):
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
+        raise LibraryException("Invalid operation: resource not available")
+
+    @override
+    def add_sheet(self, name: str) -> None:
         raise LibraryException("Invalid operation: resource not available")

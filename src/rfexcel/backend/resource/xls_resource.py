@@ -1,9 +1,11 @@
+from pathlib import Path
 from typing import Any, override
 
 import xlrd.sheet
 from xlrd import Book
 
-from rfexcel.exception.library_exceptions import LibraryException
+from rfexcel.exception.library_exceptions import (
+    LibraryException, OperationNotSupportedForFormat)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
 
@@ -11,7 +13,8 @@ from .i_resource import IResource
 
 
 class XlsEditResource(IResource):
-    def __init__(self, wb: Book):
+    def __init__(self, wb: Book, path: Path):
+        super().__init__(path)
         self._wb: Book = wb
         self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
 
@@ -44,6 +47,10 @@ class XlsEditResource(IResource):
     @override
     def switch_sheet(self, name: str) -> None:
         self._active_sheet = self._wb.sheet_by_name(name)
+
+    @override
+    def add_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; adding sheets is not supported")
 
     @override
     def close(self):
@@ -51,7 +58,8 @@ class XlsEditResource(IResource):
 
 
 class XlsStreamResource(IResource):
-    def __init__(self, wb: Book):
+    def __init__(self, wb: Book, path: Path):
+        super().__init__(path)
         self._wb: Book = wb
         self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
 
@@ -84,6 +92,10 @@ class XlsStreamResource(IResource):
     @override
     def switch_sheet(self, name: str) -> None:
         self._active_sheet = self._wb.sheet_by_name(name)
+
+    @override
+    def add_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; adding sheets is not supported")
 
     @override
     def close(self):

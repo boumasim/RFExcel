@@ -1,6 +1,8 @@
 from typing import override
 
+from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
+from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 
 
 class CsvWriter(IWriter):
@@ -10,3 +12,7 @@ class CsvWriter(IWriter):
     @override
     def print(self):
         print("csv reader")
+
+    @override
+    def add_sheet(self, name: str, resource: IResource):
+        raise OperationNotSupportedForFormat("Adding sheets is not supported for CSV format")

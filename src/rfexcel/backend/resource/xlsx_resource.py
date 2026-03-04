@@ -1,11 +1,13 @@
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any, override
 
 from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
-from rfexcel.exception.library_exceptions import LibraryException
+from rfexcel.exception.library_exceptions import (LibraryException,
+                                                  NotSupportedInReadOnlyMode)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 
@@ -13,7 +15,8 @@ from .i_resource import IResource
 
 
 class XlsxEditResource(IResource):
-    def __init__(self, wb: Workbook):
+    def __init__(self, wb: Workbook, path: Path):
+        super().__init__(path)
         self._wb: Workbook = wb
         self._active_sheet: Worksheet | None = wb.worksheets[0] if wb.worksheets else None
 
@@ -48,12 +51,18 @@ class XlsxEditResource(IResource):
         self._active_sheet = self._wb[name]
 
     @override
+    def add_sheet(self, name: str) -> None:
+        ws: Worksheet = self._wb.create_sheet(title=name)
+        self._active_sheet = ws
+
+    @override
     def close(self):
         self._wb.close()
 
 
 class XlsxStreamResource(IResource):
-    def __init__(self, wb: Workbook):
+    def __init__(self, wb: Workbook, path: Path):
+        super().__init__(path)
         self._wb = wb
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
         self._row_generator: Iterator[tuple[Any, ...]] | None = None  # lazily initialised on first fetch_row call
@@ -91,6 +100,10 @@ class XlsxStreamResource(IResource):
         self._active_sheet = self._wb[name]
         self._row_generator = None
         self._last_read_row_index = 0
+
+    @override
+    def add_sheet(self, name: str) -> None:
+        raise NotSupportedInReadOnlyMode("Adding sheets is not supported in streaming mode")
 
     @override
     def close(self):
