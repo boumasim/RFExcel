@@ -53,6 +53,10 @@ class XlsEditResource(IResource):
         raise OperationNotSupportedForFormat(".xls format is read-only; adding sheets is not supported")
 
     @override
+    def delete_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; deleting sheets is not supported")
+
+    @override
     def close(self):
         self._wb.release_resources()
 
@@ -96,6 +100,10 @@ class XlsStreamResource(IResource):
     @override
     def add_sheet(self, name: str) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; adding sheets is not supported")
+
+    @override
+    def delete_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; deleting sheets is not supported")
 
     @override
     def close(self):

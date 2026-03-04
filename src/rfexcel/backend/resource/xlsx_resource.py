@@ -56,6 +56,13 @@ class XlsxEditResource(IResource):
         self._active_sheet = ws
 
     @override
+    def delete_sheet(self, name: str) -> None:
+        if name not in self._wb.sheetnames:
+            raise LibraryException(f"Sheet '{name}' does not exist")
+        del self._wb[name]
+        self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -104,6 +111,10 @@ class XlsxStreamResource(IResource):
     @override
     def add_sheet(self, name: str) -> None:
         raise NotSupportedInReadOnlyMode("Adding sheets is not supported in streaming mode")
+
+    @override
+    def delete_sheet(self, name: str) -> None:
+        raise NotSupportedInReadOnlyMode("Deleting sheets is not supported in streaming mode")
 
     @override
     def close(self):

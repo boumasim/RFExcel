@@ -17,3 +17,7 @@ class XlsxWriter(IWriter):
     @override
     def add_sheet(self, name: str, resource: IResource):
         resource.add_sheet(name)
+
+    @override
+    def delete_sheet(self, name: str, resource: IResource):
+        resource.delete_sheet(name)

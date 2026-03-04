@@ -54,6 +54,10 @@ class CsvEditResource(IResource):
         raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
 
     @override
+    def delete_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
+
+    @override
     def close(self):
         if self._edited:
             with open(self._path, mode='w', newline='', encoding=self._encoding) as f:
@@ -98,6 +102,10 @@ class CsvStreamResource(IResource):
 
     @override
     def add_sheet(self, name: str) -> None:
+        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
+
+    @override
+    def delete_sheet(self, name: str) -> None:
         raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
 
     @override

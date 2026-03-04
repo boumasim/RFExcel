@@ -43,3 +43,7 @@ class IResource(ABC):
     @abstractmethod
     def add_sheet(self, name: str) -> None:
         pass
+
+    @abstractmethod
+    def delete_sheet(self, name: str) -> None:
+        pass

@@ -16,3 +16,7 @@ class CsvWriter(IWriter):
     @override
     def add_sheet(self, name: str, resource: IResource):
         raise OperationNotSupportedForFormat("Adding sheets is not supported for CSV format")
+
+    @override
+    def delete_sheet(self, name: str, resource: IResource):
+        raise OperationNotSupportedForFormat("Deleting sheets is not supported for CSV format")

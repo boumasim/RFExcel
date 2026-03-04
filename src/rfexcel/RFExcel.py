@@ -116,3 +116,7 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def add_sheet(self, name: str) -> None:
         self._writer.add_sheet(name=name, resource=self._resource)
+
+    @override
+    def delete_sheet(self, name: str) -> None:
+        self._writer.delete_sheet(name=name, resource=self._resource)

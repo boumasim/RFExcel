@@ -307,6 +307,36 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.add_sheet(name)
 
+    @keyword("Delete Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def delete_sheet(self, name: str) -> None:
+        """Deletes the sheet with the given name from the active workbook.
+
+        After deletion, the active sheet is reset to the first remaining sheet
+        in the workbook.
+
+        Supported formats and modes:
+        - ``.xlsx`` (edit mode): Full support.
+        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx`` format
+          in memory before the sheet is deleted. The original ``.xls`` file on disk
+          is *not* modified.
+        - ``.xlsx`` (streaming mode): Raises ``LibraryException``.
+        - ``.xls`` (streaming/on-demand mode): Raises ``LibraryException``.
+        - ``.csv``: Raises ``OperationNotSupportedForFormat`` — CSV files have no concept of sheets.
+
+        Raises ``LibraryException`` if the sheet does not exist or no workbook is open.
+
+        Arguments:
+        - ``name``: The exact name of the sheet to delete.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |          |
+        | Delete Sheet  | OldSheet            |          |
+        | ${sheets} =   | List Sheet Names    |          |
+        | Should Not Contain | ${sheets}      | OldSheet |
+        """
+        if self._active_workbook:
+            self._active_workbook.delete_sheet(name)
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.

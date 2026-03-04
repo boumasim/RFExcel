@@ -22,3 +22,8 @@ class XlsWriter(IWriter):
     def add_sheet(self, name: str, resource: IResource):
         self._convert_to_xlsx()
         self._ref.resource.add_sheet(name)
+
+    @override
+    def delete_sheet(self, name: str, resource: IResource):
+        self._convert_to_xlsx()
+        self._ref.resource.delete_sheet(name)
