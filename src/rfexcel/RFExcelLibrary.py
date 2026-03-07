@@ -337,6 +337,45 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.delete_sheet(name)
 
+    @keyword("Save Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def save_workbook(self, path: str | None = None) -> None:
+        """Saves the current state of the active workbook to disk.
+
+        By default the file is saved back to the path it was opened from.
+        An optional ``path`` argument enables a *Save As* workflow — the
+        workbook is written to the new location and that location becomes the
+        new active path for any subsequent saves.
+
+        Supported formats and modes:
+        - ``.xlsx`` (edit mode): Full support. Saves in-memory workbook to disk.
+        - ``.xls`` (edit mode, *not yet converted*): Raises ``OperationNotSupportedForFormat``.
+          Perform a write operation first (e.g. ``Add Sheet``) to trigger the
+          automatic in-memory conversion to ``.xlsx``, then call ``Save Workbook``
+          with a ``.xlsx`` target path.
+        - ``.xls`` (edit mode, *after lazy conversion*): Saves the converted
+          in-memory workbook. Provide a ``.xlsx`` ``path`` to avoid writing
+          xlsx content under a ``.xls`` filename.
+        - Streaming / read-only mode (all formats): Raises ``NotSupportedInReadOnlyMode``.
+        - ``.csv`` (edit mode): Flushes the in-memory row buffer to disk.
+
+        Safe to call when no workbook is open — it will do nothing.
+
+        Arguments:
+        - ``path``: Optional destination path. If omitted, saves to the original path.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
+        | Add Sheet      | Report                       |                              |
+        | Save Workbook  |                              |                              |
+        | Save Workbook  | ${OUTPUT_DIR}${/}result.xlsx |                              |
+        | Load Workbook  | ${CURDIR}/data.xls           |                              |
+        | Add Sheet      | NewSheet                     |                              |
+        | Save Workbook  | ${OUTPUT_DIR}${/}result.xlsx |                              |
+        """
+        if self._active_workbook:
+            self._active_workbook.save_workbook(path=path)
+            logger.info("Workbook successfully saved")
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.

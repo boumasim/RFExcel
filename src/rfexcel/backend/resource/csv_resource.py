@@ -5,7 +5,9 @@ from typing import Any, override
 from robot.api import logger
 
 from rfexcel.backend.resource.i_resource import IResource
-from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
+from rfexcel.exception.library_exceptions import (
+    FileSaveException, NotSupportedInReadOnlyMode,
+    OperationNotSupportedForFormat)
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
@@ -58,6 +60,19 @@ class CsvEditResource(IResource):
         raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
 
     @override
+    def save(self, path: Path | None = None) -> None:
+        target = path or self._path
+        try:
+            with open(target, mode='w', newline='', encoding=self._encoding) as f:
+                writer = csv.writer(f, dialect=self._dialect)
+                writer.writerows(self._all_rows)
+        except Exception as e:
+            raise FileSaveException(str(target), str(e)) from e
+        self._path = target
+        self._edited = False
+        logger.info(f"CSV file saved to '{target.name}'.")
+
+    @override
     def close(self):
         if self._edited:
             with open(self._path, mode='w', newline='', encoding=self._encoding) as f:
@@ -107,6 +122,10 @@ class CsvStreamResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
+
+    @override
+    def save(self, path: Path | None = None) -> None:
+        raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
 
     @override
     def close(self):

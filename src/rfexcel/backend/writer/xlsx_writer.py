@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
@@ -21,3 +22,7 @@ class XlsxWriter(IWriter):
     @override
     def delete_sheet(self, name: str, resource: IResource):
         resource.delete_sheet(name)
+
+    @override
+    def save(self, path: Path | None, resource: IResource) -> None:
+        resource.save(path)

@@ -5,8 +5,10 @@ from typing import Any, override
 from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
+from robot.api import logger
 
-from rfexcel.exception.library_exceptions import (LibraryException,
+from rfexcel.exception.library_exceptions import (FileSaveException,
+                                                  LibraryException,
                                                   NotSupportedInReadOnlyMode)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
@@ -63,6 +65,21 @@ class XlsxEditResource(IResource):
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
 
     @override
+    def save(self, path: Path | None = None) -> None:
+        target = path or self._path
+        if target.suffix.lower() == '.xls':
+            logger.warn(
+                f"Saving xlsx content to '{target.name}' with a .xls extension. "
+                "Consider providing a .xlsx path."
+            )
+        try:
+            self._wb.save(filename=target)
+        except Exception as e:
+            raise FileSaveException(str(target), str(e)) from e
+        self._path = target
+        logger.info(f"Workbook saved to '{target.name}'.")
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -115,6 +132,10 @@ class XlsxStreamResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         raise NotSupportedInReadOnlyMode("Deleting sheets is not supported in streaming mode")
+
+    @override
+    def save(self, path: Path | None = None) -> None:
+        raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
 
     @override
     def close(self):

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
@@ -18,4 +19,8 @@ class NullWriter(IWriter):
 
     @override
     def delete_sheet(self, name: str, resource: IResource):
+        raise LibraryException("Invalid operation: writer not available")
+
+    @override
+    def save(self, path: Path | None, resource: IResource) -> None:
         raise LibraryException("Invalid operation: writer not available")

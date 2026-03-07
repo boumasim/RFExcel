@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, List, Union, cast, override
 
 from openpyxl import Workbook
@@ -116,3 +117,7 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def delete_sheet(self, name: str):
         self._writer.delete_sheet(name=name, resource=self._resource)
+
+    @override
+    def save_workbook(self, path: str | None = None) -> None:
+        self._writer.save(Path(path) if path else None, self._resource)

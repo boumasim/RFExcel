@@ -48,3 +48,7 @@ class NullResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         raise LibraryException("Invalid operation: resource not available")
+
+    @override
+    def save(self, path: Path | None = None) -> None:
+        raise LibraryException("Invalid operation: resource not available")

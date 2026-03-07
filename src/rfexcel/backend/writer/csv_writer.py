@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
@@ -20,3 +21,7 @@ class CsvWriter(IWriter):
     @override
     def delete_sheet(self, name: str, resource: IResource):
         raise OperationNotSupportedForFormat("Deleting sheets is not supported for CSV format")
+
+    @override
+    def save(self, path: Path | None, resource: IResource) -> None:
+        resource.save(path)

@@ -48,3 +48,8 @@ class NotSupportedInReadOnlyMode(RFExcelException):
     """Exception raised when trying to perform a write operation in read-only mode"""
     def __init__(self, msg: str = "This operation is not supported in read-only mode"):
         super().__init__(msg)
+
+class FileSaveException(RFExcelException):
+    """Exception raised when a workbook cannot be saved to the given path"""
+    def __init__(self, path: str, reason: str):
+        super().__init__(f"Cannot save workbook to '{path}': {reason}")

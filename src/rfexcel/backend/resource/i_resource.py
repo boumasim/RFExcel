@@ -47,3 +47,7 @@ class IResource(ABC):
     @abstractmethod
     def delete_sheet(self, name: str) -> None:
         pass
+
+    @abstractmethod
+    def save(self, path: Path | None = None) -> None:
+        pass
