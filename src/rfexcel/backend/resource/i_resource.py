@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
+from rfexcel.utlis.types import ColumnValues
 
 
 class IResource(ABC):
@@ -50,4 +51,8 @@ class IResource(ABC):
 
     @abstractmethod
     def save(self, path: Path | None = None) -> None:
+        pass
+
+    @abstractmethod
+    def append_row(self, cell_data: ColumnValues) -> None:
         pass

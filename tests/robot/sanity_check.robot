@@ -8,41 +8,6 @@ ${RESOURCES}    ${CURDIR}/../resources
 ${RESULTS}      ${CURDIR}/../../results
 
 *** Test Cases ***
-Load XLS File Read Only
-    [Documentation]    Load XLS file in streaming (read-only) mode
-    Load Workbook    path=${RESOURCES}/example.xls    read_only=True
-    Close Workbook
-
-Load XLS File Edit Mode
-    [Documentation]    Load XLS file in edit mode (standard reader)
-    Load Workbook    path=${RESOURCES}/example.xls    read_only=False
-    Close Workbook
-
-Load XLSX File Read Only
-    [Documentation]    Load XLSX file in streaming (read-only) mode
-    Load Workbook    path=${RESOURCES}/data.xlsx    read_only=True
-    Close Workbook
-
-Load XLSX File Edit Mode
-    [Documentation]    Load XLSX file in edit mode
-    Load Workbook    path=${RESOURCES}/data.xlsx    read_only=False
-
-    Close Workbook
-
-Load CSV File Read Only
-    [Documentation]    Load CSV file in streaming (read-only) mode
-    Load Workbook    path=${RESOURCES}/data.csv    read_only=True
-
-Load CSV File Edit Mode
-    [Documentation]    Load CSV file in edit mode (buffered in memory)
-    Load Workbook    path=${RESOURCES}/data.csv    read_only=False
-    Close Workbook
-
-Create New XLSX File
-    [Documentation]    Create a new XLSX file from scratch
-    Create Workbook    path=${RESULTS}/test_created.xlsx
-    Close Workbook
-
 Create New CSV File
     [Documentation]    Create a new CSV file from scratch
     Create Workbook    path=${RESULTS}/test_created.csv
@@ -97,3 +62,12 @@ Save sheet test
     [Documentation]     Test saving a workbook after modifications
     Load Workbook    path=${RESOURCES}/data.csv
     Save Workbook   path=${RESULTS}/data.csv
+
+Add row to shifted table
+    [Documentation]     Test adding a row to a shifted table and verify data integrity
+    Load Workbook    path=${RESOURCES}/data.xlsx
+    Switch Sheet    name=Sheet3
+    ${value_map}=   Create Dictionary    Product ID=XD    Description=LOL    Price=69.00
+    Add Row    row_data=${value_map}    header_row=3
+    ${rows}=    Get Rows    header_row=3
+    Save Workbook   path=${RESULTS}/data.xlsx

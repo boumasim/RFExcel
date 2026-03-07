@@ -4,6 +4,7 @@ from typing import override
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.RFExcel import RFExcel
+from rfexcel.utlis.types import ColumnValues
 
 
 class XlsWriter(IWriter):
@@ -32,3 +33,8 @@ class XlsWriter(IWriter):
     def save(self, path: Path | None, resource: IResource) -> None:
         self._convert_to_xlsx()
         self._ref.save_workbook(str(path) if path else None)
+
+    @override
+    def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
+        self._convert_to_xlsx()
+        self._ref.writer.add_row(cell_data, self._ref.resource)

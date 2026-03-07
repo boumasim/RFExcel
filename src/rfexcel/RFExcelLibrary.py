@@ -2,11 +2,11 @@ from typing import Any, List, Union
 
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
-from robot.utils import DotDict  # type: ignore
 
 from rfexcel.backend.lib.i_library import IExcel
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utlis.types import DictRowData, ListRowData
+from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
+                                 RowInputData)
 
 
 class RFExcelLibrary:
@@ -115,7 +115,7 @@ class RFExcelLibrary:
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, str] | str | None = None, 
+                search_criteria: RowInputData | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -197,10 +197,10 @@ class RFExcelLibrary:
                 one_row=one_row,
                 **kwargs,
             )
-        return DotDict() if one_row else []
+        return DictRowData() if one_row else []
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: ListRowData | None = None, **kwargs: Any) -> Union[DictRowData, ListRowData]:
+    def get_row(self, row: int, headers: HeaderSpec | None = None, **kwargs: Any) -> Union[DictRowData, ListRowData]:
         """Returns a single row from the active workbook.
 
         The ``row`` argument is 1-based. The ``headers`` argument controls the
@@ -208,9 +208,13 @@ class RFExcelLibrary:
 
         - *No headers (default)*: Returns the row as a plain ``list`` of string
             values. Useful for positional access.
-        - *With headers*: Maps the row values to the provided header names and
-            returns a ``dict``, identical in structure to a row returned by
-            ``Get Rows``.
+        - *With a header list*: Maps row values to the provided column names by
+            position (sequential column 1, 2, 3 …) and returns a ``dict``.
+            Suitable for normal tables that start at column A.
+        - *With a header map (dict)*: Uses the column indices from the map to
+            look up each value. Pass the result of ``Get Rows`` internal
+            ``header_map`` or build one manually as ``{"Name": 2, "Age": 3}``.
+            Required for shifted tables that do not start at column A.
 
         Any additional ``**kwargs`` are forwarded to the underlying backend library
         (e.g. ``data_only=True`` for xlsx to get cached cell values).
@@ -220,7 +224,8 @@ class RFExcelLibrary:
 
         Arguments:
         - ``row``: Row number to read (1-based).
-        - ``headers``: Optional list of column names to map values against.
+        - ``headers``: Optional list of column names *or* ``dict`` mapping
+            header names to 1-based column indices.
         - ``**kwargs``: Forwarded to the backend library.
 
         Examples:
@@ -230,8 +235,10 @@ class RFExcelLibrary:
         | ${headers} =   | Create List         | Name | Age | Country           |               |
         | ${row} =       | Get Row             | 2    | headers=${headers}        |               |
         | Log            | ${row}[Name]        |                               |               |
+        | ${hmap} =      | Create Dictionary   | Name=2 | Age=3 | Country=4     |               |
+        | ${row} =       | Get Row             | 2    | headers=${hmap}           |               |
         """
-        resolved: list[str] = headers if headers is not None else []
+        resolved: HeaderSpec = headers if headers is not None else []
         if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
         return []
 
@@ -375,6 +382,81 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.save_workbook(path=path)
             logger.info("Workbook successfully saved")
+
+    @keyword("Add Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def add_row(self, row_data: RowInputData, header_row: int = 1) -> None:
+        """Appends a new row to the end of the active sheet.
+
+        The ``row_data`` argument maps **column header names** to the values
+        to write. The keyword reads the header row (specified by ``header_row``)
+        to determine the ordered column positions and builds the new row
+        accordingly.
+
+        - Keys in ``row_data`` that do **not** appear in the header row are
+          silently ignored.
+        - Columns present in the header row but **absent** from ``row_data``
+          are written as empty strings.
+
+        Supported formats and modes:
+        - ``.xlsx`` (edit mode): Full support.
+        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx``
+          in memory before the row is appended. The original ``.xls`` file
+          on disk is *not* modified.
+        - ``.csv`` (edit mode): Row is appended to the in-memory buffer and
+          flushed on ``Save Workbook`` or ``Close Workbook``.
+        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
+
+        Raises ``LibraryException`` if ``header_row`` is beyond the last row
+        of the file (headers cannot be determined).
+
+        Arguments:
+        - ``row_data``: Dictionary mapping column header names to cell values.
+        - ``header_row``: Row number (1-based) containing the column headers. Defaults to ``1``.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
+        | Add Row       | ${{{"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"}}} |
+        | Save Workbook |                     |                                     |              |
+        | Load Workbook | ${CURDIR}/data.csv  |                                     |              |
+        | Add Row       | ${{{"Product ID": "P-100", "Price": "1.00"}}}           |              |
+        | Save Workbook |                     |                                     |              |
+        """
+        if self._active_workbook:
+            self._active_workbook.add_row(row_data=row_data, header_row=header_row)
+
+    @keyword("Add Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def add_rows(self, rows: list[RowInputData], header_row: int = 1) -> None:
+        """Appends multiple rows to the end of the active sheet.
+
+        Iterates over ``rows`` and appends each entry in order, reusing the
+        same logic as the ``Add Row`` keyword. The header row is read once
+        per call (internally per row), so the column mapping is consistent
+        across all inserted rows even when ``header_row`` is not ``1``.
+
+        - Keys in a row dict that do **not** appear in the header row are
+          silently ignored.
+        - Columns present in the header row but **absent** from a row dict
+          are written as empty strings.
+
+        Supported formats and modes are identical to ``Add Row``:
+        - ``.xlsx`` (edit mode): Full support.
+        - ``.xls`` (edit mode): Lazily converted to ``.xlsx`` in memory.
+        - ``.csv`` (edit mode): Appended to the in-memory buffer.
+        - Streaming / read-only mode: Raises ``LibraryException``.
+
+        Arguments:
+        - ``rows``: List of dictionaries, each mapping column header names to cell values.
+        - ``header_row``: Row number (1-based) containing the column headers. Defaults to ``1``.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
+        | ${row1} =     | Create Dictionary   | Product ID=P-001 | Description=Gadget | Price=4.99 |
+        | ${row2} =     | Create Dictionary   | Product ID=P-002 | Description=Widget | Price=9.99 |
+        | Add Rows      | ${[${row1}, ${row2}]} |                                                               |
+        | Save Workbook |                     |                                                                         |
+        """
+        if self._active_workbook:
+            self._active_workbook.add_rows(rows=rows, header_row=header_row)
 
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:

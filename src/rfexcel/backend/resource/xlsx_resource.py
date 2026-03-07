@@ -12,6 +12,7 @@ from rfexcel.exception.library_exceptions import (FileSaveException,
                                                   NotSupportedInReadOnlyMode)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
+from rfexcel.utlis.types import ColumnValues
 
 from .i_resource import IResource
 
@@ -80,6 +81,14 @@ class XlsxEditResource(IResource):
         logger.info(f"Workbook saved to '{target.name}'.")
 
     @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        next_row = (self._active_sheet.max_row or 0) + 1
+        for col, value in cell_data.items():
+            self._active_sheet.cell(row=next_row, column=col, value=value)
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -132,6 +141,10 @@ class XlsxStreamResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         raise NotSupportedInReadOnlyMode("Deleting sheets is not supported in streaming mode")
+
+    @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming mode")
 
     @override
     def save(self, path: Path | None = None) -> None:

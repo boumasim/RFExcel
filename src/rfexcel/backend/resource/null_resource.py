@@ -6,6 +6,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import LibraryException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
+from rfexcel.utlis.types import ColumnValues
 
 from .i_resource import IResource
 
@@ -51,4 +52,8 @@ class NullResource(IResource):
 
     @override
     def save(self, path: Path | None = None) -> None:
+        raise LibraryException("Invalid operation: resource not available")
+
+    @override
+    def append_row(self, cell_data: ColumnValues) -> None:
         raise LibraryException("Invalid operation: resource not available")

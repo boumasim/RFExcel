@@ -8,6 +8,7 @@ from rfexcel.exception.library_exceptions import (
     LibraryException, OperationNotSupportedForFormat)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
+from rfexcel.utlis.types import ColumnValues
 
 from .i_resource import IResource
 
@@ -64,6 +65,10 @@ class XlsEditResource(IResource):
         )
 
     @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; appending rows is not supported")
+
+    @override
     def close(self):
         self._wb.release_resources()
 
@@ -115,6 +120,10 @@ class XlsStreamResource(IResource):
     @override
     def save(self, path: Path | None = None) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; saving is not supported")
+
+    @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; appending rows is not supported")
 
     @override
     def close(self):

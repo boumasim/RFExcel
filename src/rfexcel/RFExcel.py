@@ -3,7 +3,6 @@ from typing import Any, List, Union, cast, override
 
 from openpyxl import Workbook
 from robot.api import logger
-from robot.utils import DotDict
 from xls2xlsx import XLS2XLSX
 
 from rfexcel.backend.lib.i_library import IExcel, ISetExcel
@@ -13,7 +12,7 @@ from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
-                                     search_in_row)
+                                     headers_to_header_map, search_in_row)
 
 from .backend.metadata.i_metadata import IMetadata
 from .backend.metadata.null_metadata import NullMetadata
@@ -25,7 +24,8 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utlis.types import DictRowData, ListRowData
+from .utlis.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
+                          ListRowData, RowInputData)
 
 
 class RFExcel(IExcel, ISetExcel):
@@ -42,6 +42,14 @@ class RFExcel(IExcel, ISetExcel):
         self._metadata: IMetadata = metadata
         self._resource: IResource = resource
 
+    @property
+    def writer(self) -> IWriter:
+        return self._writer
+
+    @property
+    def resource(self) -> IResource:
+        return self._resource
+
     @override
     def close(self):
         self._resource.close()
@@ -49,16 +57,18 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | dict[str, str] | None = None,
+                search_criteria: str | RowInputData | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
         search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria else None
 
         try:
-            headers = self._reader.get_headers(header_row_idx=header_row, resource=self._resource, **kwargs).get_list_row_data()
+            header_map: HeaderMap = self._reader.get_headers(
+                header_row_idx=header_row, resource=self._resource, **kwargs
+            ).get_header_map()
         except StopIteration:
-            headers = []
+            header_map = {}
 
         result: List[DictRowData] = []
         row_index = header_row + 1
@@ -66,15 +76,16 @@ class RFExcel(IExcel, ISetExcel):
         while True:
             try:
                 row = self._reader.get_row(row_idx=row_index, resource=self._resource, **kwargs)
-                if not search_criteria_dict or search_in_row(source_row=row.get_dict_row_data(headers=headers), search_criteria=search_criteria_dict, partial_match=partial_match):
-                    result.append(row.get_dict_row_data(headers=headers))
+                row_dict = row.get_dict_row_data(header_map)
+                if not search_criteria_dict or search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
+                    result.append(row_dict)
                     if one_row:
                         break
                 row_index += 1
             except StopIteration:
                 break
 
-        return result if not one_row else (result[0] if result else DotDict())
+        return result if not one_row else (result[0] if result else DictRowData())
 
     @override
     def list_sheet_names(self) -> list[str]:
@@ -85,7 +96,7 @@ class RFExcel(IExcel, ISetExcel):
         self._resource.switch_sheet(name)
 
     @override
-    def get_row(self, row: int, headers: list[str], **kwargs: Any) -> Union[DictRowData, ListRowData]:
+    def get_row(self, row: int, headers: HeaderSpec, **kwargs: Any) -> Union[DictRowData, ListRowData]:
         try:
             raw = self._reader.get_row(row_idx=row, resource=self._resource, **kwargs)
         except StopIteration:
@@ -93,7 +104,7 @@ class RFExcel(IExcel, ISetExcel):
 
         if not headers:
             return raw.get_list_row_data()
-        return raw.get_dict_row_data(headers=headers)
+        return raw.get_dict_row_data(headers_to_header_map(headers))
     
     @override
     def xls_to_xlsx(self):
@@ -121,3 +132,30 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def save_workbook(self, path: str | None = None) -> None:
         self._writer.save(Path(path) if path else None, self._resource)
+
+    @override
+    def add_row(self, row_data: RowInputData, header_row: int) -> None:
+        from rfexcel.exception.library_exceptions import LibraryException
+        try:
+            header_map = self._reader.get_headers(
+                header_row_idx=header_row, resource=self._resource
+            ).get_header_map()
+        except StopIteration:
+            raise LibraryException(
+                f"Cannot determine headers: header row {header_row} is out of range"
+            )
+        if not header_map:
+            raise LibraryException(
+                f"Cannot determine headers: header row {header_row} is out of range"
+            )
+        cell_data: ColumnValues = {
+            col: row_data[name]
+            for name, col in header_map.items()
+            if name in row_data
+        }
+        self._writer.add_row(cell_data, self._resource)
+
+    @override
+    def add_rows(self, rows: list[RowInputData], header_row: int) -> None:
+        for row_data in rows:
+            self.add_row(row_data, header_row)

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
+from rfexcel.utlis.types import ColumnValues
 
 from .i_writer import IWriter
 
@@ -26,3 +27,7 @@ class XlsxWriter(IWriter):
     @override
     def save(self, path: Path | None, resource: IResource) -> None:
         resource.save(path)
+
+    @override
+    def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
+        resource.append_row(cell_data)

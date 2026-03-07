@@ -12,6 +12,7 @@ from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
                                        CSV_NOT_SUPPORTED_MSG)
+from rfexcel.utlis.types import ColumnValues
 
 
 class CsvEditResource(IResource):
@@ -73,6 +74,15 @@ class CsvEditResource(IResource):
         logger.info(f"CSV file saved to '{target.name}'.")
 
     @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        if not cell_data:
+            return
+        max_col = max(cell_data.keys())
+        row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
+        self._all_rows.append(row)
+        self._edited = True
+
+    @override
     def close(self):
         if self._edited:
             with open(self._path, mode='w', newline='', encoding=self._encoding) as f:
@@ -126,6 +136,10 @@ class CsvStreamResource(IResource):
     @override
     def save(self, path: Path | None = None) -> None:
         raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
+
+    @override
+    def append_row(self, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming (read-only) mode")
 
     @override
     def close(self):
