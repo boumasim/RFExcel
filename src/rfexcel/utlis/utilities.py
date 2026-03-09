@@ -1,6 +1,5 @@
-from robot.utils import DotDict  # type: ignore
-
-from rfexcel.utlis.types import DictRowData
+from rfexcel.utlis.types import (DictRowData, HeaderMap, HeaderSpec,
+                                 RowInputData)
 
 
 def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
@@ -30,7 +29,22 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
     return True
 
 
-def convert_string_to_dict_row_data(data: str | dict[str, str], delimiter: str = ';') -> DictRowData:
+def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
+    """Normalise a header specifier to a ``HeaderMap`` (``{name: 1-based-column-index}``).
+
+    Accepts two forms:
+    - ``list[str]``: treated as sequential columns starting at 1
+      (``["A", "B", "C"]`` → ``{"A": 1, "B": 2, "C": 3}``).
+    - ``HeaderMap`` (``dict[str, int]``): returned as-is (already canonical).
+
+    Empty-string names are excluded from the result in both cases.
+    """
+    if isinstance(headers, dict):
+        return headers
+    return {name: i + 1 for i, name in enumerate(headers) if name}
+
+
+def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = ';') -> DictRowData:
     """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
@@ -39,9 +53,9 @@ def convert_string_to_dict_row_data(data: str | dict[str, str], delimiter: str =
     correctly. Whitespace around keys and values is stripped. Segments
     without ``=`` are silently ignored.
     """
-    if(isinstance(data, dict)):
-        return DotDict(data)
-    result: DictRowData = DotDict()
+    if isinstance(data, dict):
+        return DictRowData(data)
+    result: DictRowData = DictRowData()
     for segment in data.split(delimiter):
         segment = segment.strip()
         if '=' not in segment:

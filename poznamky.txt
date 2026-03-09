@@ -55,3 +55,5 @@ XLS rozhodnuti:
 generovani docs - python -m robot.libdoc src/rfexcel docs/RFExcel.html
 
 1-base indexing koncept pro reach do dat
+
+state pattern kvuli zapisovani.

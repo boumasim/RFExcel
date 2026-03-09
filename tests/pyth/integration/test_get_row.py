@@ -42,8 +42,8 @@ XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",            
 CSV_ROW2_DICT  = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": "25.50",  "Location": "Warehouse A, Shelf 2"}
 CSV_ROW3_DICT  = {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": "89.99",  "Location": "Store Front"}
 
-XLS_ROW2_DICT  = {"Index": "1.0", "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": "32.0", "": ""}
-XLS_ROW10_DICT = {"Index": "9.0", "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": "40.0", "": ""}
+XLS_ROW2_DICT  = {"Index": "1.0", "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": "32.0"}
+XLS_ROW10_DICT = {"Index": "9.0", "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": "40.0"}
 
 
 # ─── xlsx edit mode ─────────────────────────────────────────────────────────────

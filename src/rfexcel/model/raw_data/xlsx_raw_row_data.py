@@ -1,11 +1,10 @@
-from itertools import zip_longest
 from typing import Any, override
 
 from openpyxl.cell.cell import Cell
-from robot.utils import DotDict  # type: ignore
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import DictRowData, ListRowData
+from rfexcel.utlis.types import (ColumnValues, DictRowData, HeaderMap,
+                                 ListRowData)
 
 
 class XlsxRawRowData(IRawRowData):
@@ -20,9 +19,32 @@ class XlsxRawRowData(IRawRowData):
         return [str(cell.value) if cell.value is not None else "" for cell in self._data]  # type: ignore[union-attr]
 
     @override
-    def get_dict_row_data(self, headers: ListRowData) -> DictRowData:
+    def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         if self._value_only:
-            values = (str(v) if v is not None else "" for v in self._data)
-        else:
-            values = (str(cell.value) if cell.value is not None else "" for cell in self._data)  # type: ignore[union-attr]
-        return DotDict(zip_longest(headers, values, fillvalue=""))
+            return DictRowData({
+                name: (
+                    str(self._data[col - 1])
+                    if col - 1 < len(self._data) and self._data[col - 1] is not None
+                    else ""
+                )
+                for name, col in header_map.items()
+            })
+        col_to_value: ColumnValues = {
+            cell.column: (str(cell.value) if cell.value is not None else "")  # type: ignore[union-attr]
+            for cell in self._data
+        }
+        return DictRowData({name: col_to_value.get(col, "") for name, col in header_map.items()})
+
+    @override
+    def get_header_map(self) -> HeaderMap:
+        if self._value_only:
+            return {
+                str(v): i + 1
+                for i, v in enumerate(self._data)
+                if str(v).strip() != ""
+            }
+        return {
+            str(cell.value): cell.column  # type: ignore[union-attr]
+            for cell in self._data
+            if cell.value is not None and str(cell.value).strip() != ""  # type: ignore[union-attr]
+        }
