@@ -89,6 +89,13 @@ class XlsxEditResource(IResource):
             self._active_sheet.cell(row=next_row, column=col, value=value)
 
     @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        for col, value in cell_data.items():
+            self._active_sheet.cell(row=row_index, column=col, value=value)
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -145,6 +152,10 @@ class XlsxStreamResource(IResource):
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming mode")
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming mode")
 
     @override
     def save(self, path: Path | None = None) -> None:

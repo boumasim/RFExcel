@@ -49,6 +49,13 @@ class NotSupportedInReadOnlyMode(RFExcelException):
     def __init__(self, msg: str = "This operation is not supported in read-only mode"):
         super().__init__(msg)
 
+class HeadersNotDeterminedException(RFExcelException):
+    """Exception raised when the header row cannot be read or is empty"""
+    def __init__(self, header_row: int):
+        super().__init__(
+            f"Cannot determine headers: header row {header_row} is out of range or empty"
+        )
+
 class FileSaveException(RFExcelException):
     """Exception raised when a workbook cannot be saved to the given path"""
     def __init__(self, path: str, reason: str):

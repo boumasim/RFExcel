@@ -69,6 +69,10 @@ class XlsEditResource(IResource):
         raise OperationNotSupportedForFormat(".xls format is read-only; appending rows is not supported")
 
     @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; updating rows is not supported")
+
+    @override
     def close(self):
         self._wb.release_resources()
 
@@ -124,6 +128,10 @@ class XlsStreamResource(IResource):
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; appending rows is not supported")
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; updating rows is not supported")
 
     @override
     def close(self):

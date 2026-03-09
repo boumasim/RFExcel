@@ -56,3 +56,7 @@ class IResource(ABC):
     @abstractmethod
     def append_row(self, cell_data: ColumnValues) -> None:
         pass
+
+    @abstractmethod
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        pass

@@ -458,6 +458,61 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.add_rows(rows=rows, header_row=header_row)
 
+    @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def update_values(self,
+                      search_criteria: RowInputData | str,
+                      values: RowInputData | str,
+                      header_row: int = 1,
+                      partial_match: bool = False,
+                      first_only: bool = False) -> int:
+        """Updates cells in rows that match ``search_criteria``.
+
+        Finds every data row (after ``header_row``) where all key/value pairs
+        in ``search_criteria`` match the corresponding column values, then
+        overwrites only the columns named in ``values`` with the new values.
+        Columns not listed in ``values`` are left untouched.
+
+        ``search_criteria`` can be a dictionary or a ``key=value;key=value``
+        string (same format accepted by ``Get Rows``).
+
+        When ``partial_match=True``, a row matches if each criterion value is
+        a *substring* of the cell value instead of requiring an exact match.
+
+        When ``first_only=True``, stops after the first matching row and
+        returns ``1`` (or ``0`` if nothing matched).
+
+        Returns the number of rows that were updated.
+
+        - Keys in ``values`` that do **not** appear in the header row are
+          silently ignored.
+        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
+
+        Arguments:
+        - ``search_criteria``: Dict or string identifying which rows to update.
+        - ``values``: Dict of ``{column_header: new_value}`` pairs to write.
+        - ``header_row``: Row number (1-based) containing column headers. Defaults to ``1``.
+        - ``partial_match``: If ``True``, use substring matching. Defaults to ``False``.
+        - ``first_only``: If ``True``, update only the first matching row. Defaults to ``False``.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
+        | ${count} =     | Update Values       | ${{{'Product ID': 'P-001'}}} | ${{{'Price': '0.00', 'Location': 'Archived'}}} |
+        | Should Be Equal As Integers | ${count} | 1 |                                             |
+        | Save Workbook  |                     |                                                    |                    |
+        | Load Workbook  | ${CURDIR}/data.csv  |                                                    |                    |
+        | Update Values  | Location=Online     | ${{{'Price': '0.00'}}}       | partial_match=True | first_only=True |
+        | Save Workbook  |                     |                                                    |                    |
+        """
+        if self._active_workbook:
+            return self._active_workbook.update_values(
+                search_criteria=search_criteria,
+                values=values,
+                header_row=header_row,
+                partial_match=partial_match,
+                first_only=first_only,
+            )
+        return 0
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.

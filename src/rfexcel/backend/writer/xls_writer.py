@@ -38,3 +38,8 @@ class XlsWriter(IWriter):
     def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
         self._convert_to_xlsx()
         self._ref.writer.add_row(cell_data, self._ref.resource)
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        self._convert_to_xlsx()
+        self._ref.writer.update_row(row_index, cell_data, self._ref.resource)

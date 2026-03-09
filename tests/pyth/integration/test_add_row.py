@@ -23,7 +23,8 @@ import shutil
 import openpyxl
 import pytest
 
-from rfexcel.exception.library_exceptions import LibraryException
+from rfexcel.exception.library_exceptions import (
+    HeadersNotDeterminedException, LibraryException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -104,7 +105,7 @@ class TestAddRowXlsxEdit:
     def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        with pytest.raises(LibraryException):
+        with pytest.raises(HeadersNotDeterminedException):
             lib.add_row(_FULL_ROW, header_row=9999)
 
 
@@ -216,19 +217,6 @@ class TestAddRowCsvEdit:
         rows = lib2.get_rows()
         assert rows[-1]["Product ID"] == "P-999"
         assert rows[-1]["Description"] == "Widget"
-        lib2.close()
-
-    def test_row_is_persisted_on_close(self, lib: RFExcelLibrary, tmp_path):
-        """close() auto-flushes dirty CSV even without an explicit save_workbook."""
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path)
-        lib.add_row(_FULL_ROW)
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        rows = lib2.get_rows()
-        assert rows[-1]["Product ID"] == "P-999"
         lib2.close()
 
     def test_multiple_rows_added_in_correct_order(

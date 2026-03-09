@@ -20,7 +20,6 @@ class CsvEditResource(IResource):
         super().__init__(path)
         self._encoding = encoding
         self._dialect = dialect
-        self._edited = False
 
         with open(path, mode='r', newline='', encoding=encoding) as f:
             self._all_rows: list[list[str]] = list(csv.reader(f, dialect=dialect, **kwargs))
@@ -70,7 +69,6 @@ class CsvEditResource(IResource):
         except Exception as e:
             raise FileSaveException(str(target), str(e)) from e
         self._path = target
-        self._edited = False
         logger.info(f"CSV file saved to '{target.name}'.")
 
     @override
@@ -80,15 +78,22 @@ class CsvEditResource(IResource):
         max_col = max(cell_data.keys())
         row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
         self._all_rows.append(row)
-        self._edited = True
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        list_index = row_index - 1
+        if list_index < 0 or list_index >= len(self._all_rows):
+            return
+        row = self._all_rows[list_index]
+        for col, value in cell_data.items():
+            col_index = col - 1
+            while len(row) <= col_index:
+                row.append("")
+            row[col_index] = value
 
     @override
     def close(self):
-        if self._edited:
-            with open(self._path, mode='w', newline='', encoding=self._encoding) as f:
-                writer = csv.writer(f, dialect=self._dialect)
-                writer.writerows(self._all_rows)
-            logger.info(f"CSV file '{self._path.name}' was updated.")
+        pass
 
 
 class CsvStreamResource(IResource):
@@ -140,6 +145,10 @@ class CsvStreamResource(IResource):
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming (read-only) mode")
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming (read-only) mode")
 
     @override
     def close(self):

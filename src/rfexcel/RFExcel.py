@@ -11,6 +11,7 @@ from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
+from rfexcel.exception.library_exceptions import HeadersNotDeterminedException
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
                                      headers_to_header_map, search_in_row)
 
@@ -135,19 +136,14 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def add_row(self, row_data: RowInputData, header_row: int) -> None:
-        from rfexcel.exception.library_exceptions import LibraryException
         try:
             header_map = self._reader.get_headers(
                 header_row_idx=header_row, resource=self._resource
             ).get_header_map()
         except StopIteration:
-            raise LibraryException(
-                f"Cannot determine headers: header row {header_row} is out of range"
-            )
+            raise HeadersNotDeterminedException(header_row)
         if not header_map:
-            raise LibraryException(
-                f"Cannot determine headers: header row {header_row} is out of range"
-            )
+            raise HeadersNotDeterminedException(header_row)
         cell_data: ColumnValues = {
             col: row_data[name]
             for name, col in header_map.items()
@@ -159,3 +155,41 @@ class RFExcel(IExcel, ISetExcel):
     def add_rows(self, rows: list[RowInputData], header_row: int) -> None:
         for row_data in rows:
             self.add_row(row_data, header_row)
+
+    @override
+    def update_values(self,
+                      search_criteria: str | RowInputData,
+                      values: str | RowInputData,
+                      header_row: int,
+                      partial_match: bool,
+                      first_only: bool = False) -> int:
+        search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
+        values_dict = convert_string_to_dict_row_data(values)
+        try:
+            header_map: HeaderMap = self._reader.get_headers(
+                header_row_idx=header_row, resource=self._resource
+            ).get_header_map()
+        except StopIteration:
+            raise HeadersNotDeterminedException(header_row)
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
+        update_cell_data: ColumnValues = {
+            col: values_dict[name]
+            for name, col in header_map.items()
+            if name in values_dict
+        }
+        updated = 0
+        row_index = header_row + 1
+        while True:
+            try:
+                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
+                row_dict = row.get_dict_row_data(header_map)
+                if search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
+                    self._writer.update_row(row_index, update_cell_data, self._resource)
+                    updated += 1
+                    if first_only:
+                        break
+                row_index += 1
+            except StopIteration:
+                break
+        return updated

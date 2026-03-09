@@ -30,3 +30,7 @@ class CsvWriter(IWriter):
     @override
     def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
         resource.append_row(cell_data)
+
+    @override
+    def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        resource.update_row(row_index, cell_data)
