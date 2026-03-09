@@ -10,6 +10,38 @@ from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
 
 
 class RFExcelLibrary:
+    """Robot Framework library for reading and writing Excel and CSV files.
+
+    = Supported Formats =
+
+    | Format    | Edit mode  | Streaming mode | Notes |
+    | ``.xlsx`` | ✓          | ✓              | Full read/write via openpyxl. |
+    | ``.xls``  | read-only* | read-only      | *Write operations trigger lazy in-memory conversion to ``.xlsx``; the original file is never modified. |
+    | ``.csv``  | ✓          | ✓              | No sheet concept; sheet keywords raise ``OperationNotSupportedForFormat``. |
+
+    = Modes =
+
+    - *Edit mode* (``read_only=False``, default): Loads the full file into memory.
+      Supports reading and writing.
+    - *Streaming mode* (``read_only=True``): Memory-efficient, read-only.
+      For ``.xlsx`` and ``.csv`` access is strictly forward-only — calling a read
+      keyword twice on the same open workbook raises ``StreamingViolationException``.
+      For ``.xls``, on-demand sheet loading is used; random row access is still available.
+
+    = Search Criteria & Partial Matching =
+
+    Keywords that filter or target rows accept a ``search_criteria`` argument.
+    It can be supplied as:
+    - A ``dict``: ``{"Product ID": "P-200", "Price": "25.50"}``
+    - A string of ``key=value`` pairs separated by ``;``: ``"Product ID=P-200;Price=25.50"``
+
+    Matching uses *AND* logic — all pairs must match for a row to qualify.
+    A key absent from the column headers produces no match.
+
+    When ``partial_match=True``, the criterion value only needs to be a *substring*
+    of the cell value (e.g. ``"Keyboard"`` matches ``"Keyboard, Mechanical"``).
+    Defaults to exact match (``partial_match=False``).
+    """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
     ROBOT_LIBRARY_LISTENER = "SELF"
@@ -26,21 +58,14 @@ class RFExcelLibrary:
 
     @keyword("Create Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def create_workbook(self, path: str, **kwargs: Any) -> None:
-        """Creates a new empty workbook at the given path and opens it in edit mode.
+        """Creates a new empty workbook at ``path`` and opens it in edit mode.
 
-        Parent directories in the path are created automatically if they do not exist.
-        The new file is immediately saved to disk and opened for editing.
-
-        Supported formats:
-        - ``.xlsx``: Creates a blank Excel workbook via openpyxl.
-        - ``.csv``: Creates an empty CSV file.
-        - ``.xls``: *Not supported* for creation. Use ``.xlsx`` instead.
-
-        Raises ``FileAlreadyExistsException`` if a file at ``path`` already exists.
-        Raises ``FileFormatNotSupportedException`` if the extension is unsupported or ``.xls``.
+        Parent directories are created automatically. Supported: ``.xlsx``, ``.csv``.
+        Raises ``FileAlreadyExistsException`` if a file already exists at ``path``.
+        Raises ``FileFormatNotSupportedException`` for unsupported or ``.xls`` paths.
 
         Arguments:
-        - ``path``: Destination path including the file extension (e.g., ``/tmp/result.xlsx``).
+        - ``path``: Destination path including the file extension.
 
         Examples:
         | Create Workbook | ${OUTPUT_DIR}${/}result.xlsx |
@@ -53,37 +78,25 @@ class RFExcelLibrary:
     def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Opens an existing workbook for reading or editing.
 
-        The ``read_only`` flag controls which mode the file is opened in:
+        - ``read_only=False`` *(default — Edit mode)*: Loads the full file into memory; read/write.
+        - ``read_only=True`` *(Streaming mode)*: Memory-efficient, read-only.
+          For ``.xlsx`` and ``.csv`` access is strictly forward-only.
+          For ``.xls`` on-demand sheet loading allows random row access.
 
-        - ``read_only=False`` *(default — Edit mode)*: Loads the entire file into memory.
-            Supports both reading and writing. Suitable for small to medium-sized files.
-        - ``read_only=True`` *(Streaming / On-Demand mode)*: Memory-efficient.
-            Iterates over rows without loading the whole file. Supports reading only.
-            For ``.xlsx`` and ``.csv`` this is strict forward-only access.
-            For ``.xls`` this uses on-demand sheet loading (random row access is still available).
-
-        Supported formats and modes:
-        - ``.xlsx``: Edit and streaming mode.
-        - ``.xls``: Read-only in both modes (``xlrd`` does not support writing).
-        - ``.csv``: Edit and streaming mode.
-
-        Optional keyword arguments (passed through to the backend):
-        - ``data_only`` *(xlsx streaming only)*: If ``True``, formula cells return their
-            last cached value instead of the formula string. Defaults to ``False``.
-
-        Raises ``FileDoesNotExistException`` if the file cannot be found at ``path``.
+        Raises ``FileDoesNotExistException`` if the file is not found at ``path``.
         Raises ``FileFormatNotSupportedException`` for unsupported file extensions.
 
         Arguments:
         - ``path``: Path to the existing file.
-        - ``read_only``: Open in streaming/on-demand mode if ``True``. Defaults to ``False``.
+        - ``read_only``: Open in streaming mode if ``True``. Defaults to ``False``.
+        - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx streaming).
 
         Examples:
-        | Load Workbook | ${CURDIR}/data.xlsx |                |                  |
-        | Load Workbook | ${CURDIR}/large.xlsx | read_only=True |                  |
-        | Load Workbook | ${CURDIR}/data.xls  |                |                  |
-        | Load Workbook | ${CURDIR}/data.csv  | read_only=True |                  |
-        | Load Workbook | ${CURDIR}/data.xlsx | read_only=True | data_only=True   |
+        | Load Workbook | ${CURDIR}/data.xlsx |                |                |
+        | Load Workbook | ${CURDIR}/large.xlsx | read_only=True |                |
+        | Load Workbook | ${CURDIR}/data.xls  |                |                |
+        | Load Workbook | ${CURDIR}/data.csv  | read_only=True |                |
+        | Load Workbook | ${CURDIR}/data.xlsx | read_only=True | data_only=True |
         """
         self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
@@ -92,16 +105,8 @@ class RFExcelLibrary:
     def close(self) -> None:
         """Closes the active workbook and releases all associated resources.
 
-        This releases any open file handles held by the backend (e.g., openpyxl
-        read-only workbook connections, CSV file handles). After this keyword,
-        a new ``Load Workbook`` or ``Create Workbook`` call is required before
-        performing any further operations.
-
-        This keyword is also called *automatically* at the end of every test case
-        via the Robot Framework listener (``ROBOT_LIBRARY_LISTENER``), so explicit
-        cleanup is not required but is recommended for clarity.
-
-        Safe to call when no workbook is currently open — it will do nothing.
+        Called automatically at the end of each test case; explicit cleanup is
+        optional but recommended for clarity. Safe to call with no open workbook.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |
@@ -119,75 +124,35 @@ class RFExcelLibrary:
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
-        """Returns all data rows from the active workbook as a list of dictionaries.
+        """Returns data rows from the active sheet as a list of dicts keyed by column header.
 
-        The row specified by ``header_row`` is used as the column header. Every
-        subsequent row is returned as a ``dict`` where keys are the header values
-        and values are the corresponding cell contents. All values are returned
-        as strings.
+        Row ``header_row`` is used as column headers; rows before it are ignored.
+        See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
 
-        Rows *before* ``header_row`` are ignored entirely. If ``header_row``
-        points beyond the last row of the file, an empty list is returned.
+        When ``one_row=True``, stops at the first matching row and returns it as a flat
+        dict instead of a list. Returns ``{}`` if nothing matches.
 
-        *Filtering with search_criteria*
+        In streaming mode, rows are consumed sequentially — calling ``Get Rows`` twice
+        on the same open workbook raises ``StreamingViolationException``.
 
-        When ``search_criteria`` is provided, only rows where *all* rules match
-        are returned (AND logic). Each rule is a key-value pair where the key is
-        a column header and the value is what to match against.
-
-        ``search_criteria`` can be supplied in two forms:
-        - A ``dict``: ``{"Product ID": "P-200", "Price": "25.50"}``
-        - A string with ``key=value`` pairs separated by ``;``:
-            ``"Product ID=P-200;Price=25.50"``
-
-        When ``partial_match=True``, each criteria value only needs to be a
-        *substring* of the corresponding cell value (e.g. ``"Keyboard"`` matches
-        ``"Keyboard, Mechanical"``).
-        When ``partial_match=False`` *(default)*, each cell value must equal
-        the criteria value exactly.
-
-        If any key in ``search_criteria`` is not present in the column headers,
-        no row can satisfy that criterion and the result will be empty.
-
-        *Returning a single row*
-
-        When ``one_row=True``, iteration stops at the first matching row and that
-        row is returned directly as a flat ``dict`` rather than a list. If no row
-        matches, an empty ``dict`` is returned.
-
-        *Backend keyword arguments*
-
-        Any additional ``**kwargs`` are forwarded all the way to the underlying
-        library calls (openpyxl / xlrd / csv). For example:
-        - ``data_only=True`` *(xlsx)* — return cached cell values instead of formulas.
-        - ``data_only=False`` *(xlsx)* — return formula strings as-is.
-
-        In streaming / on-demand mode (``.xlsx`` read-only, ``.csv`` read-only),
-        rows are consumed sequentially. Calling ``Get Rows`` a second time on the
-        same open workbook will raise a ``StreamingViolationException``.
-        In edit mode, repeated calls return the full data set each time.
-
-        Returns an empty list (or empty dict when ``one_row=True``) if:
-        - No workbook is currently open.
-        - The file is empty or contains only a header row.
-        - ``header_row`` is beyond the last row of the file.
-        - ``search_criteria`` is provided but no row matches.
+        Returns ``[]`` (or ``{}`` when ``one_row=True``) if no workbook is open,
+        ``header_row`` is beyond the file, or no row matches.
 
         Arguments:
-        - ``header_row``: Row number (1-based) to use as column headers. Defaults to ``1``.
-        - ``search_criteria``: Optional filter. Dict or ``"key=value;key=value"`` string.
-        - ``partial_match``: If ``True``, criteria values are matched as substrings. Defaults to ``False``.
-        - ``one_row``: If ``True``, return the first matching row as a flat dict. Defaults to ``False``.
-        - ``**kwargs``: Forwarded to the backend library (e.g. ``data_only=True`` for xlsx).
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+        - ``search_criteria``: Optional filter — see `library description`_ for format details.
+        - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
+        - ``one_row``: Return first match as a flat dict when ``True``. Defaults to ``False``.
+        - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx).
 
         Examples:
-        | Load Workbook | ${CURDIR}/data.xlsx |                                         |                      |
-        | ${rows} =     | Get Rows            |                                         |                      |
-        | ${rows} =     | Get Rows            | search_criteria=Product ID=P-200        |                      |
-        | ${rows} =     | Get Rows            | search_criteria=Description=Keyboard    | partial_match=True   |
-        | ${row} =      | Get Rows            | search_criteria=Product ID=P-200        | one_row=True         |
-        | ${rows} =     | Get Rows            | search_criteria=${dict}                 |                      |
-        | ${rows} =     | Get Rows            | header_row=2                            |                      |
+        | Load Workbook | ${CURDIR}/data.xlsx |                                         |                    |
+        | ${rows} =     | Get Rows            |                                         |                    |
+        | ${rows} =     | Get Rows            | search_criteria=Product ID=P-200        |                    |
+        | ${rows} =     | Get Rows            | search_criteria=Description=Keyboard    | partial_match=True |
+        | ${row} =      | Get Rows            | search_criteria=Product ID=P-200        | one_row=True       |
+        | ${rows} =     | Get Rows            | search_criteria=${dict}                 |                    |
+        | ${rows} =     | Get Rows            | header_row=2                            |                    |
         """
         if self._active_workbook:
             return self._active_workbook.get_rows(
@@ -201,32 +166,20 @@ class RFExcelLibrary:
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_row(self, row: int, headers: HeaderSpec | None = None, **kwargs: Any) -> Union[DictRowData, ListRowData]:
-        """Returns a single row from the active workbook.
+        """Returns a single row by its row number as a list or dict.
 
-        The ``row`` argument is 1-based. The ``headers`` argument controls the
-        return format:
+        - No ``headers``: Returns a plain ``list`` of string values.
+        - ``headers`` as a list: Maps values by position to the given column names; returns a ``dict``.
+        - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``dict``.
+          Use this for tables that do not start at column A.
 
-        - *No headers (default)*: Returns the row as a plain ``list`` of string
-            values. Useful for positional access.
-        - *With a header list*: Maps row values to the provided column names by
-            position (sequential column 1, 2, 3 …) and returns a ``dict``.
-            Suitable for normal tables that start at column A.
-        - *With a header map (dict)*: Uses the column indices from the map to
-            look up each value. Pass the result of ``Get Rows`` internal
-            ``header_map`` or build one manually as ``{"Name": 2, "Age": 3}``.
-            Required for shifted tables that do not start at column A.
-
-        Any additional ``**kwargs`` are forwarded to the underlying backend library
-        (e.g. ``data_only=True`` for xlsx to get cached cell values).
-
-        Returns an empty list if no workbook is open or the row index is beyond
-        the last row of the file.
+        Returns ``[]`` if no workbook is open or the row is beyond the last row.
+        Any ``**kwargs`` are forwarded to the backend (e.g. ``data_only=True`` for xlsx).
 
         Arguments:
-        - ``row``: Row number to read (1-based).
-        - ``headers``: Optional list of column names *or* ``dict`` mapping
-            header names to 1-based column indices.
-        - ``**kwargs``: Forwarded to the backend library.
+        - ``row``: Row number to read (row 1 = first row).
+        - ``headers``: Optional list of column names or dict mapping column names to column numbers.
+        - ``**kwargs``: Forwarded to the backend.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
@@ -286,60 +239,39 @@ class RFExcelLibrary:
 
     @keyword("Add Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def add_sheet(self, name: str) -> None:
-        """Adds a new sheet with the given name to the active workbook and switches to it.
+        """Adds a new sheet to the active workbook and switches to it.
 
-        The new sheet becomes the active sheet immediately after creation, so
-        subsequent read/write operations will target the newly added sheet.
-
-        Supported formats and modes:
-        - ``.xlsx`` (edit mode): Full support.
-        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx`` format
-          in memory before the sheet is added. The original ``.xls`` file on disk
-          is *not* modified.
-        - ``.xlsx`` (streaming mode): Raises ``NotSupportedInReadOnlyMode``.
-        - ``.xls`` (streaming/on-demand mode): Not supported; raises ``OperationNotSupportedForFormat``.
-        - ``.csv``: Raises ``OperationNotSupportedForFormat`` — CSV files have no concept of sheets.
-
-        Raises ``LibraryException`` if no workbook is currently open.
+        Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
+        Streaming mode and ``.csv`` raise ``NotSupportedInReadOnlyMode`` or ``OperationNotSupportedForFormat``.
 
         Arguments:
-        - ``name``: The name to assign to the new sheet.
+        - ``name``: Name of the new sheet.
 
         Examples:
-        | Load Workbook | ${CURDIR}/data.xlsx |          |
-        | Add Sheet     | NewSheet            |          |
-        | ${sheets} =   | List Sheet Names    |          |
-        | Should Contain | ${sheets}          | NewSheet |
+        | Load Workbook  | ${CURDIR}/data.xlsx |          |
+        | Add Sheet      | NewSheet            |          |
+        | ${sheets} =    | List Sheet Names    |          |
+        | Should Contain | ${sheets}           | NewSheet |
         """
         if self._active_workbook:
             self._active_workbook.add_sheet(name)
 
     @keyword("Delete Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_sheet(self, name: str) -> None:
-        """Deletes the sheet with the given name from the active workbook.
+        """Deletes a sheet from the active workbook; the first remaining sheet becomes active.
 
-        After deletion, the active sheet is reset to the first remaining sheet
-        in the workbook.
-
-        Supported formats and modes:
-        - ``.xlsx`` (edit mode): Full support.
-        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx`` format
-          in memory before the sheet is deleted. The original ``.xls`` file on disk
-          is *not* modified.
-        - ``.xlsx`` (streaming mode): Raises ``LibraryException``.
-        - ``.xls`` (streaming/on-demand mode): Raises ``LibraryException``.
-        - ``.csv``: Raises ``OperationNotSupportedForFormat`` — CSV files have no concept of sheets.
-
-        Raises ``LibraryException`` if the sheet does not exist or no workbook is open.
+        Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
+        Streaming mode and ``.csv`` raise ``LibraryException`` or ``OperationNotSupportedForFormat``.
+        Raises ``LibraryException`` if the sheet does not exist.
 
         Arguments:
         - ``name``: The exact name of the sheet to delete.
 
         Examples:
-        | Load Workbook | ${CURDIR}/data.xlsx |          |
-        | Delete Sheet  | OldSheet            |          |
-        | ${sheets} =   | List Sheet Names    |          |
-        | Should Not Contain | ${sheets}      | OldSheet |
+        | Load Workbook      | ${CURDIR}/data.xlsx |          |
+        | Delete Sheet       | OldSheet            |          |
+        | ${sheets} =        | List Sheet Names    |          |
+        | Should Not Contain | ${sheets}           | OldSheet |
         """
         if self._active_workbook:
             self._active_workbook.delete_sheet(name)
@@ -348,27 +280,16 @@ class RFExcelLibrary:
     def save_workbook(self, path: str | None = None) -> None:
         """Saves the current state of the active workbook to disk.
 
-        By default the file is saved back to the path it was opened from.
-        An optional ``path`` argument enables a *Save As* workflow — the
-        workbook is written to the new location and that location becomes the
-        new active path for any subsequent saves.
+        By default saves back to the original path. Providing ``path`` enables a
+        *Save As* workflow and updates the active path for subsequent saves.
 
-        Supported formats and modes:
-        - ``.xlsx`` (edit mode): Full support. Saves in-memory workbook to disk.
-        - ``.xls`` (edit mode, *not yet converted*): Raises ``OperationNotSupportedForFormat``.
-          Perform a write operation first (e.g. ``Add Sheet``) to trigger the
-          automatic in-memory conversion to ``.xlsx``, then call ``Save Workbook``
-          with a ``.xlsx`` target path.
-        - ``.xls`` (edit mode, *after lazy conversion*): Saves the converted
-          in-memory workbook. Provide a ``.xlsx`` ``path`` to avoid writing
-          xlsx content under a ``.xls`` filename.
-        - Streaming / read-only mode (all formats): Raises ``NotSupportedInReadOnlyMode``.
-        - ``.csv`` (edit mode): Flushes the in-memory row buffer to disk.
-
-        Safe to call when no workbook is open — it will do nothing.
+        Streaming / read-only mode raises ``NotSupportedInReadOnlyMode``.
+        For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
+        trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
+        Safe to call when no workbook is open — does nothing.
 
         Arguments:
-        - ``path``: Optional destination path. If omitted, saves to the original path.
+        - ``path``: Optional destination path. Omit to save to the original path.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
@@ -387,31 +308,14 @@ class RFExcelLibrary:
     def add_row(self, row_data: RowInputData, header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
-        The ``row_data`` argument maps **column header names** to the values
-        to write. The keyword reads the header row (specified by ``header_row``)
-        to determine the ordered column positions and builds the new row
-        accordingly.
-
-        - Keys in ``row_data`` that do **not** appear in the header row are
-          silently ignored.
-        - Columns present in the header row but **absent** from ``row_data``
-          are written as empty strings.
-
-        Supported formats and modes:
-        - ``.xlsx`` (edit mode): Full support.
-        - ``.xls`` (edit mode): The file is *lazily converted* to ``.xlsx``
-          in memory before the row is appended. The original ``.xls`` file
-          on disk is *not* modified.
-        - ``.csv`` (edit mode): Row is appended to the in-memory buffer and
-          flushed on ``Save Workbook`` or ``Close Workbook``.
-        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
-
-        Raises ``LibraryException`` if ``header_row`` is beyond the last row
-        of the file (headers cannot be determined).
+        ``row_data`` maps column header names to values. Keys not found in the headers
+        are silently ignored; missing columns are written as empty strings.
+        Streaming / read-only mode raises ``LibraryException``.
+        ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
 
         Arguments:
-        - ``row_data``: Dictionary mapping column header names to cell values.
-        - ``header_row``: Row number (1-based) containing the column headers. Defaults to ``1``.
+        - ``row_data``: Dict mapping column header names to cell values.
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
@@ -426,27 +330,11 @@ class RFExcelLibrary:
 
     @keyword("Add Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def add_rows(self, rows: list[RowInputData], header_row: int = 1) -> None:
-        """Appends multiple rows to the end of the active sheet.
-
-        Iterates over ``rows`` and appends each entry in order, reusing the
-        same logic as the ``Add Row`` keyword. The header row is read once
-        per call (internally per row), so the column mapping is consistent
-        across all inserted rows even when ``header_row`` is not ``1``.
-
-        - Keys in a row dict that do **not** appear in the header row are
-          silently ignored.
-        - Columns present in the header row but **absent** from a row dict
-          are written as empty strings.
-
-        Supported formats and modes are identical to ``Add Row``:
-        - ``.xlsx`` (edit mode): Full support.
-        - ``.xls`` (edit mode): Lazily converted to ``.xlsx`` in memory.
-        - ``.csv`` (edit mode): Appended to the in-memory buffer.
-        - Streaming / read-only mode: Raises ``LibraryException``.
+        """Appends multiple rows to the end of the active sheet. Same rules as ``Add Row``.
 
         Arguments:
-        - ``rows``: List of dictionaries, each mapping column header names to cell values.
-        - ``header_row``: Row number (1-based) containing the column headers. Defaults to ``1``.
+        - ``rows``: List of dicts, each mapping column header names to cell values.
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
@@ -465,34 +353,19 @@ class RFExcelLibrary:
                       header_row: int = 1,
                       partial_match: bool = False,
                       first_only: bool = False) -> int:
-        """Updates cells in rows that match ``search_criteria``.
+        """Updates cells in all rows matching ``search_criteria``. Returns the count of updated rows.
 
-        Finds every data row (after ``header_row``) where all key/value pairs
-        in ``search_criteria`` match the corresponding column values, then
-        overwrites only the columns named in ``values`` with the new values.
-        Columns not listed in ``values`` are left untouched.
-
-        ``search_criteria`` can be a dictionary or a ``key=value;key=value``
-        string (same format accepted by ``Get Rows``).
-
-        When ``partial_match=True``, a row matches if each criterion value is
-        a *substring* of the cell value instead of requiring an exact match.
-
-        When ``first_only=True``, stops after the first matching row and
-        returns ``1`` (or ``0`` if nothing matched).
-
-        Returns the number of rows that were updated.
-
-        - Keys in ``values`` that do **not** appear in the header row are
-          silently ignored.
-        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
+        Only columns listed in ``values`` are overwritten; others are left untouched.
+        Keys in ``values`` not present in headers are silently ignored.
+        Streaming / read-only mode raises ``LibraryException``.
+        See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
 
         Arguments:
-        - ``search_criteria``: Dict or string identifying which rows to update.
+        - ``search_criteria``: Filter identifying which rows to update — see `library description`_ for format details.
         - ``values``: Dict of ``{column_header: new_value}`` pairs to write.
-        - ``header_row``: Row number (1-based) containing column headers. Defaults to ``1``.
-        - ``partial_match``: If ``True``, use substring matching. Defaults to ``False``.
-        - ``first_only``: If ``True``, update only the first matching row. Defaults to ``False``.
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+        - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
+        - ``first_only``: Update only the first matching row when ``True``. Defaults to ``False``.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
@@ -519,23 +392,16 @@ class RFExcelLibrary:
                     header_row: int = 1,
                     partial_match: bool = False,
                     first_only: bool = False) -> int:
-        """Deletes all rows that match ``search_criteria``.
+        """Deletes all rows matching ``search_criteria``. Returns the count of deleted rows.
 
-        Finds every data row (after ``header_row``) where all key/value pairs
-        in ``search_criteria`` match the corresponding column values and removes
-        them from the workbook.
-
-        When ``first_only=True``, stops after deleting the first matching row.
-
-        Returns the number of rows deleted.
-
-        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
+        See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
+        Streaming / read-only mode raises ``LibraryException``.
 
         Arguments:
-        - ``search_criteria``: Dict or string identifying which rows to delete.
-        - ``header_row``: Row number (1-based) containing column headers. Defaults to ``1``.
-        - ``partial_match``: If ``True``, use substring matching. Defaults to ``False``.
-        - ``first_only``: If ``True``, delete only the first matching row. Defaults to ``False``.
+        - ``search_criteria``: Filter identifying which rows to delete — see `library description`_ for format details.
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+        - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
+        - ``first_only``: Delete only the first matching row when ``True``. Defaults to ``False``.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
