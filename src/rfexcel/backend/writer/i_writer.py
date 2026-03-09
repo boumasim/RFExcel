@@ -24,7 +24,7 @@ class IWriter(ABC):
         pass
 
     @abstractmethod
-    def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
+    def append_row(self, cell_data: ColumnValues, resource: IResource) -> None:
         pass
 
     @abstractmethod

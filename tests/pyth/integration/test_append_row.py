@@ -1,4 +1,4 @@
-"""Integration tests for the Add Row keyword.
+"""Integration tests for the Append Row keyword.
 
 Each test that writes to a file works on a temporary copy (shutil.copy +
 tmp_path) so the originals in tests/resources are never modified.
@@ -36,13 +36,13 @@ _FULL_ROW = {"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "L
 # XLSX – Edit mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowXlsxEdit:
+class TestAppendRowXlsxEdit:
 
     def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_row(_FULL_ROW)
+        lib.append_row(_FULL_ROW)
         rows = lib.get_rows()
         assert len(rows) == before + 1
         assert rows[-1]["Product ID"] == "P-999"
@@ -55,7 +55,7 @@ class TestAddRowXlsxEdit:
     ):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        lib.add_row({"Product ID": "P-888", "Price": "0.01"})
+        lib.append_row({"Product ID": "P-888", "Price": "0.01"})
         last = lib.get_rows()[-1]
         assert last["Product ID"] == "P-888"
         assert last["Price"] == "0.01"
@@ -66,7 +66,7 @@ class TestAddRowXlsxEdit:
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_row({"Product ID": "P-777", "NonExistent": "ignored"})
+        lib.append_row({"Product ID": "P-777", "NonExistent": "ignored"})
         rows = lib.get_rows()
         assert len(rows) == before + 1
         assert rows[-1]["Product ID"] == "P-777"
@@ -74,7 +74,7 @@ class TestAddRowXlsxEdit:
     def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        lib.add_row(_FULL_ROW)
+        lib.append_row(_FULL_ROW)
         lib.save_workbook()
         lib.close()
 
@@ -97,7 +97,7 @@ class TestAddRowXlsxEdit:
         wb.save(out)
 
         lib.load_workbook(out)
-        lib.add_row({"Name": "Bob", "Score": "85"}, header_row=2)
+        lib.append_row({"Name": "Bob", "Score": "85"}, header_row=2)
         rows = lib.get_rows(header_row=2)
         assert rows[-1]["Name"] == "Bob"
         assert rows[-1]["Score"] == "85"
@@ -106,35 +106,35 @@ class TestAddRowXlsxEdit:
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         with pytest.raises(HeadersNotDeterminedException):
-            lib.add_row(_FULL_ROW, header_row=9999)
+            lib.append_row(_FULL_ROW, header_row=9999)
 
 
 # ---------------------------------------------------------------------------
 # XLSX – Streaming mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowXlsxStream:
+class TestAppendRowXlsxStream:
 
-    def test_add_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(LibraryException):
-            lib.add_row(_FULL_ROW)
+            lib.append_row(_FULL_ROW)
 
 
 # ---------------------------------------------------------------------------
 # XLS – Edit mode (lazy conversion)
 # ---------------------------------------------------------------------------
 
-class TestAddRowXlsEdit:
+class TestAppendRowXlsEdit:
 
-    def test_add_row_triggers_conversion_and_persists(
+    def test_append_row_triggers_conversion_and_persists(
         self, lib: RFExcelLibrary, tmp_path
     ):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = str(tmp_path / "result.xlsx")
         lib.load_workbook(path)
-        lib.add_row({"First Name": "Jane", "Last Name": "Doe"})
+        lib.append_row({"First Name": "Jane", "Last Name": "Doe"})
         lib.save_workbook(new_path)
         lib.close()
 
@@ -145,7 +145,7 @@ class TestAddRowXlsEdit:
         assert rows[-1]["Last Name"] == "Doe"
         lib2.close()
 
-    def test_original_xls_untouched_after_add_row(
+    def test_original_xls_untouched_after_append_row(
         self, lib: RFExcelLibrary, tmp_path
     ):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
@@ -155,7 +155,7 @@ class TestAddRowXlsEdit:
         original_rows_count.close()
 
         lib.load_workbook(path)
-        lib.add_row(_FULL_ROW)
+        lib.append_row(_FULL_ROW)
         lib.save_workbook(str(tmp_path / "out.xlsx"))
         lib.close()
 
@@ -169,26 +169,26 @@ class TestAddRowXlsEdit:
 # XLS – Streaming mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowXlsStream:
+class TestAppendRowXlsStream:
 
-    def test_add_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(LibraryException):
-            lib.add_row(_FULL_ROW)
+            lib.append_row(_FULL_ROW)
 
 
 # ---------------------------------------------------------------------------
 # CSV – Edit mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowCsvEdit:
+class TestAppendRowCsvEdit:
 
     def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_row(_FULL_ROW)
+        lib.append_row(_FULL_ROW)
         rows = lib.get_rows()
         assert len(rows) == before + 1
         assert rows[-1]["Product ID"] == "P-999"
@@ -198,7 +198,7 @@ class TestAddRowCsvEdit:
     ):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
-        lib.add_row({"Description": "Only Desc"})
+        lib.append_row({"Description": "Only Desc"})
         last = lib.get_rows()[-1]
         assert last["Description"] == "Only Desc"
         assert last["Product ID"] == ""
@@ -208,7 +208,7 @@ class TestAddRowCsvEdit:
     def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
-        lib.add_row(_FULL_ROW)
+        lib.append_row(_FULL_ROW)
         lib.save_workbook()
         lib.close()
 
@@ -224,8 +224,8 @@ class TestAddRowCsvEdit:
     ):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
-        lib.add_row({"Product ID": "P-A"})
-        lib.add_row({"Product ID": "P-B"})
+        lib.append_row({"Product ID": "P-A"})
+        lib.append_row({"Product ID": "P-B"})
         rows = lib.get_rows()
         assert rows[-2]["Product ID"] == "P-A"
         assert rows[-1]["Product ID"] == "P-B"
@@ -235,32 +235,32 @@ class TestAddRowCsvEdit:
 # CSV – Streaming mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowCsvStream:
+class TestAppendRowCsvStream:
 
-    def test_add_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(LibraryException):
-            lib.add_row(_FULL_ROW)
+            lib.append_row(_FULL_ROW)
 
 
 # ---------------------------------------------------------------------------
 # No workbook open
 # ---------------------------------------------------------------------------
 
-class TestAddRowNoWorkbook:
+class TestAppendRowNoWorkbook:
 
-    def test_add_row_is_silent_noop_when_no_workbook_open(
+    def test_append_row_is_silent_noop_when_no_workbook_open(
         self, lib: RFExcelLibrary
     ):
-        lib.add_row(_FULL_ROW)  # must not raise
+        lib.append_row(_FULL_ROW)  # must not raise
 
 
 # ---------------------------------------------------------------------------
 # XLSX – Shifted table (headers do NOT start at column A)
 # ---------------------------------------------------------------------------
 
-class TestAddRowXlsxShifted:
+class TestAppendRowXlsxShifted:
     """The table starts at column B (col-index 2).  Column A is intentionally
     left empty.  Rows must be appended to the correct columns (B, C, D, E),
     not blindly starting from column A."""
@@ -289,7 +289,7 @@ class TestAddRowXlsxShifted:
     def test_new_row_lands_in_correct_columns(self, lib: RFExcelLibrary, tmp_path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
-        lib.add_row({"Product ID": "P-999", "Description": "Widget",
+        lib.append_row({"Product ID": "P-999", "Description": "Widget",
                      "Price": "9.99", "Location": "Online"})
         lib.save_workbook()
 
@@ -307,7 +307,7 @@ class TestAddRowXlsxShifted:
     def test_partial_row_leaves_other_columns_empty(self, lib: RFExcelLibrary, tmp_path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
-        lib.add_row({"Product ID": "P-777", "Price": "7.77"})
+        lib.append_row({"Product ID": "P-777", "Price": "7.77"})
         lib.save_workbook()
 
         wb = openpyxl.load_workbook(path)
@@ -321,10 +321,10 @@ class TestAddRowXlsxShifted:
         assert ws.cell(last_row, 5).value is None,    "Location not provided → empty"
 
     def test_get_rows_still_returns_correct_dict(self, lib: RFExcelLibrary, tmp_path):
-        """After add_row + save, the dict-based API must reflect the new row."""
+        """After append_row + save, the dict-based API must reflect the new row."""
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
-        lib.add_row({"Product ID": "P-888", "Description": "Gamma",
+        lib.append_row({"Product ID": "P-888", "Description": "Gamma",
                      "Price": "8.88", "Location": "Depot"})
         rows = lib.get_rows()
         assert rows[-1]["Product ID"] == "P-888"

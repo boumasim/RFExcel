@@ -15,9 +15,9 @@ class RFExcelLibrary:
     = Supported Formats =
 
     | Format    | Edit mode  | Streaming mode | Notes |
-    | ``.xlsx`` | ✓          | ✓              | Full read/write via openpyxl. |
-    | ``.xls``  | read-only* | read-only      | *Write operations trigger lazy in-memory conversion to ``.xlsx``; the original file is never modified. |
-    | ``.csv``  | ✓          | ✓              | No sheet concept; sheet keywords raise ``OperationNotSupportedForFormat``. |
+    | ``.xlsx`` | yes        | yes            | Full read/write via openpyxl. |
+    | ``.xls``  | yes*       | yes*           | *Write operations trigger lazy in-memory conversion to ``.xlsx``; the original file is never modified. |
+    | ``.csv``  | yes        | yes            | No sheet concept; sheet keywords raise ``OperationNotSupportedForFormat``. |
 
     = Modes =
 
@@ -304,8 +304,8 @@ class RFExcelLibrary:
             self._active_workbook.save_workbook(path=path)
             logger.info("Workbook successfully saved")
 
-    @keyword("Add Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def add_row(self, row_data: RowInputData, header_row: int = 1) -> None:
+    @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def append_row(self, row_data: RowInputData, header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
@@ -319,18 +319,18 @@ class RFExcelLibrary:
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
-        | Add Row       | ${{{"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"}}} |
+        | Append Row    | ${{{"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"}}} |
         | Save Workbook |                     |                                     |              |
         | Load Workbook | ${CURDIR}/data.csv  |                                     |              |
-        | Add Row       | ${{{"Product ID": "P-100", "Price": "1.00"}}}           |              |
+        | Append Row    | ${{{"Product ID": "P-100", "Price": "1.00"}}}           |              |
         | Save Workbook |                     |                                     |              |
         """
         if self._active_workbook:
-            self._active_workbook.add_row(row_data=row_data, header_row=header_row)
+            self._active_workbook.append_row(row_data=row_data, header_row=header_row)
 
-    @keyword("Add Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def add_rows(self, rows: list[RowInputData], header_row: int = 1) -> None:
-        """Appends multiple rows to the end of the active sheet. Same rules as ``Add Row``.
+    @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def append_rows(self, rows: list[RowInputData], header_row: int = 1) -> None:
+        """Appends multiple rows to the end of the active sheet. Same rules as ``Append Row``.
 
         Arguments:
         - ``rows``: List of dicts, each mapping column header names to cell values.
@@ -340,11 +340,11 @@ class RFExcelLibrary:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
         | ${row1} =     | Create Dictionary   | Product ID=P-001 | Description=Gadget | Price=4.99 |
         | ${row2} =     | Create Dictionary   | Product ID=P-002 | Description=Widget | Price=9.99 |
-        | Add Rows      | ${[${row1}, ${row2}]} |                                                               |
+        | Append Rows   | ${[${row1}, ${row2}]} |                                                               |
         | Save Workbook |                     |                                                                         |
         """
         if self._active_workbook:
-            self._active_workbook.add_rows(rows=rows, header_row=header_row)
+            self._active_workbook.append_rows(rows=rows, header_row=header_row)
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,

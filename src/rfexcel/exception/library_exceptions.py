@@ -22,6 +22,11 @@ class LibraryException(RFExcelException):
     def __init__(self, msg: str):
         super().__init__(msg)
 
+class NullComponentException(LibraryException):
+    """Raised when a Null Object method is called."""
+    def __init__(self):
+        super().__init__("Library uses null component for this operation.")
+
 class RowIndexOutOfBoundsException(RFExcelException):
     """Exception when row index is out of valid range"""
     def __init__(self, row_index: int, msg: str = ""):

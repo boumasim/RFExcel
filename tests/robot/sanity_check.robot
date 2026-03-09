@@ -68,6 +68,6 @@ Add row to shifted table
     Load Workbook    path=${RESOURCES}/data.xlsx
     Switch Sheet    name=Sheet3
     ${value_map}=   Create Dictionary    Product ID=XD    Description=LOL    Price=69.00
-    Add Row    row_data=${value_map}    header_row=3
+    Append Row    row_data=${value_map}    header_row=3
     ${rows}=    Get Rows    header_row=3
     Save Workbook   path=${RESULTS}/data.xlsx

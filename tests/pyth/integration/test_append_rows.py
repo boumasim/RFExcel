@@ -1,4 +1,4 @@
-"""Integration tests for the Add Rows keyword."""
+"""Integration tests for the Append Rows keyword."""
 import shutil
 
 import pytest
@@ -15,13 +15,13 @@ _ROW_B = {"Product ID": "P-002", "Description": "Beta",  "Price": "2.00", "Locat
 # XLSX – Edit mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowsXlsxEdit:
+class TestAppendRowsXlsxEdit:
 
     def test_all_rows_appended_in_order(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_rows([_ROW_A, _ROW_B])
+        lib.append_rows([_ROW_A, _ROW_B])
         rows = lib.get_rows()
         assert len(rows) == before + 2
         assert rows[-2]["Product ID"] == "P-001"
@@ -31,13 +31,13 @@ class TestAddRowsXlsxEdit:
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_rows([])
+        lib.append_rows([])
         assert len(lib.get_rows()) == before
 
     def test_partial_rows_fill_missing_with_empty_string(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        lib.add_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
+        lib.append_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
         rows = lib.get_rows()
         assert rows[-2]["Product ID"] == "P-010"
         assert rows[-2]["Description"] == ""
@@ -47,7 +47,7 @@ class TestAddRowsXlsxEdit:
     def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        lib.add_rows([_ROW_A, _ROW_B])
+        lib.append_rows([_ROW_A, _ROW_B])
         lib.save_workbook()
         lib.close()
 
@@ -63,19 +63,19 @@ class TestAddRowsXlsxEdit:
 # XLSX – Streaming mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowsXlsxStream:
+class TestAppendRowsXlsxStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         with pytest.raises(LibraryException):
-            lib.add_rows([_ROW_A])
+            lib.append_rows([_ROW_A])
 
 
 # ---------------------------------------------------------------------------
 # XLS – Edit mode (lazy conversion)
 # ---------------------------------------------------------------------------
 
-class TestAddRowsXlsEdit:
+class TestAppendRowsXlsEdit:
 
     _XLS_ROW_A = {"Index": "99", "First Name": "Alice", "Last Name": "Smith",
                   "Gender": "Female", "Country": "Czech Republic", "Age": "30"}
@@ -86,7 +86,7 @@ class TestAddRowsXlsEdit:
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_rows([self._XLS_ROW_A, self._XLS_ROW_B])
+        lib.append_rows([self._XLS_ROW_A, self._XLS_ROW_B])
         rows = lib.get_rows()
         assert len(rows) == before + 2
         assert rows[-2]["Index"] == "99"
@@ -97,13 +97,13 @@ class TestAddRowsXlsEdit:
 # CSV – Edit mode
 # ---------------------------------------------------------------------------
 
-class TestAddRowsCsvEdit:
+class TestAppendRowsCsvEdit:
 
     def test_rows_appended_and_read_back(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
-        lib.add_rows([_ROW_A, _ROW_B])
+        lib.append_rows([_ROW_A, _ROW_B])
         lib.save_workbook()
         lib.close()
 
@@ -118,4 +118,4 @@ class TestAddRowsCsvEdit:
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
         with pytest.raises(LibraryException):
-            lib.add_rows([_ROW_A])
+            lib.append_rows([_ROW_A])

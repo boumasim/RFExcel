@@ -135,7 +135,7 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.save(Path(path) if path else None, self._resource)
 
     @override
-    def add_row(self, row_data: RowInputData, header_row: int) -> None:
+    def append_row(self, row_data: RowInputData, header_row: int) -> None:
         try:
             header_map = self._reader.get_headers(
                 header_row_idx=header_row, resource=self._resource
@@ -149,12 +149,12 @@ class RFExcel(IExcel, ISetExcel):
             for name, col in header_map.items()
             if name in row_data
         }
-        self._writer.add_row(cell_data, self._resource)
+        self._writer.append_row(cell_data, self._resource)
 
     @override
-    def add_rows(self, rows: list[RowInputData], header_row: int) -> None:
+    def append_rows(self, rows: list[RowInputData], header_row: int) -> None:
         for row_data in rows:
-            self.add_row(row_data, header_row)
+            self.append_row(row_data, header_row)
 
     @override
     def delete_rows(self,

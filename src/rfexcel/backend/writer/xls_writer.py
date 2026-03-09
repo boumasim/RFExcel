@@ -35,9 +35,9 @@ class XlsWriter(IWriter):
         self._ref.save_workbook(str(path) if path else None)
 
     @override
-    def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
+    def append_row(self, cell_data: ColumnValues, resource: IResource) -> None:
         self._convert_to_xlsx()
-        self._ref.writer.add_row(cell_data, self._ref.resource)
+        self._ref.writer.append_row(cell_data, self._ref.resource)
 
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:

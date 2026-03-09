@@ -28,7 +28,7 @@ class CsvWriter(IWriter):
         resource.save(path)
 
     @override
-    def add_row(self, cell_data: ColumnValues, resource: IResource) -> None:
+    def append_row(self, cell_data: ColumnValues, resource: IResource) -> None:
         resource.append_row(cell_data)
 
     @override

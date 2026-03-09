@@ -8,6 +8,6 @@ BASE_DIALECT = 'excel'
 BASE_ENCODING = 'utf-8'
 
 #error messages
-CSV_NOT_SUPPORTED_MSG = "This operation is not supported for CSV files"
-XLSX_NOT_SUPPORTED_MSG = "This operation is not supported for XLSX files"
-XLS_NOT_SUPPORTED_MSG = "This operation is not supported for XLS files"
+CSV_NOT_SUPPORTED_MSG = "Operation is not supported for CSV files"
+XLSX_NOT_SUPPORTED_MSG = "Operation is not supported for XLSX files"
+XLS_NOT_SUPPORTED_MSG = "Operation is not supported for XLS files"
