@@ -513,6 +513,46 @@ class RFExcelLibrary:
             )
         return 0
 
+    @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def delete_rows(self,
+                    search_criteria: RowInputData | str,
+                    header_row: int = 1,
+                    partial_match: bool = False,
+                    first_only: bool = False) -> int:
+        """Deletes all rows that match ``search_criteria``.
+
+        Finds every data row (after ``header_row``) where all key/value pairs
+        in ``search_criteria`` match the corresponding column values and removes
+        them from the workbook.
+
+        When ``first_only=True``, stops after deleting the first matching row.
+
+        Returns the number of rows deleted.
+
+        - Streaming / read-only mode (all formats): Raises ``LibraryException``.
+
+        Arguments:
+        - ``search_criteria``: Dict or string identifying which rows to delete.
+        - ``header_row``: Row number (1-based) containing column headers. Defaults to ``1``.
+        - ``partial_match``: If ``True``, use substring matching. Defaults to ``False``.
+        - ``first_only``: If ``True``, delete only the first matching row. Defaults to ``False``.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
+        | ${count} =     | Delete Rows         | ${{{'Product ID': 'P-001'}}}       |                 |
+        | Should Be Equal As Integers | ${count} | 1 |                            |
+        | Delete Rows    | Location=Online     | partial_match=True | first_only=True |
+        | Save Workbook  |                     |                                    |                 |
+        """
+        if self._active_workbook:
+            return self._active_workbook.delete_rows(
+                search_criteria=search_criteria,
+                header_row=header_row,
+                partial_match=partial_match,
+                first_only=first_only,
+            )
+        return 0
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.

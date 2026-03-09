@@ -30,3 +30,7 @@ class IWriter(ABC):
     @abstractmethod
     def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         pass
+
+    @abstractmethod
+    def delete_row(self, row_index: int, resource: IResource) -> None:
+        pass

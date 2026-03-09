@@ -43,3 +43,8 @@ class XlsWriter(IWriter):
     def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         self._convert_to_xlsx()
         self._ref.writer.update_row(row_index, cell_data, self._ref.resource)
+
+    @override
+    def delete_row(self, row_index: int, resource: IResource) -> None:
+        self._convert_to_xlsx()
+        self._ref.writer.delete_row(row_index, self._ref.resource)

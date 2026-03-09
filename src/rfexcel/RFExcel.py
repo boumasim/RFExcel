@@ -157,6 +157,38 @@ class RFExcel(IExcel, ISetExcel):
             self.add_row(row_data, header_row)
 
     @override
+    def delete_rows(self,
+                    search_criteria: str | RowInputData,
+                    header_row: int,
+                    partial_match: bool,
+                    first_only: bool = False) -> int:
+        search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
+        try:
+            header_map: HeaderMap = self._reader.get_headers(
+                header_row_idx=header_row, resource=self._resource
+            ).get_header_map()
+        except StopIteration:
+            raise HeadersNotDeterminedException(header_row)
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
+        matches: list[int] = []
+        row_index = header_row + 1
+        while True:
+            try:
+                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
+                row_dict = row.get_dict_row_data(header_map)
+                if search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
+                    matches.append(row_index)
+                    if first_only:
+                        break
+                row_index += 1
+            except StopIteration:
+                break
+        for idx in reversed(matches):
+            self._writer.delete_row(idx, self._resource)
+        return len(matches)
+
+    @override
     def update_values(self,
                       search_criteria: str | RowInputData,
                       values: str | RowInputData,

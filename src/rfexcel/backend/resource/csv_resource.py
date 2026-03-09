@@ -92,6 +92,12 @@ class CsvEditResource(IResource):
             row[col_index] = value
 
     @override
+    def delete_row(self, row_index: int) -> None:
+        list_index = row_index - 1
+        if 0 <= list_index < len(self._all_rows):
+            self._all_rows.pop(list_index)
+
+    @override
     def close(self):
         pass
 
@@ -149,7 +155,9 @@ class CsvStreamResource(IResource):
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming (read-only) mode")
-
+    @override
+    def delete_row(self, row_index: int) -> None:
+        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
     @override
     def close(self):
         if self._handle and not self._handle.closed:

@@ -96,6 +96,12 @@ class XlsxEditResource(IResource):
             self._active_sheet.cell(row=row_index, column=col, value=value)
 
     @override
+    def delete_row(self, row_index: int) -> None:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        self._active_sheet.delete_rows(row_index, 1)
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -156,6 +162,10 @@ class XlsxStreamResource(IResource):
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming mode")
+
+    @override
+    def delete_row(self, row_index: int) -> None:
+        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
 
     @override
     def save(self, path: Path | None = None) -> None:

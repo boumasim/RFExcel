@@ -35,3 +35,7 @@ class XlsxWriter(IWriter):
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         resource.update_row(row_index, cell_data)
+
+    @override
+    def delete_row(self, row_index: int, resource: IResource) -> None:
+        resource.delete_row(row_index)

@@ -33,3 +33,7 @@ class NullWriter(IWriter):
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         raise LibraryException("Invalid operation: writer not available")
+
+    @override
+    def delete_row(self, row_index: int, resource: IResource) -> None:
+        raise LibraryException("Invalid operation: writer not available")

@@ -61,3 +61,7 @@ class NullResource(IResource):
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise LibraryException("Invalid operation: resource not available")
+
+    @override
+    def delete_row(self, row_index: int) -> None:
+        raise LibraryException("Invalid operation: resource not available")
