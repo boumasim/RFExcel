@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Union, cast, override
 
 from openpyxl import Workbook
 from robot.api import logger
-from xls2xlsx import XLS2XLSX
+from xls2xlsx import XLS2XLSX  # pyright: ignore[reportMissingTypeStubs]
 
 from rfexcel.backend.lib.i_library import IExcel, ISetExcel
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata

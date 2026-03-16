@@ -69,7 +69,7 @@ class FileSaveException(RFExcelException):
 class NotMatchingColumns(RFExcelException):
     """Exception raised when specified headers are missing in source or target during comparison"""
     def __init__(self, missing_in_source: list[str], missing_in_target: list[str]):
-        parts = []
+        parts: list[str] = []
         if missing_in_target:
             parts.append(f"missing in target: {missing_in_target}")
         if missing_in_source:
