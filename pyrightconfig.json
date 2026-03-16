@@ -1,8 +1,15 @@
 {
   "pythonVersion": "3.13",
-  "include": ["src"],
-  "extraPaths": ["src"],
-  "exclude": ["**/node_modules", "**/__pycache__"],
+  "include": [
+    "src"
+  ],
+  "extraPaths": [
+    "src"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/__pycache__"
+  ],
   "venvPath": ".",
   "venv": ".venv",
   "typeCheckingMode": "strict"
