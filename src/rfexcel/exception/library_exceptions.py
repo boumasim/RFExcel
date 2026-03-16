@@ -65,3 +65,13 @@ class FileSaveException(RFExcelException):
     """Exception raised when a workbook cannot be saved to the given path"""
     def __init__(self, path: str, reason: str):
         super().__init__(f"Cannot save workbook to '{path}': {reason}")
+
+class NotMatchingColumns(RFExcelException):
+    """Exception raised when specified headers are missing in source or target during comparison"""
+    def __init__(self, missing_in_source: list[str], missing_in_target: list[str]):
+        parts = []
+        if missing_in_target:
+            parts.append(f"missing in target: {missing_in_target}")
+        if missing_in_source:
+            parts.append(f"missing in source: {missing_in_source}")
+        super().__init__(f"Column mismatch - {', '.join(parts)}")

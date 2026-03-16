@@ -1,8 +1,9 @@
-from typing import Any, List, Union
+from typing import Any, Dict, List, Union
 
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
 
+from rfexcel import RFExcel
 from rfexcel.backend.lib.i_library import IExcel
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
@@ -460,3 +461,65 @@ class RFExcelLibrary:
         """
         self.close()
         self.load_workbook(path=path, read_only=read_only, **kwargs)
+
+    @keyword("Compare Data To")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def compare_data_to(self,
+                        target_path: str,
+                        source_header_row: int = 1,
+                        target_header_row: int = 1,
+                        target_sheet: str | None = None,
+                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+        """Compares the active workbook row-by-row against a target file and returns the differences.
+
+        Opens ``target_path`` in streaming (read-only) mode. The source is the currently
+        active workbook. Row ``source_header_row`` / ``target_header_row`` is used as
+        the header row in each file respectively.
+
+        Only rows that differ in at least one compared column are included in the result.
+        Column shift is handled automatically — tables that start at a column other than A
+        (or have missing columns) are compared by header name, not by position.
+
+        Raises ``NotMatchingColumns`` if:
+        - ``headers=None`` and any source header is absent from the target.
+        - ``headers`` is provided and any listed header is absent from either file.
+
+        Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
+
+        Arguments:
+        - ``target_path``: Path to the file to compare against.
+        - ``source_header_row``: Header row in the source (active workbook). Defaults to ``1``.
+        - ``target_header_row``: Header row in the target file. Defaults to ``1``.
+        - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.
+        - ``headers``: List of column names to compare. Defaults to all source headers.
+
+        Returns a list of dicts, one per differing source row:
+        | [
+        |   {
+        |     "source_row_index": 5,
+        |     "differences": {
+        |       "Cena":    {"source": "100", "target": "120"},
+        |       "Skladem": {"source": "10",  "target": "8"}
+        |     }
+        |   },
+        |   ...
+        | ]
+
+        Examples:
+        | Load Workbook    | ${CURDIR}/source.xlsx |                              |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx        |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Cena", "Skladem"]} |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | target_sheet=Sheet2           |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
+        """
+        if self._active_workbook:
+
+            target : IExcel = self._factory.load_workbook(path=target_path, read_only=True)
+
+            return self._active_workbook.compare_data_to(
+                target=target,
+                source_header_row=source_header_row,
+                target_header_row=target_header_row,
+                target_sheet=target_sheet,
+                headers=headers,
+            )
+        return []

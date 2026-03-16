@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Union, cast, override
+from typing import Any, Dict, List, Union, cast, override
 
 from openpyxl import Workbook
 from robot.api import logger
@@ -12,7 +12,8 @@ from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, RowIndexOutOfBoundsException)
+    HeadersNotDeterminedException, NotMatchingColumns,
+    RowIndexOutOfBoundsException)
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
                                      headers_to_header_map, search_in_row)
 
@@ -45,12 +46,26 @@ class RFExcel(IExcel, ISetExcel):
         self._resource: IResource = resource
 
     @property
+    @override
     def writer(self) -> IWriter:
         return self._writer
 
     @property
+    @override
     def resource(self) -> IResource:
         return self._resource
+    
+    @property
+    @override
+    def reader(self) -> IReader:
+        return self._reader
+
+    @staticmethod
+    def _read_header_map(reader: IReader, resource: IResource, header_row: int, **kwargs: Any) -> HeaderMap:
+        try:
+            return reader.get_headers(header_row_idx=header_row, resource=resource, **kwargs).get_header_map()
+        except StopIteration:
+            raise HeadersNotDeterminedException(header_row)
 
     @override
     def close(self):
@@ -65,12 +80,7 @@ class RFExcel(IExcel, ISetExcel):
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
         search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria else None
 
-        try:
-            header_map: HeaderMap = self._reader.get_headers(
-                header_row_idx=header_row, resource=self._resource, **kwargs
-            ).get_header_map()
-        except StopIteration:
-            header_map = {}
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
 
         result: List[DictRowData] = []
         row_index = header_row + 1
@@ -137,12 +147,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def append_row(self, row_data: RowInputData, header_row: int) -> None:
-        try:
-            header_map = self._reader.get_headers(
-                header_row_idx=header_row, resource=self._resource
-            ).get_header_map()
-        except StopIteration:
-            raise HeadersNotDeterminedException(header_row)
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
         cell_data: ColumnValues = {
@@ -164,12 +169,7 @@ class RFExcel(IExcel, ISetExcel):
                     partial_match: bool,
                     first_only: bool = False) -> int:
         search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
-        try:
-            header_map: HeaderMap = self._reader.get_headers(
-                header_row_idx=header_row, resource=self._resource
-            ).get_header_map()
-        except StopIteration:
-            raise HeadersNotDeterminedException(header_row)
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
         matches: list[int] = []
@@ -208,12 +208,7 @@ class RFExcel(IExcel, ISetExcel):
                       first_only: bool = False) -> int:
         search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
         values_dict = convert_string_to_dict_row_data(values)
-        try:
-            header_map: HeaderMap = self._reader.get_headers(
-                header_row_idx=header_row, resource=self._resource
-            ).get_header_map()
-        except StopIteration:
-            raise HeadersNotDeterminedException(header_row)
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
         update_cell_data: ColumnValues = {
@@ -236,3 +231,71 @@ class RFExcel(IExcel, ISetExcel):
             except StopIteration:
                 break
         return updated
+
+    @override
+    def compare_data_to(self,
+                        target: IExcel,
+                        source_header_row: int = 1,
+                        target_header_row: int = 1,
+                        target_sheet: str | None = None,
+                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+        try:
+            if target_sheet is not None:
+                target.switch_sheet(target_sheet)
+
+            source_header_map: HeaderMap = self._read_header_map(self._reader, self._resource, source_header_row)
+            target_header_map: HeaderMap = self._read_header_map(target.reader, target.resource, target_header_row)
+
+            if headers is None:
+                compare_headers: list[str] = list(source_header_map.keys())
+                missing_in_target = [h for h in compare_headers if h not in target_header_map]
+                if missing_in_target:
+                    raise NotMatchingColumns(missing_in_source=[], missing_in_target=missing_in_target)
+            else:
+                compare_headers = headers
+                missing_in_source = [h for h in compare_headers if h not in source_header_map]
+                missing_in_target = [h for h in compare_headers if h not in target_header_map]
+                if missing_in_source or missing_in_target:
+                    raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
+
+            result: List[Dict[str, Any]] = []
+            source_row_index = source_header_row + 1
+            target_row_index = target_header_row + 1
+            target_exhausted = False
+
+            while True:
+                try:
+                    source_row = self._reader.get_row(row_idx=source_row_index, resource=self._resource)
+                except StopIteration:
+                    break
+
+                source_dict = source_row.get_dict_row_data(source_header_map)
+
+                if not target_exhausted:
+                    try:
+                        target_row = target.reader.get_row(row_idx=target_row_index, resource=target.resource)
+                        target_dict: DictRowData = target_row.get_dict_row_data(target_header_map)
+                        target_row_index += 1
+                    except StopIteration:
+                        target_exhausted = True
+                        target_dict = DictRowData()
+                else:
+                    target_dict = DictRowData()
+
+                source_values = cast(dict[str, str], source_dict)
+                target_values = cast(dict[str, str], target_dict)
+                differences: Dict[str, Any] = {
+                    h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
+                    for h in compare_headers
+                    if source_values.get(h, "") != target_values.get(h, "")
+                }
+
+                if differences:
+                    result.append({"source_row_index": source_row_index, "differences": differences})
+
+                source_row_index += 1
+
+            return result
+        finally:
+            target.close()
+            target.close()

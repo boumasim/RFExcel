@@ -39,11 +39,10 @@ class XlsxEditResource(IResource):
             raise LibraryException("No active worksheet")
         if row_index > self._active_sheet.max_row:
             raise StopIteration()
-        data_only: bool = kwargs.get('data_only', True)  # type: ignore[assignment]
         row_values = next(
-            self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=data_only)
+            self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
         )
-        return XlsxRawRowData(row_values, data_only)
+        return XlsxRawRowData(row_values, False)
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -127,15 +126,14 @@ class XlsxStreamResource(IResource):
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if self._row_generator is None:
-            data_only: bool = kwargs.get('data_only', True)  # type: ignore[assignment]
             self._row_generator = (
-                self._active_sheet.iter_rows(values_only=data_only)
+                self._active_sheet.iter_rows(values_only=False)
                 if self._active_sheet
                 else iter([])
             )
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
-        return XlsxRawRowData(row_data, kwargs.get('data_only', True))  # type: ignore[arg-type]
+        return XlsxRawRowData(row_data, False)
 
     @override
     def get_sheet_names(self) -> list[str]:

@@ -7,9 +7,10 @@ from rfexcel.RFExcelLibrary import RFExcelLibrary
 
 _RESOURCES = Path(__file__).parent.parent / "resources"
 
-XLSX_FILE = str(_RESOURCES / "data.xlsx")
-CSV_FILE  = str(_RESOURCES / "data.csv")
-XLS_FILE  = str(_RESOURCES / "example.xls")
+XLSX_FILE  = str(_RESOURCES / "data.xlsx")
+XLSX2_FILE = str(_RESOURCES / "data2.xlsx")
+CSV_FILE   = str(_RESOURCES / "data.csv")
+XLS_FILE   = str(_RESOURCES / "example.xls")
 
 
 @pytest.fixture

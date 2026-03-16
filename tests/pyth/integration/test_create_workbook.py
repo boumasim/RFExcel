@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    FileAlreadyExistsException, FileFormatNotSupportedException)
+    FileAlreadyExistsException, FileFormatNotSupportedException,
+    HeadersNotDeterminedException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLSX_FILE
 
@@ -48,11 +49,12 @@ class TestCreateWorkbookPositive:
         rows = lib.get_rows()
         assert rows == []
 
-    def test_created_csv_is_immediately_readable(self, lib: RFExcelLibrary, tmp_path):
+    def test_created_csv_get_rows_raises_on_empty_file(self, lib: RFExcelLibrary, tmp_path):
+        """An empty CSV has no header row; get_rows() raises HeadersNotDeterminedException."""
         path = str(tmp_path / "empty.csv")
         lib.create_workbook(path)
-        rows = lib.get_rows()
-        assert rows == []
+        with pytest.raises(HeadersNotDeterminedException):
+            lib.get_rows()
 
 
 # ─── negative ─────────────────────────────────────────────────────────────────

@@ -71,3 +71,11 @@ Add row to shifted table
     Append Row    row_data=${value_map}    header_row=3
     ${rows}=    Get Rows    header_row=3
     Save Workbook   path=${RESULTS}/data.xlsx
+
+Compare data to another file
+    [Documentation]     Test comparing data between two files and verify differences
+    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx
+    Log    Differences: ${differences}
+    ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx  headers=['Description', 'Location']
+    Log    Differences with headers: ${differences}
