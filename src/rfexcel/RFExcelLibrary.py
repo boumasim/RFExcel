@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Union
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
 
-from .backend.lib.i_library import IExcel
+from .backend.interfaces.i_library import IExcel
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
                                  RowInputData)

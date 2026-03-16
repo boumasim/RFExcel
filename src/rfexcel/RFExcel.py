@@ -5,7 +5,7 @@ from openpyxl import Workbook
 from robot.api import logger
 from xls2xlsx import XLS2XLSX  # pyright: ignore[reportMissingTypeStubs]
 
-from .backend.lib.i_library import IExcel, ISetExcel
+from .backend.interfaces.i_library import IExcel, ISetExcel
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
