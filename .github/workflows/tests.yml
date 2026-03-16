@@ -18,20 +18,25 @@ jobs:
           python-version: "3.13"
           cache: 'pip'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
-          pip install -e . 
+          pip install -e .
 
       - name: Run Type Checker (Pyright)
         run: pyright
 
       - name: Run Python Tests
-        run: pytest tests/pyth/
+        run: |
+          source .venv/bin/activate
+          pytest tests/python/
 
       - name: Run Robot Tests
         run: |
+          source .venv/bin/activate
           chmod +x robot-tests.sh
           ./robot-tests.sh
