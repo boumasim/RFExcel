@@ -10,7 +10,5 @@
     "**/node_modules",
     "**/__pycache__"
   ],
-  "venvPath": ".",
-  "venv": ".venv",
   "typeCheckingMode": "strict"
 }
