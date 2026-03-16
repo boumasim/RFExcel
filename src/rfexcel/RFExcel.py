@@ -11,7 +11,8 @@ from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
-from rfexcel.exception.library_exceptions import HeadersNotDeterminedException
+from rfexcel.exception.library_exceptions import (
+    HeadersNotDeterminedException, RowIndexOutOfBoundsException)
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
                                      headers_to_header_map, search_in_row)
 
@@ -187,6 +188,16 @@ class RFExcel(IExcel, ISetExcel):
         for idx in reversed(matches):
             self._writer.delete_row(idx, self._resource)
         return len(matches)
+
+    @override
+    def delete_row(self, row_number: int) -> None:
+        if row_number < 1:
+            raise RowIndexOutOfBoundsException(row_number)
+        try:
+            self._reader.get_row(row_idx=row_number, resource=self._resource)
+        except StopIteration:
+            raise RowIndexOutOfBoundsException(row_number)
+        self._writer.delete_row(row_number, self._resource)
 
     @override
     def update_values(self,

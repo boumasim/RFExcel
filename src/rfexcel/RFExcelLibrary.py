@@ -419,6 +419,27 @@ class RFExcelLibrary:
             )
         return 0
 
+    @keyword("Delete Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def delete_row(self, row_number: int) -> None:
+        """Deletes the row at the given ``row_number``.
+
+        ``row_number`` row_number 1 is the first row.
+        Raises ``RowIndexOutOfBoundsException`` if ``row_number`` is less than 1 or
+        beyond the last row in the sheet.
+        Streaming / read-only mode raises ``LibraryException``.
+        Safe to call when no workbook is open — does nothing.
+
+        Arguments:
+        - ``row_number``: 1-based row number to delete.
+
+        Examples:
+        | Load Workbook  | ${CURDIR}/data.xlsx |   |
+        | Delete Row     | 2                   |   |
+        | Save Workbook  |                     |   |
+        """
+        if self._active_workbook:
+            self._active_workbook.delete_row(row_number=row_number)
+
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Switches the active workbook to a different file.
