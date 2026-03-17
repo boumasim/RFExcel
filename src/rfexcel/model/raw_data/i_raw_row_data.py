@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from rfexcel.utlis.types import DictRowData, ListRowData
+from rfexcel.utlis.types import DictRowData, HeaderMap, ListRowData
 
 
 class IRawRowData(ABC):
@@ -10,5 +10,9 @@ class IRawRowData(ABC):
         pass
 
     @abstractmethod
-    def get_dict_row_data(self, headers: ListRowData) -> DictRowData:
+    def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
+        pass
+
+    @abstractmethod
+    def get_header_map(self) -> HeaderMap:
         pass

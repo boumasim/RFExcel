@@ -22,11 +22,11 @@ jobs:
         run: |
           pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install pytest
-          pip install -e . 
+          pip install pytest pyright
+          pip install -e .
 
       - name: Run Type Checker (Pyright)
-        run: pyright
+        run: pyright --pythonpath $(which python)
 
       - name: Run Python Tests
         run: pytest tests/pyth/

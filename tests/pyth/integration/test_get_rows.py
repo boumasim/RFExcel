@@ -14,8 +14,9 @@ import csv
 
 import pytest
 
-from rfexcel.exception.library_exceptions import (FileDoesNotExistException,
-                                                  StreamingViolationException)
+from rfexcel.exception.library_exceptions import (
+    FileDoesNotExistException, HeadersNotDeterminedException,
+    StreamingViolationException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -40,11 +41,11 @@ CSV_ROWS = [
 # example.xls has 8 physical columns; the last two headers are empty strings.
 XLS_FIRST_ROW = {
     "Index": "1.0", "First Name": "Dulce", "Last Name": "Abril",
-    "Gender": "Female", "Country": "United States", "Age": "32.0", "": "",
+    "Gender": "Female", "Country": "United States", "Age": "32.0",
 }
 XLS_LAST_ROW = {
     "Index": "9.0", "First Name": "Vincenza", "Last Name": "Weiland",
-    "Gender": "Female", "Country": "United States", "Age": "40.0", "": "",
+    "Gender": "Female", "Country": "United States", "Age": "40.0",
 }
 
 
@@ -85,9 +86,14 @@ class TestGetRowsXlsxEdit:
         assert "P-200" in rows[0]
 
     def test_header_row_beyond_data_returns_empty_list(self, lib: RFExcelLibrary):
-        """A header_row past the last row means no data rows exist."""
+        """When row 5 (the last data row) is used as the header, there are no data rows after it."""
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(header_row=5) == []
+
+    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE)
+        with pytest.raises(HeadersNotDeterminedException):
+            lib.get_rows(header_row=9999)
 
 
 # ─── xlsx stream mode ───────────────────────────────────────────────────────────
@@ -140,12 +146,16 @@ class TestGetRowsXlsStandard:
         assert rows[0]["Index"] == "1.0"
         assert rows[0]["Age"] == "32.0"
 
-    def test_trailing_empty_columns_produce_empty_string_key(self, lib: RFExcelLibrary):
-        """example.xls has 2 trailing empty columns — their header is ''."""
+    def test_trailing_empty_columns_excluded_from_result(self, lib: RFExcelLibrary):
+        """example.xls trailing empty-header columns are excluded from results.
+
+        get_header_map() only maps columns that have a non-empty header, so
+        the two trailing empty columns in example.xls do not appear as keys.
+        """
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
-        assert "" in rows[0]
-        assert rows[0][""] == ""
+        assert "" not in rows[0]
+        assert list(rows[0].keys()) == ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
 
     def test_all_rows_contain_expected_name_columns(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -195,6 +205,11 @@ class TestGetRowsCsvEdit:
         for row in lib.get_rows():
             assert list(row.keys()) == ["Product ID", "Description", "Price", "Location"]
 
+    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(CSV_FILE)
+        with pytest.raises(HeadersNotDeterminedException):
+            lib.get_rows(header_row=9999)
+
 
 # ─── csv stream mode ─────────────────────────────────────────────────────────────
 
@@ -243,9 +258,11 @@ class TestGetRowsNegative:
         lib.create_workbook(str(tmp_path / "empty.xlsx"))
         assert lib.get_rows() == []
 
-    def test_get_rows_on_empty_created_csv_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
+    def test_get_rows_on_empty_created_csv_raises(self, lib: RFExcelLibrary, tmp_path):
+        """An empty CSV file has no header row at all; header row 1 is out of range."""
         lib.create_workbook(str(tmp_path / "empty.csv"))
-        assert lib.get_rows() == []
+        with pytest.raises(HeadersNotDeterminedException):
+            lib.get_rows()
 
     def test_header_row_1_on_single_row_file_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
         """A file with only a header row and no data rows must yield []."""

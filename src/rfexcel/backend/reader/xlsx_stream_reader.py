@@ -19,6 +19,8 @@ class XlsxStreamReader(IReader):
 
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
+        if resource.last_read_row_index >= header_row_idx:
+            raise StreamingViolationException(header_row_idx, resource.last_read_row_index)
         for i in range(header_row_idx):
             row_data = resource.fetch_row(row_index=i, **kwargs)
             if i == header_row_idx - 1:

@@ -1,10 +1,7 @@
-from itertools import zip_longest
 from typing import override
 
-from robot.utils import DotDict  # type: ignore
-
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import DictRowData, ListRowData
+from rfexcel.utlis.types import DictRowData, HeaderMap, ListRowData
 
 
 class XlsRawRowData(IRawRowData):
@@ -16,5 +13,16 @@ class XlsRawRowData(IRawRowData):
         return [str(v) for v in self._data]
 
     @override
-    def get_dict_row_data(self, headers: ListRowData) -> DictRowData:
-        return DotDict(zip_longest(headers, (str(v) for v in self._data), fillvalue=""))
+    def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
+        return DictRowData({
+            name: (str(self._data[col - 1]) if col - 1 < len(self._data) else "")
+            for name, col in header_map.items()
+        })
+
+    @override
+    def get_header_map(self) -> HeaderMap:
+        return {
+            str(v): i + 1
+            for i, v in enumerate(self._data)
+            if str(v).strip() != ""
+        }

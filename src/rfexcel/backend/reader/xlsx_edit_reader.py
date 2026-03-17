@@ -17,7 +17,8 @@ class XlsxEditReader(IReader):
 
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
-        return resource.fetch_row(row_index=header_row_idx, **kwargs)
+        filtered = {k: v for k, v in kwargs.items() if k != 'data_only'}
+        return resource.fetch_row(row_index=header_row_idx, data_only=False, **filtered)
 
     @override
     def get_row(self, row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
