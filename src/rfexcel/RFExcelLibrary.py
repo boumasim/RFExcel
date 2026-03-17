@@ -1,12 +1,13 @@
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from robot.api import logger  # type: ignore
-from robot.api.deco import keyword, not_keyword  # type: ignore
+from robot.api.deco import keyword, not_keyword
+from robot.utils import DotDict  # type: ignore
+
+from rfexcel.factory.workbook_factory import WorkbookFactory
+from rfexcel.utlis.types import DictRowData, HeaderSpec  # type: ignore
 
 from .backend.interfaces.i_library import IExcel
-from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
-                                 RowInputData)
 
 
 class RFExcelLibrary:
@@ -120,10 +121,10 @@ class RFExcelLibrary:
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: RowInputData | str | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
-                **kwargs: Any) -> List[DictRowData] | DictRowData:
+                **kwargs: Any) -> list[DotDict] | DotDict:
         """Returns data rows from the active sheet as a list of dicts keyed by column header.
 
         Row ``header_row`` is used as column headers; rows before it are ignored.
@@ -162,10 +163,10 @@ class RFExcelLibrary:
                 one_row=one_row,
                 **kwargs,
             )
-        return DictRowData() if one_row else []
+        return DotDict() if one_row else []
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: HeaderSpec | None = None, **kwargs: Any) -> Union[DictRowData, ListRowData]:
+    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> dict[str, str] | list[str]:
         """Returns a single row by its row number as a list or dict.
 
         - No ``headers``: Returns a plain ``list`` of string values.
@@ -305,7 +306,7 @@ class RFExcelLibrary:
             logger.info("Workbook successfully saved")
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_row(self, row_data: RowInputData, header_row: int = 1) -> None:
+    def append_row(self, row_data: dict[str, str], header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
@@ -329,7 +330,7 @@ class RFExcelLibrary:
             self._active_workbook.append_row(row_data=row_data, header_row=header_row)
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_rows(self, rows: list[RowInputData], header_row: int = 1) -> None:
+    def append_rows(self, rows: list[dict[str, str]], header_row: int = 1) -> None:
         """Appends multiple rows to the end of the active sheet. Same rules as ``Append Row``.
 
         Arguments:
@@ -348,8 +349,8 @@ class RFExcelLibrary:
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
-                      search_criteria: RowInputData | str,
-                      values: RowInputData | str,
+                      search_criteria: dict[str, str] | str,
+                      values: dict[str, str] | str,
                       header_row: int = 1,
                       partial_match: bool = False,
                       first_only: bool = False) -> int:
@@ -388,7 +389,7 @@ class RFExcelLibrary:
 
     @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_rows(self,
-                    search_criteria: RowInputData | str,
+                    search_criteria: dict[str, str] | str,
                     header_row: int = 1,
                     partial_match: bool = False,
                     first_only: bool = False) -> int:
@@ -467,7 +468,7 @@ class RFExcelLibrary:
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+                        headers: list[str] | None = None) -> list[dict[str, Any]]:
         """Compares the active workbook row-by-row against a target file and returns the differences.
 
         Opens ``target_path`` in streaming (read-only) mode. The source is the currently

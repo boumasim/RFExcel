@@ -49,12 +49,12 @@ Get Rows with Search Criteria
 
 Sheet test
     [Documentation]     Test sheet operations: create, switch, and verify data
-    Load Workbook    path=${RESOURCES}/test.xlsx
+    Load Workbook    path=${RESOURCES}/data.xlsx
     ${sheets}=     List Sheet Names
     Add Sheet       name=Test 1
     ${sheet1}=     List Sheet Names
     Switch Sheet    name=List 1
-    Delete Sheet    name=Test1
+    Delete Sheet    name=Test 1
     ${sheet_names}=     List Sheet Names
     Log    Remaining Sheets: ${sheet_names}
 
@@ -74,7 +74,7 @@ Add row to shifted table
 
 Compare data to another file
     [Documentation]     Test comparing data between two files and verify differences
-    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=False
     ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx
     Log    Differences: ${differences}
     ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx  headers=['Description', 'Location']
