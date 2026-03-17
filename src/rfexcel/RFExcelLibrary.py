@@ -1,7 +1,7 @@
 from typing import Any
 
 from robot.api import logger  # type: ignore
-from robot.api.deco import keyword, not_keyword
+from robot.api.deco import keyword, not_keyword # type: ignore
 from robot.utils import DotDict  # type: ignore
 
 from rfexcel.factory.workbook_factory import WorkbookFactory
