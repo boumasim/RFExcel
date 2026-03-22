@@ -98,6 +98,16 @@ class CsvEditResource(IResource):
             self._all_rows.pop(list_index)
 
     @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        list_index = row_index - 1
+        if not cell_data:
+            row: list[str] = []
+        else:
+            max_col = max(cell_data.keys())
+            row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
+        self._all_rows.insert(list_index, row)
+
+    @override
     def close(self):
         pass
 
@@ -158,6 +168,11 @@ class CsvStreamResource(IResource):
     @override
     def delete_row(self, row_index: int) -> None:
         raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Inserting rows is not supported in streaming (read-only) mode")
+
     @override
     def close(self):
         if self._handle and not self._handle.closed:

@@ -38,3 +38,7 @@ class CsvWriter(IWriter):
     @override
     def delete_row(self, row_index: int, resource: IResource) -> None:
         resource.delete_row(row_index)
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        resource.insert_row(row_index, cell_data)

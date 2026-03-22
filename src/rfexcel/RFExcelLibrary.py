@@ -1,7 +1,7 @@
 from typing import Any
 
 from robot.api import logger  # type: ignore
-from robot.api.deco import keyword, not_keyword # type: ignore
+from robot.api.deco import keyword, not_keyword  # type: ignore
 from robot.utils import DotDict  # type: ignore
 
 from rfexcel.factory.workbook_factory import WorkbookFactory
@@ -346,6 +346,33 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.append_rows(rows=rows, header_row=header_row)
+
+    @keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def insert_row(self, row_data: dict[str, str], row: int, header_row: int = 1) -> None:
+        """Inserts a new row at the given row index, shifting existing rows down.
+
+        ``row_data`` maps column header names to values. Keys not found in the headers
+        are silently ignored; missing columns are written as empty strings.
+        ``row`` must be greater than ``header_row``; otherwise ``RowIndexOutOfBoundsException``
+        is raised.
+        Streaming / read-only mode raises ``LibraryException``.
+        ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
+
+        Arguments:
+        - ``row_data``: Dict mapping column header names to cell values.
+        - ``row``: 1-based row index at which the new row is inserted (must be > ``header_row``).
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |                                                                       |
+        | Insert Row    | ${{{"Product ID": "P-010", "Description": "New", "Price": "1.00"}}} | 2 |
+        | Save Workbook |                     |                                                                       |
+        | Load Workbook | ${CURDIR}/data.csv  |                                                                       |
+        | Insert Row    | ${{{"Product ID": "P-020", "Price": "2.00"}}}                        | 3 |
+        | Save Workbook |                     |                                                                       |
+        """
+        if self._active_workbook:
+            self._active_workbook.insert_row(row_data=row_data, row=row, header_row=header_row)
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,

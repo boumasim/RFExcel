@@ -77,6 +77,10 @@ class XlsEditResource(IResource):
         raise OperationNotSupportedForFormat(".xls format is read-only; deleting rows is not supported")
 
     @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; inserting rows is not supported")
+
+    @override
     def close(self):
         self._wb.release_resources()
 
@@ -140,6 +144,10 @@ class XlsStreamResource(IResource):
     @override
     def delete_row(self, row_index: int) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; deleting rows is not supported")
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; inserting rows is not supported")
 
     @override
     def close(self):

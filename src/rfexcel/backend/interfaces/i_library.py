@@ -94,6 +94,10 @@ class IExcel(ABC):
         pass
 
     @abstractmethod
+    def insert_row(self, row_data: RowInputData, row: int, header_row: int) -> None:
+        pass
+
+    @abstractmethod
     def compare_data_to(self,
                         target: IExcel,
                         source_header_row: int = 1,

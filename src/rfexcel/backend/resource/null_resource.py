@@ -65,3 +65,7 @@ class NullResource(IResource):
     @override
     def delete_row(self, row_index: int) -> None:
         raise NullComponentException()
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NullComponentException()

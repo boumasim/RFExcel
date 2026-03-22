@@ -5,7 +5,6 @@ from openpyxl import Workbook
 from robot.api import logger
 from xls2xlsx import XLS2XLSX  # pyright: ignore[reportMissingTypeStubs]
 
-from .backend.interfaces.i_library import IExcel, ISetExcel
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
@@ -17,6 +16,7 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
                                      headers_to_header_map, search_in_row)
 
+from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
 from .backend.metadata.null_metadata import NullMetadata
 from .backend.reader.i_reader import IReader
@@ -161,6 +161,22 @@ class RFExcel(IExcel, ISetExcel):
     def append_rows(self, rows: list[RowInputData], header_row: int) -> None:
         for row_data in rows:
             self.append_row(row_data, header_row)
+
+    @override
+    def insert_row(self, row_data: RowInputData, row: int, header_row: int) -> None:
+        if row <= header_row:
+            raise RowIndexOutOfBoundsException(
+                row, f"Row {row} must be greater than header_row {header_row}"
+            )
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
+        cell_data: ColumnValues = {
+            col: row_data[name]
+            for name, col in header_map.items()
+            if name in row_data
+        }
+        self._writer.insert_row(row, cell_data, self._resource)
 
     @override
     def delete_rows(self,

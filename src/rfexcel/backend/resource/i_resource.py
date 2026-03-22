@@ -64,3 +64,7 @@ class IResource(ABC):
     @abstractmethod
     def delete_row(self, row_index: int) -> None:
         pass
+
+    @abstractmethod
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        pass

@@ -37,3 +37,7 @@ class NullWriter(IWriter):
     @override
     def delete_row(self, row_index: int, resource: IResource) -> None:
         raise NullComponentException()
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        raise NullComponentException()
