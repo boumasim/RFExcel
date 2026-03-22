@@ -22,7 +22,7 @@ class IResource(ABC):
         pass
 
     @property
-    def get_path(self) -> Path:
+    def path(self) -> Path:
         return self._path
 
     @abstractmethod

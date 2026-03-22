@@ -19,7 +19,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import NotMatchingColumns
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLSX2_FILE, XLSX_FILE
+from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX2_FILE, XLSX_FILE
 
 # ─── expected differences ─────────────────────────────────────────────────────
 
@@ -246,3 +246,47 @@ class TestCompareDataToNegative:
         lib.load_workbook(XLSX_FILE)
         with pytest.raises(NotMatchingColumns):
             lib.compare_data_to(target_path)  # Description & Location absent in target
+
+
+# ─── same-workbook (same path) comparisons ───────────────────────────────────
+
+class TestCompareDataToSameWorkbook:
+    """When target_path resolves to the active workbook's path, the active
+    workbook is used directly as the target — no second file handle is opened
+    and the workbook is NOT closed after the comparison."""
+
+    def test_xlsx_same_path_returns_no_differences(self, lib: RFExcelLibrary):
+        """A workbook compared against itself must have no differences."""
+        lib.load_workbook(XLSX_FILE)
+        assert lib.compare_data_to(XLSX_FILE) == []
+
+    def test_workbook_remains_open_and_usable_after_same_path_compare(
+        self, lib: RFExcelLibrary
+    ):
+        """The active workbook must not be closed by a same-path comparison."""
+        lib.load_workbook(XLSX_FILE)
+        lib.compare_data_to(XLSX_FILE)
+        rows = lib.get_rows()
+        assert len(rows) > 0
+
+    def test_csv_same_path_returns_no_differences(self, lib: RFExcelLibrary):
+        lib.load_workbook(CSV_FILE)
+        assert lib.compare_data_to(CSV_FILE) == []
+
+    def test_xls_same_path_returns_no_differences(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE)
+        assert lib.compare_data_to(XLS_FILE) == []
+
+    def test_subset_headers_same_path_returns_no_differences(
+        self, lib: RFExcelLibrary
+    ):
+        """Selecting a header subset from the same workbook must still yield empty."""
+        lib.load_workbook(XLSX_FILE)
+        assert lib.compare_data_to(XLSX_FILE, headers=["Product ID", "Price"]) == []
+
+    def test_same_path_does_not_report_identical_rows(self, lib: RFExcelLibrary):
+        """None of the data rows should appear in the diff when source == target."""
+        lib.load_workbook(XLSX_FILE)
+        result = lib.compare_data_to(XLSX_FILE)
+        assert result == []
+        assert len(result) == 0

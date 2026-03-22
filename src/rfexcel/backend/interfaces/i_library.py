@@ -103,7 +103,8 @@ class IExcel(ABC):
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+                        headers: list[str] | None = None,
+                        close_target: bool = True) -> List[Dict[str, Any]]:
         pass
 
 class ISetExcel(ABC):

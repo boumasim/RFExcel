@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from robot.api import logger  # type: ignore
@@ -491,12 +492,17 @@ class RFExcelLibrary:
 
     @keyword("Compare Data To")  # pyright: ignore[reportUntypedFunctionDecorator]
     def compare_data_to(self,
-                        target_path: str,
+                        target_path: str | None = None,
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
                         headers: list[str] | None = None) -> list[dict[str, Any]]:
         """Compares the active workbook row-by-row against a target file and returns the differences.
+
+        When ``target_path`` resolves to the same file as the active workbook, the
+        active workbook is used directly as the comparison target (in-memory state,
+        no second file load). For different files a separate read-only handle is
+        opened and closed automatically.
 
         Opens ``target_path`` in streaming (read-only) mode. The source is the currently
         active workbook. Row ``source_header_row`` / ``target_header_row`` is used as
@@ -513,7 +519,7 @@ class RFExcelLibrary:
         Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
 
         Arguments:
-        - ``target_path``: Path to the file to compare against.
+        - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparision, argument can be ommited.
         - ``source_header_row``: Header row in the source (active workbook). Defaults to ``1``.
         - ``target_header_row``: Header row in the target file. Defaults to ``1``.
         - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.
@@ -536,11 +542,20 @@ class RFExcelLibrary:
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx        |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Cena", "Skladem"]} |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | target_sheet=Sheet2           |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/source.xlsx |                               |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
         """
         if self._active_workbook:
-
-            target : IExcel = self._factory.load_workbook(path=target_path, read_only=True)
+            same_file = (
+                target_path is None or
+                Path(target_path).resolve() == self._active_workbook.resource.path.resolve()
+            )
+            if same_file:
+                target: IExcel = self._active_workbook
+                close_target = False
+            else:
+                target = self._factory.load_workbook(path=str(target_path), read_only=True)
+                close_target = True
 
             return self._active_workbook.compare_data_to(
                 target=target,
@@ -548,5 +563,6 @@ class RFExcelLibrary:
                 target_header_row=target_header_row,
                 target_sheet=target_sheet,
                 headers=headers,
+                close_target=close_target,
             )
         return []

@@ -121,13 +121,13 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def xls_to_xlsx(self):
         logger.info(
-            f"Converting '{self._resource.get_path.name}' from .xls to .xlsx in memory "
+            f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
-        x2x = XLS2XLSX(str(self._resource.get_path))
+        x2x = XLS2XLSX(str(self._resource.path))
         wb : Workbook = cast(Workbook, x2x.to_xlsx()) # type: ignore
         self._resource.close()
-        self._resource = XlsxEditResource(wb, self._resource.get_path)
+        self._resource = XlsxEditResource(wb, self._resource.path)
         self._reader = XlsxEditReader()
         self._metadata = XlsxMetadata()
         self._writer = XlsxWriter()
@@ -254,7 +254,8 @@ class RFExcel(IExcel, ISetExcel):
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+                        headers: list[str] | None = None,
+                        close_target: bool = True) -> List[Dict[str, Any]]:
         try:
             if target_sheet is not None:
                 target.switch_sheet(target_sheet)
@@ -313,5 +314,5 @@ class RFExcel(IExcel, ISetExcel):
 
             return result
         finally:
-            target.close()
-            target.close()
+            if close_target:
+                target.close()
