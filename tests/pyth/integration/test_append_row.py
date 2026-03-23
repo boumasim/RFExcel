@@ -1,10 +1,12 @@
 import shutil
+from pathlib import Path
 
 import openpyxl
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NullComponentException, WorkbookNotOpenException)
+    HeadersNotDeterminedException, NullComponentException,
+    WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -18,7 +20,7 @@ _FULL_ROW = {"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "L
 
 class TestAppendRowXlsxEdit:
 
-    def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path):
+    def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
@@ -31,7 +33,7 @@ class TestAppendRowXlsxEdit:
         assert rows[-1]["Location"] == "Online"
 
     def test_partial_row_fills_missing_columns_with_empty_string(
-        self, lib: RFExcelLibrary, tmp_path
+        self, lib: RFExcelLibrary, tmp_path: Path
     ):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
@@ -42,7 +44,7 @@ class TestAppendRowXlsxEdit:
         assert last["Description"] == ""
         assert last["Location"] == ""
 
-    def test_unknown_keys_are_silently_ignored(self, lib: RFExcelLibrary, tmp_path):
+    def test_unknown_keys_are_silently_ignored(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
@@ -51,7 +53,7 @@ class TestAppendRowXlsxEdit:
         assert len(rows) == before + 1
         assert rows[-1]["Product ID"] == "P-777"
 
-    def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         lib.append_row(_FULL_ROW)
@@ -64,7 +66,7 @@ class TestAppendRowXlsxEdit:
         assert rows[-1]["Product ID"] == "P-999"
         lib2.close()
 
-    def test_custom_header_row(self, lib: RFExcelLibrary, tmp_path):
+    def test_custom_header_row(self, lib: RFExcelLibrary, tmp_path: Path):
         """When the sheet has a blank/filler first row and headers on row 2."""
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -81,7 +83,7 @@ class TestAppendRowXlsxEdit:
         assert rows[-1]["Name"] == "Bob"
         assert rows[-1]["Score"] == "85"
 
-    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary, tmp_path):
+    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         with pytest.raises(HeadersNotDeterminedException):
@@ -94,7 +96,7 @@ class TestAppendRowXlsxEdit:
 
 class TestAppendRowXlsxStream:
 
-    def test_append_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(NullComponentException):
@@ -108,7 +110,7 @@ class TestAppendRowXlsxStream:
 class TestAppendRowXlsEdit:
 
     def test_append_row_triggers_conversion_and_persists(
-        self, lib: RFExcelLibrary, tmp_path
+        self, lib: RFExcelLibrary, tmp_path: Path
     ):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = str(tmp_path / "result.xlsx")
@@ -125,7 +127,7 @@ class TestAppendRowXlsEdit:
         lib2.close()
 
     def test_original_xls_untouched_after_append_row(
-        self, lib: RFExcelLibrary, tmp_path
+        self, lib: RFExcelLibrary, tmp_path: Path
     ):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         original_rows_count = RFExcelLibrary()
@@ -150,7 +152,7 @@ class TestAppendRowXlsEdit:
 
 class TestAppendRowXlsStream:
 
-    def test_append_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(NullComponentException):
@@ -163,7 +165,7 @@ class TestAppendRowXlsStream:
 
 class TestAppendRowCsvEdit:
 
-    def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path):
+    def test_full_row_appears_at_end(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
@@ -173,7 +175,7 @@ class TestAppendRowCsvEdit:
         assert rows[-1]["Product ID"] == "P-999"
 
     def test_partial_row_fills_missing_with_empty_string(
-        self, lib: RFExcelLibrary, tmp_path
+        self, lib: RFExcelLibrary, tmp_path: Path
     ):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
@@ -184,7 +186,7 @@ class TestAppendRowCsvEdit:
         assert last["Price"] == ""
         assert last["Location"] == ""
 
-    def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         lib.append_row(_FULL_ROW)
@@ -199,7 +201,7 @@ class TestAppendRowCsvEdit:
         lib2.close()
 
     def test_multiple_rows_added_in_correct_order(
-        self, lib: RFExcelLibrary, tmp_path
+        self, lib: RFExcelLibrary, tmp_path: Path
     ):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
@@ -216,7 +218,7 @@ class TestAppendRowCsvEdit:
 
 class TestAppendRowCsvStream:
 
-    def test_append_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
+    def test_append_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path, read_only=True)
         with pytest.raises(NullComponentException):
@@ -241,10 +243,11 @@ class TestAppendRowNoWorkbook:
 # ---------------------------------------------------------------------------
 
 class TestAppendRowXlsxShifted:
-    def _make_shifted_xlsx(self, tmp_path) -> str:
+    def _make_shifted_xlsx(self, tmp_path: Path) -> str:
         """Start at B"""
         wb = openpyxl.Workbook()
         ws = wb.active
+        assert ws is not None
         ws["B1"] = "Product ID"
         ws["C1"] = "Description"
         ws["D1"] = "Price"
@@ -261,7 +264,7 @@ class TestAppendRowXlsxShifted:
         wb.save(path)
         return path
 
-    def test_new_row_lands_in_correct_columns(self, lib: RFExcelLibrary, tmp_path):
+    def test_new_row_lands_in_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
         lib.append_row({"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"})
@@ -269,6 +272,7 @@ class TestAppendRowXlsxShifted:
 
         wb = openpyxl.load_workbook(path)
         ws = wb.active
+        assert ws is not None
         last_row = ws.max_row
 
         assert ws.cell(last_row, 1).value is None,  "Column A must stay empty"
@@ -277,7 +281,7 @@ class TestAppendRowXlsxShifted:
         assert ws.cell(last_row, 4).value == "9.99",   "Price must land in col D"
         assert ws.cell(last_row, 5).value == "Online", "Location must land in col E"
 
-    def test_partial_row_leaves_other_columns_empty(self, lib: RFExcelLibrary, tmp_path):
+    def test_partial_row_leaves_other_columns_empty(self, lib: RFExcelLibrary, tmp_path: Path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
         lib.append_row({"Product ID": "P-777", "Price": "7.77"})
@@ -285,6 +289,7 @@ class TestAppendRowXlsxShifted:
 
         wb = openpyxl.load_workbook(path)
         ws = wb.active
+        assert ws is not None
         last_row = ws.max_row
 
         assert ws.cell(last_row, 1).value is None,    "Column A stays empty"
@@ -293,7 +298,7 @@ class TestAppendRowXlsxShifted:
         assert ws.cell(last_row, 4).value == "7.77",  "Price lands in col D"
         assert ws.cell(last_row, 5).value is None,    "Location not provided → empty"
 
-    def test_get_rows_still_returns_correct_dict(self, lib: RFExcelLibrary, tmp_path):
+    def test_get_rows_still_returns_correct_dict(self, lib: RFExcelLibrary, tmp_path: Path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
         lib.append_row({"Product ID": "P-888", "Description": "Gamma", "Price": "8.88", "Location": "Depot"})
@@ -301,4 +306,5 @@ class TestAppendRowXlsxShifted:
         assert rows[-1]["Product ID"] == "P-888"
         assert rows[-1]["Description"] == "Gamma"
         assert rows[-1]["Price"] == "8.88"
+        assert rows[-1]["Location"] == "Depot"
         assert rows[-1]["Location"] == "Depot"

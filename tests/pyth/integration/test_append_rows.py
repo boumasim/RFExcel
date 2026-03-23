@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 
 import pytest
@@ -16,7 +17,7 @@ _ROW_B = {"Product ID": "P-002", "Description": "Beta",  "Price": "2.00", "Locat
 
 class TestAppendRowsXlsxEdit:
 
-    def test_all_rows_appended_in_order(self, lib: RFExcelLibrary, tmp_path):
+    def test_all_rows_appended_in_order(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
@@ -26,14 +27,14 @@ class TestAppendRowsXlsxEdit:
         assert rows[-2]["Product ID"] == "P-001"
         assert rows[-1]["Product ID"] == "P-002"
 
-    def test_empty_list_is_noop(self, lib: RFExcelLibrary, tmp_path):
+    def test_empty_list_is_noop(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
         lib.append_rows([])
         assert len(lib.get_rows()) == before
 
-    def test_partial_rows_fill_missing_with_empty_string(self, lib: RFExcelLibrary, tmp_path):
+    def test_partial_rows_fill_missing_with_empty_string(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         lib.append_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
@@ -43,7 +44,7 @@ class TestAppendRowsXlsxEdit:
         assert rows[-1]["Price"] == "5.00"
         assert rows[-1]["Product ID"] == ""
 
-    def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path):
+    def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         lib.append_rows([_ROW_A, _ROW_B])
@@ -81,7 +82,7 @@ class TestAppendRowsXlsEdit:
     _XLS_ROW_B = {"Index": "100", "First Name": "Bob", "Last Name": "Jones",
                   "Gender": "Male", "Country": "Slovakia", "Age": "25"}
 
-    def test_rows_appended_after_lazy_conversion(self, lib: RFExcelLibrary, tmp_path):
+    def test_rows_appended_after_lazy_conversion(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
@@ -110,7 +111,7 @@ class TestAppendRowsXlsOnDemand:
 
 class TestAppendRowsCsvEdit:
 
-    def test_rows_appended_and_read_back(self, lib: RFExcelLibrary, tmp_path):
+    def test_rows_appended_and_read_back(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())

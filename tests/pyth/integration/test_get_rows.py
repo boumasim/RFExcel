@@ -1,3 +1,4 @@
+from pathlib import Path
 """Integration tests for the Get Rows keyword.
 
 Expected data is derived from the actual files:
@@ -256,17 +257,17 @@ class TestGetRowsNegative:
         with pytest.raises(FileDoesNotExistException):
             lib.load_workbook("/nonexistent/path/missing.xlsx")
 
-    def test_get_rows_on_empty_created_xlsx_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
+    def test_get_rows_on_empty_created_xlsx_returns_empty_list(self, lib: RFExcelLibrary, tmp_path: Path):
         lib.create_workbook(str(tmp_path / "empty.xlsx"))
         assert lib.get_rows() == []
 
-    def test_get_rows_on_empty_created_csv_raises(self, lib: RFExcelLibrary, tmp_path):
+    def test_get_rows_on_empty_created_csv_raises(self, lib: RFExcelLibrary, tmp_path: Path):
         """An empty CSV file has no header row at all; header row 1 is out of range."""
         lib.create_workbook(str(tmp_path / "empty.csv"))
         with pytest.raises(HeadersNotDeterminedException):
             lib.get_rows()
 
-    def test_header_row_1_on_single_row_file_returns_empty_list(self, lib: RFExcelLibrary, tmp_path):
+    def test_header_row_1_on_single_row_file_returns_empty_list(self, lib: RFExcelLibrary, tmp_path: Path):
         """A file with only a header row and no data rows must yield []."""
         path = tmp_path / "headers_only.csv"
         with open(path, "w", newline="") as f:
@@ -469,7 +470,7 @@ class TestGetRowsOneRow:
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows(one_row=True)
 
-    def test_one_row_early_exit_does_not_exhaust_all_rows(self, lib: RFExcelLibrary, tmp_path):
+    def test_one_row_early_exit_does_not_exhaust_all_rows(self, lib: RFExcelLibrary, tmp_path: Path):
         """When one_row=True the loop must stop after the first match.
         Verified by counting how many rows a second (non-filtered) call returns
         from a freshly opened edit-mode file — all 4 must still be readable.

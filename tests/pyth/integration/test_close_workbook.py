@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
@@ -34,13 +35,13 @@ class TestCloseWorkbookPositive:
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows()
 
-    def test_close_after_create_xlsx_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path):
+    def test_close_after_create_xlsx_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path: Path):
         lib.create_workbook(str(tmp_path / "new.xlsx"))
         lib.close()
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows()
 
-    def test_close_after_create_csv_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path):
+    def test_close_after_create_csv_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path: Path):
         lib.create_workbook(str(tmp_path / "new.csv"))
         lib.close()
         with pytest.raises(WorkbookNotOpenException):

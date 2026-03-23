@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 
 import pytest
@@ -112,20 +113,20 @@ class TestDeleteRowXlsOnDemand:
 
 class TestDeleteRowCsvEdit:
 
-    def test_row_deleted(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_deleted(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         lib.delete_row(2)  # row 2 is P-200
         assert all(r["Product ID"] != "P-200" for r in lib.get_rows())
 
-    def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
         lib.delete_row(2)
         assert len(lib.get_rows()) == before - 1
 
-    def test_row_number_beyond_last_row_raises(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_number_beyond_last_row_raises(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         with pytest.raises(RowIndexOutOfBoundsException):

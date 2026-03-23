@@ -2,6 +2,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import (
     LibraryException, NullComponentException, OperationNotSupportedForFormat)
+from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 # ---------------------------------------------------------------------------
@@ -10,27 +11,27 @@ from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 class TestDeleteSheetXlsxEdit:
 
-    def test_delete_sheet_removes_sheet(self, lib):
+    def test_delete_sheet_removes_sheet(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.add_sheet("ToDelete")
         lib.delete_sheet("ToDelete")
         assert "ToDelete" not in lib.list_sheet_names()
 
-    def test_delete_sheet_decrements_sheet_count(self, lib):
+    def test_delete_sheet_decrements_sheet_count(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.add_sheet("Temp")
         before = len(lib.list_sheet_names())
         lib.delete_sheet("Temp")
         assert len(lib.list_sheet_names()) == before - 1
 
-    def test_delete_sheet_preserves_remaining_sheets(self, lib):
+    def test_delete_sheet_preserves_remaining_sheets(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.add_sheet("Keep")
         lib.add_sheet("Remove")
         lib.delete_sheet("Remove")
         assert "Keep" in lib.list_sheet_names()
 
-    def test_delete_sheet_resets_active_to_first_sheet(self, lib):
+    def test_delete_sheet_resets_active_to_first_sheet(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         first_sheet = lib.list_sheet_names()[0]
         lib.add_sheet("Victim")
@@ -41,7 +42,7 @@ class TestDeleteSheetXlsxEdit:
         assert isinstance(rows, list)
         assert len(rows) > 0
 
-    def test_delete_nonexistent_sheet_raises(self, lib):
+    def test_delete_nonexistent_sheet_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         with pytest.raises(LibraryException):
             lib.delete_sheet("DoesNotExist")
@@ -53,7 +54,7 @@ class TestDeleteSheetXlsxEdit:
 
 class TestDeleteSheetXlsxStream:
 
-    def test_delete_sheet_raises_in_stream_mode(self, lib):
+    def test_delete_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         with pytest.raises(NullComponentException):
             lib.delete_sheet("Sheet1")
@@ -65,14 +66,13 @@ class TestDeleteSheetXlsxStream:
 
 class TestDeleteSheetXlsEdit:
 
-    def test_delete_sheet_triggers_xls_conversion(self, lib):
+    def test_delete_sheet_triggers_xls_conversion(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
-        original = lib.list_sheet_names()
         lib.add_sheet("Extra")
         lib.delete_sheet("Extra")
         assert "Extra" not in lib.list_sheet_names()
 
-    def test_delete_sheet_preserves_original_sheets(self, lib):
+    def test_delete_sheet_preserves_original_sheets(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         original = lib.list_sheet_names()
         lib.add_sheet("TempSheet")
@@ -80,7 +80,7 @@ class TestDeleteSheetXlsEdit:
         for name in original:
             assert name in lib.list_sheet_names()
 
-    def test_delete_nonexistent_sheet_raises_after_conversion(self, lib):
+    def test_delete_nonexistent_sheet_raises_after_conversion(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         # Force conversion first via add_sheet, then attempt bad delete
         lib.add_sheet("Anchor")
@@ -94,7 +94,7 @@ class TestDeleteSheetXlsEdit:
 
 class TestDeleteSheetXlsOnDemand:
 
-    def test_delete_sheet_raises_in_stream_mode(self, lib):
+    def test_delete_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         with pytest.raises(NullComponentException):
             lib.delete_sheet("Sheet1")
@@ -106,12 +106,12 @@ class TestDeleteSheetXlsOnDemand:
 
 class TestDeleteSheetCsv:
 
-    def test_delete_sheet_raises_for_csv_edit(self, lib):
+    def test_delete_sheet_raises_for_csv_edit(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         with pytest.raises(OperationNotSupportedForFormat):
             lib.delete_sheet("ShouldFail")
 
-    def test_delete_sheet_raises_for_csv_stream(self, lib):
+    def test_delete_sheet_raises_for_csv_stream(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
         with pytest.raises(NullComponentException):
             lib.delete_sheet("ShouldFail")

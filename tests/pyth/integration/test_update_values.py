@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 
 import pytest
@@ -187,7 +188,7 @@ class TestUpdateValuesXlsOnDemand:
 
 class TestUpdateValuesCsvEdit:
 
-    def test_matching_row_updated(self, lib: RFExcelLibrary, tmp_path):
+    def test_matching_row_updated(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         count = lib.update_values(
@@ -198,7 +199,7 @@ class TestUpdateValuesCsvEdit:
         row = next(r for r in lib.get_rows() if r["Product ID"] == "P-200")
         assert row["Price"] == "0.00"
 
-    def test_unspecified_columns_untouched(self, lib: RFExcelLibrary, tmp_path):
+    def test_unspecified_columns_untouched(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         original_desc = next(
@@ -212,7 +213,7 @@ class TestUpdateValuesCsvEdit:
         assert row["Description"] == original_desc
         assert row["Price"] == "1.11"
 
-    def test_partial_match(self, lib: RFExcelLibrary, tmp_path):
+    def test_partial_match(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         count = lib.update_values(
@@ -315,7 +316,7 @@ class TestUpdateFirst:
                 first_only=True,
             )
 
-    def test_csv_only_first_match_updated(self, lib: RFExcelLibrary, tmp_path):
+    def test_csv_only_first_match_updated(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         count = lib.update_values(

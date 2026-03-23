@@ -1,3 +1,5 @@
+from pathlib import Path
+
 """Integration tests for the Compare Data To keyword.
 
 Source file: data.xlsx  (4 data rows on 'List 1', header on row 1)
@@ -185,11 +187,12 @@ class TestCompareDataToXlsxVsCsv:
 
 class TestCompareDataToHeaderRow:
 
-    def test_custom_header_rows_both_offset(self, lib: RFExcelLibrary, tmp_path):
+    def test_custom_header_rows_both_offset(self, lib: RFExcelLibrary, tmp_path: Path):
         """Both files have their header on row 2; row 1 is a title row."""
         def _make(path: str, pid: str) -> None:
             wb = openpyxl.Workbook()
             ws = wb.active
+            assert ws is not None
             ws.append(["Title"])
             ws.append(["Product ID", "Price"])
             ws.append([pid, "9.99"])
@@ -205,10 +208,11 @@ class TestCompareDataToHeaderRow:
         assert len(result) == 1
         assert result[0]["differences"]["Product ID"] == {"source": "P-001", "target": "P-002"}
 
-    def test_identical_files_with_offset_header_returns_empty(self, lib: RFExcelLibrary, tmp_path):
+    def test_identical_files_with_offset_header_returns_empty(self, lib: RFExcelLibrary, tmp_path: Path):
         def _make(path: str) -> None:
             wb = openpyxl.Workbook()
             ws = wb.active
+            assert ws is not None
             ws.append(["ignore"])
             ws.append(["Name", "Score"])
             ws.append(["Alice", "90"])
@@ -236,10 +240,11 @@ class TestCompareDataToNegative:
         with pytest.raises(NotMatchingColumns):
             lib.compare_data_to(XLSX2_FILE, headers=["Nonexistent"])
 
-    def test_source_header_absent_in_target_raises(self, lib: RFExcelLibrary, tmp_path):
+    def test_source_header_absent_in_target_raises(self, lib: RFExcelLibrary, tmp_path: Path):
         """Target with a subset of source columns must raise NotMatchingColumns."""
         wb = openpyxl.Workbook()
         ws = wb.active
+        assert ws is not None
         ws.append(["Product ID", "Price"])
         ws.append(["P-200", "25.50"])
         target_path = str(tmp_path / "subset.xlsx")
@@ -374,4 +379,5 @@ class TestCompareDataToFailOnDiff:
     def test_explicit_false_returns_full_diff_list(self, loaded_xlsx: RFExcelLibrary):
         """fail_on_diff=False must accumulate all diffs and return the full list."""
         result = loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=False)
+        assert result == XLSX_VS_CSV_DIFFS
         assert result == XLSX_VS_CSV_DIFFS

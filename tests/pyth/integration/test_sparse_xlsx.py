@@ -1,3 +1,4 @@
+from pathlib import Path
 """Integration tests for XLSX files with sparse/offset table layouts.
 
 Covers two scenarios:
@@ -57,20 +58,20 @@ def _make_gap_xlsx(path) -> None:
 
 class TestOffsetTableXlsxEdit:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path):
+    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
         _make_offset_xlsx(path)
         lib.load_workbook(path)
         assert len(lib.get_rows()) == 2
 
-    def test_header_keys_are_correct(self, lib: RFExcelLibrary, tmp_path):
+    def test_header_keys_are_correct(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
         _make_offset_xlsx(path)
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert list(rows[0].keys()) == ["Name", "Score"]
 
-    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path):
+    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
         _make_offset_xlsx(path)
         lib.load_workbook(path)
@@ -80,7 +81,7 @@ class TestOffsetTableXlsxEdit:
         assert rows[1]["Name"] == "Bob"
         assert rows[1]["Score"] == "75"
 
-    def test_column_c_start(self, lib: RFExcelLibrary, tmp_path):
+    def test_column_c_start(self, lib: RFExcelLibrary, tmp_path: Path):
         """Table starting at column C (col index 3) is also handled correctly."""
         path = str(tmp_path / "offset_c.xlsx")
         _make_offset_xlsx(path, start_col=3)
@@ -92,13 +93,13 @@ class TestOffsetTableXlsxEdit:
 
 class TestOffsetTableXlsxStream:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path):
+    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
         _make_offset_xlsx(path)
         lib.load_workbook(path, read_only=True)
         assert len(lib.get_rows()) == 2
 
-    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path):
+    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
         _make_offset_xlsx(path)
         lib.load_workbook(path, read_only=True)
@@ -113,20 +114,20 @@ class TestOffsetTableXlsxStream:
 
 class TestGapColumnXlsxEdit:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path):
+    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
         _make_gap_xlsx(path)
         lib.load_workbook(path)
         assert len(lib.get_rows()) == 2
 
-    def test_header_keys_exclude_empty_column(self, lib: RFExcelLibrary, tmp_path):
+    def test_header_keys_exclude_empty_column(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
         _make_gap_xlsx(path)
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert list(rows[0].keys()) == ["Name", "Score"]
 
-    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path):
+    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
         _make_gap_xlsx(path)
         lib.load_workbook(path)
@@ -139,13 +140,13 @@ class TestGapColumnXlsxEdit:
 
 class TestGapColumnXlsxStream:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path):
+    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
         _make_gap_xlsx(path)
         lib.load_workbook(path, read_only=True)
         assert len(lib.get_rows()) == 2
 
-    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path):
+    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
         _make_gap_xlsx(path)
         lib.load_workbook(path, read_only=True)

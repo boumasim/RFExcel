@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 
 import pytest
@@ -126,21 +127,21 @@ class TestDeleteRowsXlsOnDemand:
 
 class TestDeleteRowsCsvEdit:
 
-    def test_matched_row_deleted(self, lib: RFExcelLibrary, tmp_path):
+    def test_matched_row_deleted(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         count = lib.delete_rows(search_criteria={"Product ID": "P-200"})
         assert count == 1
         assert all(r["Product ID"] != "P-200" for r in lib.get_rows())
 
-    def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path):
+    def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         before = len(lib.get_rows())
         lib.delete_rows(search_criteria={"Product ID": "P-201"})
         assert len(lib.get_rows()) == before - 1
 
-    def test_first_only_deletes_single_row(self, lib: RFExcelLibrary, tmp_path):
+    def test_first_only_deletes_single_row(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         # Tag two rows with the same Location so first_only makes a difference
