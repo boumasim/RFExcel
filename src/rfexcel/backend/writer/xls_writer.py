@@ -5,7 +5,7 @@ import weakref
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.RFExcel import RFExcel
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class XlsWriter(IWriter):

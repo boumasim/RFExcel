@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 from .i_writer import IWriter
 

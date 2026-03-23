@@ -7,7 +7,7 @@ from robot.utils import DotDict  # type: ignore
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utlis.types import DictRowData, HeaderSpec  # type: ignore
+from rfexcel.utils.types import DictRowData, HeaderSpec  # type: ignore
 
 from .backend.interfaces.i_library import IExcel
 

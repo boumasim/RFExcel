@@ -3,7 +3,7 @@ from typing import Any, override
 from openpyxl.cell.cell import Cell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import (ColumnValues, DictRowData, HeaderMap,
+from rfexcel.utils.types import (ColumnValues, DictRowData, HeaderMap,
                                  ListRowData)
 
 

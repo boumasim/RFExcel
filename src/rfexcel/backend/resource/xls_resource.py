@@ -8,7 +8,7 @@ from rfexcel.exception.library_exceptions import (
     LibraryException, OperationNotSupportedForFormat)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 from .i_resource import IResource
 

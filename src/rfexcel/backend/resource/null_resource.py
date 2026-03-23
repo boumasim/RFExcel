@@ -6,7 +6,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import NullComponentException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 from .i_resource import IResource
 

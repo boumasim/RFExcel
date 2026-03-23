@@ -12,7 +12,7 @@ from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
                                        CSV_NOT_SUPPORTED_MSG)
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class CsvEditResource(IResource):

@@ -12,7 +12,7 @@ from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
-from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
+from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      headers_to_header_map, search_in_row, convert_xls_to_xslx)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
@@ -26,7 +26,7 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utlis.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
+from .utils.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
                           ListRowData, RowInputData)
 
 

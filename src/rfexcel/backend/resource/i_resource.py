@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class IResource(ABC):

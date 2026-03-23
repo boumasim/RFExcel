@@ -3,7 +3,7 @@ from pathlib import Path
 from openpyxl import Workbook
 import xlrd
 
-from rfexcel.utlis.types import (DictRowData, HeaderMap, HeaderSpec,
+from rfexcel.utils.types import (DictRowData, HeaderMap, HeaderSpec,
                                  RowInputData)
 
 

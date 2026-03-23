@@ -3,7 +3,7 @@ from typing import override
 from robot.api import logger
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import DictRowData, HeaderMap, ListRowData
+from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class NullRawRowData(IRawRowData):

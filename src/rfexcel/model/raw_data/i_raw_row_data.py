@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from rfexcel.utlis.types import DictRowData, HeaderMap, ListRowData
+from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class IRawRowData(ABC):

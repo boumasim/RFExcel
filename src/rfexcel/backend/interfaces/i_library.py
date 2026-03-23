@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Union
 from rfexcel.backend.reader.i_reader import IReader
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
+from rfexcel.utils.types import (DictRowData, HeaderSpec, ListRowData,
                                  RowInputData)
 
 
