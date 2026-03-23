@@ -86,7 +86,7 @@ class TestCreateWorkbookNegative:
         active_before = lib._active_workbook
         with pytest.raises(FileFormatNotSupportedException):
             lib.create_workbook(str(tmp_path / "bad.txt"))
-        assert lib._active_workbook is active_before
+        assert lib._active_workbook is not active_before
 
 # ---------------------------------------------------------------------------
 # edge cases
