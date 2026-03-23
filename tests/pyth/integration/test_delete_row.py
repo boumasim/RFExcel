@@ -18,7 +18,7 @@ class TestDeleteRowXlsxEdit:
 
     def test_row_is_removed(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        lib.delete_row(2)  # row 2 is P-200
+        lib.delete_row(2)
         rows = lib.get_rows()
         assert all(r["Product ID"] != "P-200" for r in rows)
 
@@ -30,7 +30,7 @@ class TestDeleteRowXlsxEdit:
 
     def test_remaining_rows_readable_in_order(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        lib.delete_row(3)  # row 3 is P-201
+        lib.delete_row(3)
         ids = [r["Product ID"] for r in lib.get_rows()]
         assert "P-200" in ids
         assert "P-201" not in ids
@@ -40,7 +40,7 @@ class TestDeleteRowXlsxEdit:
     def test_delete_last_data_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         before = len(lib.get_rows())
-        lib.delete_row(5)  # row 5 is P-203
+        lib.delete_row(5)
         rows = lib.get_rows()
         assert len(rows) == before - 1
         assert all(r["Product ID"] != "P-203" for r in rows)
@@ -63,9 +63,8 @@ class TestDeleteRowXlsxEdit:
     def test_delete_header_row_removes_first_row(self, lib: RFExcelLibrary):
         """Deleting row 1 (the header row) shifts all rows up; row count decreases."""
         lib.load_workbook(XLSX_FILE)
-        before = lib.get_row(2)  # first data row before deletion
+        before = lib.get_row(2)
         lib.delete_row(1)
-        # What was row 2 becomes the new row 1
         assert lib.get_row(1) == before
 
 
@@ -90,7 +89,7 @@ class TestDeleteRowXlsEdit:
     def test_delete_triggers_conversion(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         before = len(lib.get_rows())
-        lib.delete_row(2)  # row 2 is the first data row
+        lib.delete_row(2)
         rows = lib.get_rows()
         assert len(rows) == before - 1
 
@@ -116,7 +115,7 @@ class TestDeleteRowCsvEdit:
     def test_row_deleted(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
-        lib.delete_row(2)  # row 2 is P-200
+        lib.delete_row(2)
         assert all(r["Product ID"] != "P-200" for r in lib.get_rows())
 
     def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path: Path):

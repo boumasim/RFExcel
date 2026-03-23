@@ -18,7 +18,9 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLSX_FILE
 
-# ─── positive ─────────────────────────────────────────────────────────────────
+#---------------------------------------------------------------------------
+# positive
+#---------------------------------------------------------------------------
 
 class TestCreateWorkbookPositive:
 
@@ -56,8 +58,9 @@ class TestCreateWorkbookPositive:
         with pytest.raises(HeadersNotDeterminedException):
             lib.get_rows()
 
-
-# ─── negative ─────────────────────────────────────────────────────────────────
+#---------------------------------------------------------------------------
+# negative
+#---------------------------------------------------------------------------
 
 class TestCreateWorkbookNegative:
 
@@ -100,8 +103,9 @@ class TestCreateWorkbookNegative:
             lib.create_workbook(str(tmp_path / "bad.txt"))
         assert lib._active_workbook is active_before
 
-
-# ─── edge cases ───────────────────────────────────────────────────────────────
+#---------------------------------------------------------------------------
+# edge cases
+#---------------------------------------------------------------------------
 
 class TestCreateWorkbookEdge:
 
@@ -114,14 +118,12 @@ class TestCreateWorkbookEdge:
     def test_created_xlsx_can_be_loaded_afterwards(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "roundtrip.xlsx")
         lib.create_workbook(path)
-        lib.close()
         lib.load_workbook(path)
         assert lib._active_workbook is not None
 
     def test_created_csv_can_be_loaded_afterwards(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "roundtrip.csv")
         lib.create_workbook(path)
-        lib.close()
         lib.load_workbook(path)
         assert lib._active_workbook is not None
 
@@ -129,7 +131,6 @@ class TestCreateWorkbookEdge:
         path_a = str(tmp_path / "a.xlsx")
         path_b = str(tmp_path / "b.xlsx")
         lib.create_workbook(path_a)
-        lib.close()
         lib.create_workbook(path_b)
         assert Path(path_a).exists()
         assert Path(path_b).exists()

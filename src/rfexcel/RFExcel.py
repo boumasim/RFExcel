@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union, override
+from typing import Any, List, Union, override
 
 from openpyxl import Workbook
 from robot.api import logger
@@ -27,8 +27,8 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utils.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
-                          ListRowData)
+from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
+                          HeaderMap, HeaderSpec, ListRowData, RowDifference)
 
 
 class RFExcel(IExcel, ISetExcel):
@@ -255,7 +255,7 @@ class RFExcel(IExcel, ISetExcel):
                         target_header_row: int,
                         target_sheet: str | None,
                         headers: list[str] | None,
-                        fail_on_diff: bool) -> List[Dict[str, Any]]:
+                        fail_on_diff: bool) -> list[RowDifference]:
         try:
             if target_sheet is not None:
                 target.switch_sheet(target_sheet)
@@ -275,7 +275,7 @@ class RFExcel(IExcel, ISetExcel):
                 if missing_in_source or missing_in_target:
                     raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
 
-            result: List[Dict[str, Any]] = []
+            result: list[RowDifference] = []
             source_row_index = source_header_row + 1
             target_row_index = target_header_row + 1
             target_exhausted = False
@@ -301,7 +301,7 @@ class RFExcel(IExcel, ISetExcel):
 
                 source_values = source_dict
                 target_values = target_dict
-                differences: Dict[str, Any] = {
+                differences: ColumnDifference = {
                     h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
                     for h in compare_headers
                     if source_values.get(h, "") != target_values.get(h, "")
@@ -310,7 +310,7 @@ class RFExcel(IExcel, ISetExcel):
                 if differences:
                     if fail_on_diff:
                         raise AssertionError(
-                            f"Difference found at source_row_index {source_row_index} (target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}): {differences}"
+                            f"Difference found at source_row_index {source_row_index}, target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}: {differences}"
                         )
                     result.append({"source_row_index": source_row_index, "differences": differences})
 

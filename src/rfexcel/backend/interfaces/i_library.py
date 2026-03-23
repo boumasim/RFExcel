@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 from rfexcel.backend.reader.i_reader import IReader
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.utils.types import DictRowData, HeaderSpec, ListRowData
+from rfexcel.utils.types import (DictRowData, HeaderSpec, ListRowData,
+                                 RowDifference)
 
 
 class IExcel(ABC):
@@ -103,7 +104,7 @@ class IExcel(ABC):
                         target_header_row: int,
                         target_sheet: str | None,
                         headers: list[str] | None,
-                        fail_on_diff: bool) -> List[Dict[str, Any]]:
+                        fail_on_diff: bool) -> list[RowDifference]:
         pass
 
 class ISetExcel(ABC):

@@ -7,7 +7,7 @@ from robot.utils import DotDict  # type: ignore
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utils.types import HeaderSpec  # type: ignore
+from rfexcel.utils.types import HeaderSpec, RowDifference  # type: ignore
 
 from .backend.interfaces.i_library import IExcel
 
@@ -83,6 +83,7 @@ class RFExcelLibrary:
         | Create Workbook | ${OUTPUT_DIR}${/}result.xlsx |
         | Create Workbook | ${OUTPUT_DIR}${/}output.csv  |
         """
+        if self._active_workbook: self.close()
         self._active_workbook = self._factory.create_workbook(path=path, **kwargs)
         logger.info("Workbook successfully created")
 
@@ -110,6 +111,7 @@ class RFExcelLibrary:
         | Load Workbook | ${CURDIR}/data.csv  | read_only=True |                |
         | Load Workbook | ${CURDIR}/data.xlsx | read_only=True | data_only=True |
         """
+        if self._active_workbook: self.close()
         self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
 
@@ -544,7 +546,7 @@ class RFExcelLibrary:
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
                         headers: list[str] | None = None,
-                        fail_on_diff: bool = False) -> list[dict[str, Any]]:
+                        fail_on_diff: bool = False) -> list[DotDict]:
         """Compares the active workbook row-by-row against a target file and returns the differences.
 
         When ``target_path`` resolves to the same file as the active workbook, the

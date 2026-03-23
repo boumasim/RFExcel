@@ -1,4 +1,7 @@
 from pathlib import Path
+from typing import cast
+
+from rfexcel.utils.types import ColumnDifference
 
 """Integration tests for the Compare Data To keyword.
 
@@ -54,8 +57,9 @@ XLSX_VS_CSV_DIFFS = [
     },
 ]
 
-
-# ─── xlsx (edit) vs xlsx2 ─────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx vs xlsx2
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToXlsxVsXlsx2:
 
@@ -71,24 +75,24 @@ class TestCompareDataToXlsxVsXlsx2:
 
     def test_product_id_diff_on_row_5(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        diffs = lib.compare_data_to(XLSX2_FILE)[0]["differences"]
+        diffs: ColumnDifference  = cast(ColumnDifference, lib.compare_data_to(XLSX2_FILE)[0]["differences"])
         assert diffs["Product ID"] == {"source": "P-203", "target": "P-205"}
 
     def test_price_diff_on_row_5(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        diffs = lib.compare_data_to(XLSX2_FILE)[0]["differences"]
+        diffs: ColumnDifference  = cast(ColumnDifference, lib.compare_data_to(XLSX2_FILE)[0]["differences"])
         assert diffs["Price"] == {"source": "5.99", "target": "6"}
 
     def test_unchanged_columns_absent_from_differences(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        diffs = lib.compare_data_to(XLSX2_FILE)[0]["differences"]
+        diffs: ColumnDifference  = cast(ColumnDifference, lib.compare_data_to(XLSX2_FILE)[0]["differences"])
         assert "Description" not in diffs
         assert "Location" not in diffs
 
     def test_identical_rows_not_reported(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX2_FILE)
-        reported = {entry["source_row_index"] for entry in result}
+        reported: set[int] = {entry["source_row_index"] for entry in result}
         assert reported.isdisjoint({2, 3, 4})
 
     def test_full_result_matches_expected_structure(self, lib: RFExcelLibrary):
@@ -113,7 +117,9 @@ class TestCompareDataToXlsxVsXlsx2:
         assert lib.compare_data_to(XLSX2_FILE, headers=["Description"]) == []
 
 
-# ─── target_sheet parameter ───────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# target_sheet parameter
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToTargetSheet:
 
@@ -135,12 +141,13 @@ class TestCompareDataToTargetSheet:
     def test_different_source_sheet_still_compares_against_target_sheet(self, lib: RFExcelLibrary):
         """Source on 'List 1' compared against target 'Sheet2': Sheet2 rows differ."""
         lib.load_workbook(XLSX_FILE)
-        # Sheet2 has P-3xx series, List 1 has P-2xx — everything differs
         result = lib.compare_data_to(XLSX2_FILE, target_sheet="Sheet2")
         assert len(result) == 4
 
 
-# ─── xlsx (edit) vs csv ───────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx vs csv
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToXlsxVsCsv:
 
@@ -183,7 +190,9 @@ class TestCompareDataToXlsxVsCsv:
         assert lib.compare_data_to(CSV_FILE, headers=["Product ID"]) == []
 
 
-# ─── header row variants ──────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# header row variants
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToHeaderRow:
 
@@ -227,7 +236,9 @@ class TestCompareDataToHeaderRow:
         assert lib.compare_data_to(target_path, source_header_row=2, target_header_row=2) == []
 
 
-# ─── negative / edge cases ───────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# negative / edge cases
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToNegative:
 
@@ -255,13 +266,11 @@ class TestCompareDataToNegative:
             lib.compare_data_to(target_path)  # Description & Location absent in target
 
 
-# ─── same-workbook (same path) comparisons ───────────────────────────────────
+# ---------------------------------------------------------------------------
+# same-workbook (same path) comparisons
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToSameWorkbook:
-    """When target_path resolves to the active workbook's path, the active
-    workbook is used directly as the target — no second file handle is opened
-    and the workbook is NOT closed after the comparison."""
-
     def test_xlsx_same_path_returns_no_differences(self, lib: RFExcelLibrary):
         """A workbook compared against itself must have no differences."""
         lib.load_workbook(XLSX_FILE)
@@ -287,30 +296,23 @@ class TestCompareDataToSameWorkbook:
     def test_subset_headers_same_path_returns_no_differences(
         self, lib: RFExcelLibrary
     ):
-        """Selecting a header subset from the same workbook must still yield empty."""
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(XLSX_FILE, headers=["Product ID", "Price"]) == []
 
     def test_same_path_does_not_report_identical_rows(self, lib: RFExcelLibrary):
-        """None of the data rows should appear in the diff when source == target."""
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX_FILE)
         assert result == []
 
 
-# ─── fail_on_diff parameter ───────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# fail_on_diff parameter
+# ---------------------------------------------------------------------------
 
 class TestCompareDataToFailOnDiff:
-    """fail_on_diff=True raises AssertionError at the first differing row instead
-    of accumulating results.  fail_on_diff=False (the default) returns the full
-    list and never raises."""
-
-    # --- no differences → must never raise regardless of the flag ---------------
-
     def test_no_diff_does_not_raise_when_fail_on_diff_true(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """Identical files must not raise even when fail_on_diff=True."""
         result = loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Description"], fail_on_diff=True)
         assert result == []
 
@@ -320,29 +322,23 @@ class TestCompareDataToFailOnDiff:
         result = loaded_xlsx.compare_data_to(XLSX_FILE, fail_on_diff=True)
         assert result == []
 
-    # --- differences present → raises on the first one --------------------------
-
     def test_raises_assertion_error_on_diff(self, loaded_xlsx: RFExcelLibrary):
-        """fail_on_diff=True must raise AssertionError when any row differs."""
         with pytest.raises(AssertionError):
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_assertion_error_message_contains_source_row_index(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """The AssertionError message must reference the differing source row."""
         with pytest.raises(AssertionError, match=r"source_row_index 5"):
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_assertion_error_message_contains_diff_column(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """The AssertionError message must name the differing column."""
         with pytest.raises(AssertionError, match="Product ID|Price"):
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_raises_at_first_diff_not_last(self, loaded_xlsx: RFExcelLibrary):
-        """With two diffs (rows 3 and 5 vs CSV), AssertionError must fire at row 3."""
         with pytest.raises(AssertionError, match=r"source_row_index 3"):
             loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
 
@@ -350,34 +346,26 @@ class TestCompareDataToFailOnDiff:
         with pytest.raises(AssertionError):
             loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
 
-    # --- headers subset with fail_on_diff ----------------------------------------
-
     def test_fail_on_diff_respects_headers_filter_no_raise(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """'Description' is identical between data.xlsx and data2.xlsx — no raise."""
         result = loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Description"], fail_on_diff=True)
         assert result == []
 
     def test_fail_on_diff_respects_headers_filter_raises(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """'Product ID' differs on row 5 between data.xlsx and data2.xlsx — must raise."""
         with pytest.raises(AssertionError):
             loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Product ID"], fail_on_diff=True)
-
-    # --- default value is False --------------------------------------------------
 
     def test_default_fail_on_diff_returns_list_not_exception(
         self, loaded_xlsx: RFExcelLibrary
     ):
-        """Omitting fail_on_diff must behave as False: return diffs, not raise."""
         result = loaded_xlsx.compare_data_to(XLSX2_FILE)
         assert isinstance(result, list)
         assert len(result) == 1
 
     def test_explicit_false_returns_full_diff_list(self, loaded_xlsx: RFExcelLibrary):
-        """fail_on_diff=False must accumulate all diffs and return the full list."""
         result = loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=False)
         assert result == XLSX_VS_CSV_DIFFS
         assert result == XLSX_VS_CSV_DIFFS

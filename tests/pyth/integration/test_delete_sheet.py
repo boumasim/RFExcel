@@ -36,7 +36,6 @@ class TestDeleteSheetXlsxEdit:
         first_sheet = lib.list_sheet_names()[0]
         lib.add_sheet("Victim")
         lib.delete_sheet("Victim")
-        # After deletion the active sheet falls back to first
         assert lib.list_sheet_names()[0] == first_sheet
         rows = lib.get_rows()
         assert isinstance(rows, list)
@@ -82,7 +81,6 @@ class TestDeleteSheetXlsEdit:
 
     def test_delete_nonexistent_sheet_raises_after_conversion(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
-        # Force conversion first via add_sheet, then attempt bad delete
         lib.add_sheet("Anchor")
         with pytest.raises(LibraryException):
             lib.delete_sheet("DoesNotExist")

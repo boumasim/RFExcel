@@ -41,7 +41,6 @@ class TestDeleteRowsXlsxEdit:
 
     def test_multiple_matches_all_deleted(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        # Tag two rows with the same location first
         lib.update_values(search_criteria={"Product ID": "P-201"}, values={"Location": "SAME"})
         lib.update_values(search_criteria={"Product ID": "P-202"}, values={"Location": "SAME"})
         count = lib.delete_rows(search_criteria={"Location": "SAME"})
@@ -56,7 +55,6 @@ class TestDeleteRowsXlsxEdit:
         count = lib.delete_rows(search_criteria={"Location": "SAME"}, one_row=True)
         assert count == 1
         rows = lib.get_rows()
-        # One row with SAME should still remain
         assert sum(1 for r in rows if r["Location"] == "SAME") == 1
 
     def test_partial_match_deletes_substring_rows(self, lib: RFExcelLibrary):
@@ -95,7 +93,7 @@ class TestDeleteRowsXlsxStream:
 
 
 # ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy conversion)
+# XLS – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestDeleteRowsXlsEdit:
@@ -110,7 +108,7 @@ class TestDeleteRowsXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLS – On-demand (streaming) mode
+# XLS – On-demand / streaming mode
 # ---------------------------------------------------------------------------
 
 class TestDeleteRowsXlsOnDemand:
@@ -144,12 +142,10 @@ class TestDeleteRowsCsvEdit:
     def test_first_only_deletes_single_row(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
-        # Tag two rows with the same Location so first_only makes a difference
         lib.update_values(search_criteria={"Product ID": "P-200"}, values={"Location": "DUPLICATE_LOC"})
         lib.update_values(search_criteria={"Product ID": "P-201"}, values={"Location": "DUPLICATE_LOC"})
         count = lib.delete_rows(search_criteria={"Location": "DUPLICATE_LOC"}, one_row=True)
         assert count == 1
-        # One row with DUPLICATE_LOC must still remain
         rows = lib.get_rows()
         assert sum(1 for r in rows if r["Location"] == "DUPLICATE_LOC") == 1
 
