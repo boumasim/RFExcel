@@ -1,33 +1,10 @@
-"""Integration tests for the Insert Row keyword.
-
-Each test that writes to a file works on a temporary copy (shutil.copy +
-tmp_path) so the originals in tests/resources are never modified.
-
-Headers in the test files (row 1):
-  data.xlsx / data.csv  ->  Product ID | Description | Price | Location
-  example.xls           ->  same columns (after lazy xls→xlsx conversion)
-
-Covers:
-  - XLSX edit: row inserted at correct position, existing rows shift down.
-  - XLSX edit: partial row (missing keys → ""), unknown keys ignored.
-  - XLSX edit: custom header_row.
-  - XLSX edit: row <= header_row raises RowIndexOutOfBoundsException.
-  - XLSX edit: header_row out of range raises HeadersNotDeterminedException.
-  - XLSX streaming: LibraryException.
-  - XLS edit: lazy conversion triggered, row persisted after save-as.
-  - XLS streaming: LibraryException.
-  - CSV edit: row inserted at correct position, round-trip read-back.
-  - CSV streaming: LibraryException.
-  - No workbook open: silent no-op.
-  - XLSX edit: shifted table (headers not at column A).
-"""
 import shutil
 
 import openpyxl
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException,
+    HeadersNotDeterminedException, NullComponentException,
     RowIndexOutOfBoundsException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
@@ -154,12 +131,12 @@ class TestInsertRowXlsxStream:
     def test_insert_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.insert_row(_NEW_ROW, row=2)
 
 
 # ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy conversion)
+# XLS – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestInsertRowXlsEdit:
@@ -210,7 +187,7 @@ class TestInsertRowXlsStream:
     def test_insert_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.insert_row(_NEW_ROW, row=2)
 
 
@@ -269,7 +246,7 @@ class TestInsertRowCsvStream:
     def test_insert_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.insert_row(_NEW_ROW, row=2)
 
 

@@ -1,9 +1,8 @@
-"""Integration tests for the Append Rows keyword."""
 import shutil
 
 import pytest
 
-from rfexcel.exception.library_exceptions import LibraryException
+from rfexcel.exception.library_exceptions import NullComponentException
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -67,7 +66,7 @@ class TestAppendRowsXlsxStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.append_rows([_ROW_A])
 
 
@@ -94,6 +93,18 @@ class TestAppendRowsXlsEdit:
 
 
 # ---------------------------------------------------------------------------
+# XLS – On-demand / streaming mode
+# ---------------------------------------------------------------------------
+
+class TestAppendRowsXlsOnDemand:
+
+    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(NullComponentException):
+            lib.append_rows([{"Index": "99", "First Name": "Alice"}])
+
+
+# ---------------------------------------------------------------------------
 # CSV – Edit mode
 # ---------------------------------------------------------------------------
 
@@ -115,7 +126,11 @@ class TestAppendRowsCsvEdit:
         assert rows[-1]["Product ID"] == "P-002"
         lib2.close()
 
+# ---------------------------------------------------------------------------
+# CSV – Streaming mode
+# ---------------------------------------------------------------------------
+
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.append_rows([_ROW_A])

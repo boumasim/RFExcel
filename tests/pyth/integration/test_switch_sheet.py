@@ -192,3 +192,23 @@ class TestSwitchSheetCsv:
         lib.load_workbook(CSV_FILE)
         with pytest.raises(OperationNotSupportedForFormat, match="(?i)csv"):
             lib.switch_sheet("anything")
+
+
+# ─── negative ─────────────────────────────────────────────────────────────────
+
+class TestSwitchSheetNegative:
+    """Note: the implementation currently leaks raw underlying exceptions
+    (KeyError from openpyxl, XLRDError from xlrd) when a sheet name does not
+    exist. Ideally these should be wrapped in LibraryException. The tests pin
+    the current (buggy) behaviour using the base Exception type so that a future
+    fix that raises LibraryException still passes."""
+
+    def test_switch_to_nonexistent_sheet_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE)
+        with pytest.raises(Exception):  # currently KeyError from openpyxl
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xls_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE)
+        with pytest.raises(Exception):  # currently XLRDError from xlrd
+            lib.switch_sheet("DoesNotExist")

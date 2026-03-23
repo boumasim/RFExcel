@@ -90,6 +90,7 @@ class XlsStreamResource(IResource):
         super().__init__(path)
         self._wb: Book = wb
         self._active_sheet: xlrd.sheet.Sheet | None = wb.sheet_by_index(0) if wb.nsheets > 0 else None
+        self._last_read_row_index = 0
 
     @property
     @override
@@ -99,7 +100,7 @@ class XlsStreamResource(IResource):
     @property
     @override
     def last_read_row_index(self) -> int:
-        return -1
+        return self._last_read_row_index
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
@@ -111,6 +112,7 @@ class XlsStreamResource(IResource):
         if target_xlrd_index >= self._active_sheet.nrows or target_xlrd_index < 0:
             raise StopIteration()
 
+        self._last_read_row_index = row_index
         return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
 
     @override

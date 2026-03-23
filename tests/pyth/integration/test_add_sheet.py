@@ -1,8 +1,7 @@
-"""Integration tests for the Add Sheet feature."""
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat)
+    NullComponentException, OperationNotSupportedForFormat)
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 # ---------------------------------------------------------------------------
@@ -13,7 +12,6 @@ class TestAddSheetXlsxEdit:
 
     def test_add_sheet_creates_new_sheet(self, lib):
         lib.load_workbook(XLSX_FILE)
-        original = lib.list_sheet_names()
         lib.add_sheet("NewSheet")
         assert "NewSheet" in lib.list_sheet_names()
 
@@ -29,7 +27,6 @@ class TestAddSheetXlsxEdit:
         lib.load_workbook(XLSX_FILE)
         lib.add_sheet("ActiveAfterAdd")
         rows = lib.get_rows()
-        # Newly created sheet is empty — expect empty list
         assert rows == []
 
     def test_add_multiple_sheets(self, lib):
@@ -56,12 +53,12 @@ class TestAddSheetXlsxStream:
 
     def test_add_sheet_raises_in_stream_mode(self, lib):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.add_sheet("ShouldFail")
 
 
 # ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy xls→xlsx conversion)
+# XLS – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestAddSheetXlsEdit:
@@ -108,12 +105,12 @@ class TestAddSheetXlsOnDemand:
 
     def test_add_sheet_raises_in_stream_mode(self, lib):
         lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.add_sheet("ShouldFail")
 
 
 # ---------------------------------------------------------------------------
-# CSV – no sheet concept
+# CSV – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestAddSheetCsv:
@@ -123,7 +120,11 @@ class TestAddSheetCsv:
         with pytest.raises(OperationNotSupportedForFormat):
             lib.add_sheet("ShouldFail")
 
+# ---------------------------------------------------------------------------
+# CSV – Streaming mode
+# ---------------------------------------------------------------------------
+
     def test_add_sheet_raises_for_csv_stream(self, lib):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.add_sheet("ShouldFail")

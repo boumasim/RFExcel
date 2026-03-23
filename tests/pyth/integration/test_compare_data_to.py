@@ -17,7 +17,8 @@ Target file: data.csv  — differs from data.xlsx on 'List 1':
 import openpyxl
 import pytest
 
-from rfexcel.exception.library_exceptions import NotMatchingColumns, WorkbookNotOpenException
+from rfexcel.exception.library_exceptions import (NotMatchingColumns,
+                                                  WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX2_FILE, XLSX_FILE
 
@@ -290,7 +291,6 @@ class TestCompareDataToSameWorkbook:
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX_FILE)
         assert result == []
-        assert len(result) == 0
 
 
 # ─── fail_on_diff parameter ───────────────────────────────────────────────────
@@ -326,7 +326,7 @@ class TestCompareDataToFailOnDiff:
         self, loaded_xlsx: RFExcelLibrary
     ):
         """The AssertionError message must reference the differing source row."""
-        with pytest.raises(AssertionError, match="5"):
+        with pytest.raises(AssertionError, match=r"source_row_index 5"):
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_assertion_error_message_contains_diff_column(
@@ -338,7 +338,7 @@ class TestCompareDataToFailOnDiff:
 
     def test_raises_at_first_diff_not_last(self, loaded_xlsx: RFExcelLibrary):
         """With two diffs (rows 3 and 5 vs CSV), AssertionError must fire at row 3."""
-        with pytest.raises(AssertionError, match="3"):
+        with pytest.raises(AssertionError, match=r"source_row_index 3"):
             loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
 
     def test_csv_target_raises_assertion_error(self, loaded_xlsx: RFExcelLibrary):

@@ -1,33 +1,10 @@
-"""Integration tests for the Delete Rows keyword.
-
-CSV edit tests use tmp_path copies because CsvEditResource auto-saves on close().
-
-File layouts used:
-  data.xlsx  – headers at row 1: Product ID | Description | Price | Location
-               data rows 2-5: P-200…P-203 (4 rows total)
-  data.csv   – headers at row 1: same layout
-  example.xls – headers at row 1: Index | First Name | Last Name | Gender | Country | Age
-
-Covers:
-  - XLSX edit: matched row is removed; row count decreases; count returned.
-  - XLSX edit: first_only=True removes only one row when multiple match.
-  - XLSX edit: no match → 0 deleted, row count unchanged.
-  - XLSX edit: partial_match=True deletes substring matches.
-  - XLSX edit: remaining rows still readable after deletion.
-  - XLSX edit: header_row out of range → HeadersNotDeterminedException.
-  - XLSX streaming → LibraryException.
-  - XLS edit: lazy conversion triggered; row deleted in memory.
-  - CSV edit: matched row deleted; row count decreases.
-  - CSV edit: first_only=True removes only first match.
-  - CSV streaming → LibraryException.
-  - No workbook open: returns 0 silently.
-"""
 import shutil
 
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
+    HeadersNotDeterminedException, NullComponentException,
+    WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -112,7 +89,7 @@ class TestDeleteRowsXlsxStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_rows(search_criteria={"Product ID": "P-200"})
 
 
@@ -129,6 +106,18 @@ class TestDeleteRowsXlsEdit:
         assert count == 1
         assert len(lib.get_rows()) == before - 1
         assert all(r["First Name"] != "Dulce" for r in lib.get_rows())
+
+
+# ---------------------------------------------------------------------------
+# XLS – On-demand (streaming) mode
+# ---------------------------------------------------------------------------
+
+class TestDeleteRowsXlsOnDemand:
+
+    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(NullComponentException):
+            lib.delete_rows(search_criteria={"First Name": "Dulce"})
 
 
 # ---------------------------------------------------------------------------
@@ -172,7 +161,7 @@ class TestDeleteRowsCsvStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_rows(search_criteria={"Product ID": "P-200"})
 
 

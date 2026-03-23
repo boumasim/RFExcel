@@ -1,30 +1,9 @@
-"""Integration tests for the Delete Row keyword.
-
-CSV edit tests use tmp_path copies because CsvEditResource auto-saves on close().
-
-File layouts used:
-  data.xlsx  – headers at row 1: Product ID | Description | Price | Location
-               data rows 2-5: P-200…P-203 (4 rows total)
-  data.csv   – headers at row 1: same layout
-  example.xls – headers at row 1: Index | First Name | Last Name | Gender | Country | Age
-
-Covers:
-  - XLSX edit: row deleted by row number; row is no longer readable.
-  - XLSX edit: row count decreases after deletion.
-  - XLSX edit: remaining rows are still readable in correct order.
-  - XLSX edit: row_number < 1 → RowIndexOutOfBoundsException.
-  - XLSX edit: row_number beyond last row → RowIndexOutOfBoundsException.
-  - XLSX streaming → LibraryException.
-  - XLS edit: lazy conversion triggered; row deleted in memory.
-  - CSV edit: row deleted; row count decreases.
-  - CSV streaming → LibraryException.
-  - No workbook open: does nothing silently.
-"""
 import shutil
 
 import pytest
 
 from rfexcel.exception.library_exceptions import (LibraryException,
+                                                  NullComponentException,
                                                   RowIndexOutOfBoundsException,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
@@ -80,6 +59,14 @@ class TestDeleteRowXlsxEdit:
         with pytest.raises(RowIndexOutOfBoundsException):
             lib.delete_row(9999)
 
+    def test_delete_header_row_removes_first_row(self, lib: RFExcelLibrary):
+        """Deleting row 1 (the header row) shifts all rows up; row count decreases."""
+        lib.load_workbook(XLSX_FILE)
+        before = lib.get_row(2)  # first data row before deletion
+        lib.delete_row(1)
+        # What was row 2 becomes the new row 1
+        assert lib.get_row(1) == before
+
 
 # ---------------------------------------------------------------------------
 # XLSX – Streaming mode
@@ -89,7 +76,7 @@ class TestDeleteRowXlsxStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_row(2)
 
 
@@ -105,6 +92,18 @@ class TestDeleteRowXlsEdit:
         lib.delete_row(2)  # row 2 is the first data row
         rows = lib.get_rows()
         assert len(rows) == before - 1
+
+
+# ---------------------------------------------------------------------------
+# XLS – On-demand (streaming) mode
+# ---------------------------------------------------------------------------
+
+class TestDeleteRowXlsOnDemand:
+
+    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(NullComponentException):
+            lib.delete_row(2)
 
 
 # ---------------------------------------------------------------------------
@@ -141,7 +140,7 @@ class TestDeleteRowCsvStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_row(2)
 
 

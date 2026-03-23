@@ -22,7 +22,7 @@ class LibraryException(RFExcelException):
     def __init__(self, msg: str):
         super().__init__(msg)
 
-class NullComponentException(LibraryException):
+class NullComponentException(RFExcelException):
     """Raised when a Null Object method is called."""
     def __init__(self):
         super().__init__("Library uses null component for this operation.")

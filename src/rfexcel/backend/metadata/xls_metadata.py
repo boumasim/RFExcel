@@ -1,4 +1,4 @@
-from typing_extensions import override
+from typing import override
 
 from rfexcel.backend.metadata.i_metadata import IMetadata
 from rfexcel.backend.resource.i_resource import IResource

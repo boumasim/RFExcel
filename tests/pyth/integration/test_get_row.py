@@ -324,3 +324,8 @@ class TestGetRowNegative:
         lib.load_workbook(XLSX_FILE)
         result = lib.get_row(2, headers=[])
         assert isinstance(result, list)
+
+    def test_row_zero_returns_empty_list(self, lib: RFExcelLibrary):
+        """Row 0 is out of bounds (1-based indexing); must return an empty list."""
+        lib.load_workbook(XLSX_FILE)
+        assert lib.get_row(0) == []

@@ -1,40 +1,13 @@
-"""Integration tests for the Update Values keyword.
-
-Tests verify in-memory updates only. Persistence is covered by save_workbook tests.
-CSV edit tests use tmp_path copies because CsvEditResource auto-saves on close().
-
-File layouts used:
-  data.xlsx  – headers at row 1: Product ID | Description | Price | Location
-               data rows 2-5: P-200…P-203
-  data.csv   – headers at row 1: Product ID | Description | Price | Location
-               data rows 2-5: P-200…P-203
-  example.xls – headers at row 1: Index | First Name | Last Name | Gender | Country | Age
-
-Covers:
-  - XLSX edit: exact match updates; count returned.
-  - XLSX edit: partial_match=True updates substring matches.
-  - XLSX edit: unmatched criteria → 0 updates, data unchanged.
-  - XLSX edit: only specified columns are updated; others untouched.
-  - XLSX edit: multiple matching rows all updated.
-  - XLSX edit: header_row out of range → HeadersNotDeterminedException.
-  - XLSX edit: string search_criteria (key=value;…) accepted.
-  - XLSX streaming → LibraryException.
-  - XLS edit: lazy conversion triggered; in-memory update verified.
-  - CSV edit: exact match, partial match.
-  - CSV streaming → LibraryException.
-  - No workbook open: returns 0 silently.
-  - Update First: only first match updated; returns True/False; no-workbook → False.
-"""
 import shutil
 
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
+    HeadersNotDeterminedException, NullComponentException,
+    WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-# xlsx has headers in row 1 (first sheet 'List 1')
 _XLSX_HEADER_ROW = 1
 
 
@@ -76,8 +49,8 @@ class TestUpdateValuesXlsxEdit:
         )
         rows = lib.get_rows(header_row=_XLSX_HEADER_ROW)
         row = next(r for r in rows if r["Product ID"] == "P-201")
-        assert row["Description"] == original_desc  # unchanged
-        assert row["Price"] == "1.00"               # updated
+        assert row["Description"] == original_desc
+        assert row["Price"] == "1.00"
 
     def test_no_match_returns_zero_and_leaves_data_unchanged(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -150,11 +123,13 @@ class TestUpdateValuesXlsxEdit:
     def test_unknown_value_keys_silently_ignored(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         rows_before = lib.get_rows(header_row=_XLSX_HEADER_ROW)
-        lib.update_values(
+        count = lib.update_values(
             search_criteria={"Product ID": "P-200"},
             values={"NonExistentColumn": "X"},
             header_row=_XLSX_HEADER_ROW,
         )
+        # Row was matched but no cells changed (column key not in headers)
+        assert count == 1
         assert lib.get_rows(header_row=_XLSX_HEADER_ROW) == rows_before
 
 
@@ -166,7 +141,7 @@ class TestUpdateValuesXlsxStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.update_values(
                 search_criteria={"Product ID": "P-200"},
                 values={"Price": "0.00"},
@@ -175,7 +150,7 @@ class TestUpdateValuesXlsxStream:
 
 
 # ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy conversion)
+# XLS – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestUpdateValuesXlsEdit:
@@ -189,6 +164,21 @@ class TestUpdateValuesXlsEdit:
         assert count == 1
         row = next(r for r in lib.get_rows() if r["First Name"] == "Dulce")
         assert row["Country"] == "Updated"
+
+
+# ---------------------------------------------------------------------------
+# XLS – On-demand / streaming mode
+# ---------------------------------------------------------------------------
+
+class TestUpdateValuesXlsOnDemand:
+
+    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(NullComponentException):
+            lib.update_values(
+                search_criteria={"First Name": "Dulce"},
+                values={"Country": "Updated"},
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -245,7 +235,7 @@ class TestUpdateValuesCsvStream:
 
     def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.update_values(
                 search_criteria={"Product ID": "P-200"},
                 values={"Price": "0.00"},

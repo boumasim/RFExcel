@@ -1,8 +1,7 @@
-"""Integration tests for the Delete Sheet feature."""
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat)
+    LibraryException, NullComponentException, OperationNotSupportedForFormat)
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 # ---------------------------------------------------------------------------
@@ -36,9 +35,11 @@ class TestDeleteSheetXlsxEdit:
         first_sheet = lib.list_sheet_names()[0]
         lib.add_sheet("Victim")
         lib.delete_sheet("Victim")
-        # After deletion the active sheet falls back to first — data should be readable
+        # After deletion the active sheet falls back to first
+        assert lib.list_sheet_names()[0] == first_sheet
         rows = lib.get_rows()
         assert isinstance(rows, list)
+        assert len(rows) > 0
 
     def test_delete_nonexistent_sheet_raises(self, lib):
         lib.load_workbook(XLSX_FILE)
@@ -54,7 +55,7 @@ class TestDeleteSheetXlsxStream:
 
     def test_delete_sheet_raises_in_stream_mode(self, lib):
         lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_sheet("Sheet1")
 
 
@@ -95,7 +96,7 @@ class TestDeleteSheetXlsOnDemand:
 
     def test_delete_sheet_raises_in_stream_mode(self, lib):
         lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_sheet("Sheet1")
 
 
@@ -112,5 +113,5 @@ class TestDeleteSheetCsv:
 
     def test_delete_sheet_raises_for_csv_stream(self, lib):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.delete_sheet("ShouldFail")

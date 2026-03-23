@@ -1,30 +1,10 @@
-"""Integration tests for the Append Row keyword.
-
-Each test that writes to a file works on a temporary copy (shutil.copy +
-tmp_path) so the originals in tests/resources are never modified.
-
-Headers in the test files (row 1):
-  data.xlsx / data.csv  ->  Product ID | Description | Price | Location
-  example.xls           ->  same columns (after lazy xls→xlsx conversion)
-
-Covers:
-  - XLSX edit: full row, partial row (missing keys → ""), unknown keys ignored.
-  - XLSX edit: custom header_row.
-  - XLSX edit: header_row out of range → LibraryException.
-  - XLSX streaming: LibraryException.
-  - XLS edit: lazy conversion triggered, row persisted after save-as.
-  - XLS streaming: LibraryException.
-  - CSV edit: full row, partial row, round-trip read-back.
-  - CSV streaming: LibraryException.
-  - No workbook open: silent no-op.
-"""
 import shutil
 
 import openpyxl
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
+    HeadersNotDeterminedException, NullComponentException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -86,12 +66,11 @@ class TestAppendRowXlsxEdit:
 
     def test_custom_header_row(self, lib: RFExcelLibrary, tmp_path):
         """When the sheet has a blank/filler first row and headers on row 2."""
-        import openpyxl
         wb = openpyxl.Workbook()
         ws = wb.active
         assert ws is not None
-        ws.append(["filler"])                         # row 1 – not headers
-        ws.append(["Name", "Score"])                  # row 2 – real headers
+        ws.append(["filler"])
+        ws.append(["Name", "Score"])
         ws.append(["Alice", "90"])
         out = str(tmp_path / "custom.xlsx")
         wb.save(out)
@@ -118,12 +97,12 @@ class TestAppendRowXlsxStream:
     def test_append_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.append_row(_FULL_ROW)
 
 
 # ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy conversion)
+# XLS – Edit mode
 # ---------------------------------------------------------------------------
 
 class TestAppendRowXlsEdit:
@@ -155,7 +134,7 @@ class TestAppendRowXlsEdit:
         original_rows_count.close()
 
         lib.load_workbook(path)
-        lib.append_row(_FULL_ROW)
+        lib.append_row({"First Name": "Jane", "Last Name": "Doe"})
         lib.save_workbook(str(tmp_path / "out.xlsx"))
         lib.close()
 
@@ -166,7 +145,7 @@ class TestAppendRowXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLS – Streaming mode
+# XLS – On demand / Streaming mode
 # ---------------------------------------------------------------------------
 
 class TestAppendRowXlsStream:
@@ -174,7 +153,7 @@ class TestAppendRowXlsStream:
     def test_append_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.append_row(_FULL_ROW)
 
 
@@ -240,7 +219,7 @@ class TestAppendRowCsvStream:
     def test_append_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.append_row(_FULL_ROW)
 
 
@@ -262,15 +241,10 @@ class TestAppendRowNoWorkbook:
 # ---------------------------------------------------------------------------
 
 class TestAppendRowXlsxShifted:
-    """The table starts at column B (col-index 2).  Column A is intentionally
-    left empty.  Rows must be appended to the correct columns (B, C, D, E),
-    not blindly starting from column A."""
-
     def _make_shifted_xlsx(self, tmp_path) -> str:
-        """Create an xlsx where headers are in B1:E1 and two data rows follow."""
+        """Start at B"""
         wb = openpyxl.Workbook()
         ws = wb.active
-        # Column A intentionally empty; table starts at B
         ws["B1"] = "Product ID"
         ws["C1"] = "Description"
         ws["D1"] = "Price"
@@ -290,14 +264,12 @@ class TestAppendRowXlsxShifted:
     def test_new_row_lands_in_correct_columns(self, lib: RFExcelLibrary, tmp_path):
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
-        lib.append_row({"Product ID": "P-999", "Description": "Widget",
-                     "Price": "9.99", "Location": "Online"})
+        lib.append_row({"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"})
         lib.save_workbook()
 
-        # Re-open and inspect via openpyxl directly to verify cell positions
         wb = openpyxl.load_workbook(path)
         ws = wb.active
-        last_row = ws.max_row          # should be 4
+        last_row = ws.max_row
 
         assert ws.cell(last_row, 1).value is None,  "Column A must stay empty"
         assert ws.cell(last_row, 2).value == "P-999",  "Product ID must land in col B"
@@ -322,11 +294,9 @@ class TestAppendRowXlsxShifted:
         assert ws.cell(last_row, 5).value is None,    "Location not provided → empty"
 
     def test_get_rows_still_returns_correct_dict(self, lib: RFExcelLibrary, tmp_path):
-        """After append_row + save, the dict-based API must reflect the new row."""
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
-        lib.append_row({"Product ID": "P-888", "Description": "Gamma",
-                     "Price": "8.88", "Location": "Depot"})
+        lib.append_row({"Product ID": "P-888", "Description": "Gamma", "Price": "8.88", "Location": "Depot"})
         rows = lib.get_rows()
         assert rows[-1]["Product ID"] == "P-888"
         assert rows[-1]["Description"] == "Gamma"

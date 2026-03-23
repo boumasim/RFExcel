@@ -1,25 +1,9 @@
-"""Integration tests for the Save Workbook keyword.
-
-Each test that modifies a file works on a temporary copy (via shutil.copy +
-pytest's tmp_path fixture) so the originals in tests/resources are never
-touched.
-
-Covers:
-  - XLSX edit mode: save-in-place, save-as, path update after save-as.
-  - XLSX streaming mode: raises LibraryException (NullWriter).
-  - XLS edit mode: save triggers implicit xls→xlsx conversion automatically.
-  - XLS streaming mode: raises LibraryException (NullWriter).
-  - CSV edit mode: save-in-place, save-as.
-  - CSV streaming mode: raises LibraryException (NullWriter).
-  - No workbook open: silent no-op.
-  - Bad path: raises FileSaveException.
-"""
 import shutil
 
 import pytest
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  LibraryException,
+                                                  NullComponentException,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
@@ -100,7 +84,7 @@ class TestSaveWorkbookXlsxStream:
     def test_save_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.save_workbook()
 
 
@@ -174,7 +158,7 @@ class TestSaveWorkbookXlsStream:
     def test_save_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.save_workbook()
 
 
@@ -225,7 +209,7 @@ class TestSaveWorkbookCsvStream:
     def test_save_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.save_workbook()
 
 

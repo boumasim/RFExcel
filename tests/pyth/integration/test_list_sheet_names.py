@@ -1,20 +1,7 @@
-"""Integration tests for the List Sheet Names keyword.
-
-Expected sheet names derived from test resources:
-  data.xlsx  : ['List 1', 'Sheet2']
-  example.xls: ['First', 'Second']
-  data.csv   : raises OperationNotSupportedForFormat (no sheet concept)
-
-Covers:
-  - xlsx edit and streaming mode.
-  - xls standard and on-demand mode.
-  - CSV edit and streaming mode → raises OperationNotSupportedForFormat.
-  - No active workbook → returns empty list.
-"""
 import pytest
 
-from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat, WorkbookNotOpenException)
+from rfexcel.exception.library_exceptions import (NullComponentException,
+                                                  WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -22,7 +9,9 @@ XLSX_SHEET_NAMES = ["List 1", "Sheet2", "Sheet3"]
 XLS_SHEET_NAMES  = ["First", "Second"]
 
 
-# ─── xlsx ─────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# XLSX
+# ---------------------------------------------------------------------------
 
 class TestListSheetNamesXlsx:
 
@@ -43,7 +32,9 @@ class TestListSheetNamesXlsx:
         assert isinstance(lib.list_sheet_names(), list)
 
 
-# ─── xls ──────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# XLS
+# ---------------------------------------------------------------------------
 
 class TestListSheetNamesXls:
 
@@ -64,22 +55,26 @@ class TestListSheetNamesXls:
         assert isinstance(lib.list_sheet_names(), list)
 
 
-# ─── csv (unsupported) ────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# CSV – no sheet concept
+# ---------------------------------------------------------------------------
 
 class TestListSheetNamesCsv:
 
     def test_csv_edit_raises_operation_not_supported(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.list_sheet_names()
 
     def test_csv_stream_raises_operation_not_supported(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(LibraryException):
+        with pytest.raises(NullComponentException):
             lib.list_sheet_names()
 
 
-# ─── no active workbook ───────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# No active workbook
+# ---------------------------------------------------------------------------
 
 class TestListSheetNamesNoWorkbook:
 
