@@ -7,6 +7,7 @@ Covers:
 """
 import pytest
 
+from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -59,10 +60,11 @@ class TestCloseWorkbookEdge:
         lib.close()
         lib.close()  # second call — must be silent
 
-    def test_get_rows_after_close_returns_empty_list(self, lib: RFExcelLibrary):
+    def test_get_rows_after_close_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.close()
-        assert lib.get_rows() == []
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_rows()
 
     def test_reload_after_close_works(self, lib: RFExcelLibrary):
         """The library must be fully reusable after a close."""

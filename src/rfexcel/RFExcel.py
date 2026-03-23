@@ -251,11 +251,11 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def compare_data_to(self,
                         target: IExcel,
-                        source_header_row: int = 1,
-                        target_header_row: int = 1,
-                        target_sheet: str | None = None,
-                        headers: list[str] | None = None,
-                        close_target: bool = True) -> List[Dict[str, Any]]:
+                        source_header_row: int,
+                        target_header_row: int,
+                        target_sheet: str | None,
+                        headers: list[str] | None,
+                        fail_on_diff: bool) -> List[Dict[str, Any]]:
         try:
             if target_sheet is not None:
                 target.switch_sheet(target_sheet)
@@ -308,11 +308,15 @@ class RFExcel(IExcel, ISetExcel):
                 }
 
                 if differences:
+                    if fail_on_diff:
+                        raise AssertionError(
+                            f"Difference found at source_row_index {source_row_index} (target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}): {differences}"
+                        )
                     result.append({"source_row_index": source_row_index, "differences": differences})
 
                 source_row_index += 1
 
             return result
         finally:
-            if close_target:
+            if self is not target:
                 target.close()

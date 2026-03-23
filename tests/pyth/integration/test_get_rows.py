@@ -16,7 +16,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import (
     FileDoesNotExistException, HeadersNotDeterminedException,
-    StreamingViolationException)
+    StreamingViolationException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -242,13 +242,15 @@ class TestGetRowsCsvStream:
 
 class TestGetRowsNegative:
 
-    def test_returns_empty_list_when_no_workbook_loaded(self, lib: RFExcelLibrary):
-        assert lib.get_rows() == []
+    def test_raises_when_no_workbook_loaded(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_rows()
 
-    def test_returns_empty_list_after_close(self, lib: RFExcelLibrary):
+    def test_raises_after_close(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.close()
-        assert lib.get_rows() == []
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_rows()
 
     def test_load_nonexistent_file_raises(self, lib: RFExcelLibrary):
         with pytest.raises(FileDoesNotExistException):
@@ -463,11 +465,9 @@ class TestGetRowsOneRow:
         assert isinstance(result, dict)
         assert result["Last Name"] == "Abril"
 
-    def test_one_row_no_workbook_returns_empty_dict(self, lib: RFExcelLibrary):
-        # No workbook loaded — must return an empty dict, not a list
-        result = lib.get_rows(one_row=True)
-        assert isinstance(result, dict)
-        assert result == {}
+    def test_one_row_no_workbook_raises(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_rows(one_row=True)
 
     def test_one_row_early_exit_does_not_exhaust_all_rows(self, lib: RFExcelLibrary, tmp_path):
         """When one_row=True the loop must stop after the first match.

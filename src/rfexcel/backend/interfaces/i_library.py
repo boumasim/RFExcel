@@ -100,11 +100,11 @@ class IExcel(ABC):
     @abstractmethod
     def compare_data_to(self,
                         target: IExcel,
-                        source_header_row: int = 1,
-                        target_header_row: int = 1,
-                        target_sheet: str | None = None,
-                        headers: list[str] | None = None,
-                        close_target: bool = True) -> List[Dict[str, Any]]:
+                        source_header_row: int,
+                        target_header_row: int,
+                        target_sheet: str | None,
+                        headers: list[str] | None,
+                        fail_on_diff: bool) -> List[Dict[str, Any]]:
         pass
 
 class ISetExcel(ABC):

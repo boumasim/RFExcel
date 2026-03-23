@@ -30,7 +30,7 @@ import shutil
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException)
+    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -258,12 +258,12 @@ class TestUpdateValuesCsvStream:
 
 class TestUpdateValuesNoWorkbook:
 
-    def test_returns_zero_when_no_workbook_open(self, lib: RFExcelLibrary):
-        result = lib.update_values(
-            search_criteria={"Product ID": "P-200"},
-            values={"Price": "0.00"},
-        )
-        assert result == 0
+    def test_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.update_values(
+                search_criteria={"Product ID": "P-200"},
+                values={"Price": "0.00"},
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -318,11 +318,12 @@ class TestUpdateFirst:
         assert row["Location"] == "Updated"
 
     def test_returns_0_when_no_workbook_open(self, lib: RFExcelLibrary):
-        assert lib.update_values(
-            search_criteria={"Product ID": "P-200"},
-            values={"Price": "0.00"},
-            first_only=True,
-        ) == 0
+        with pytest.raises(WorkbookNotOpenException):
+            lib.update_values(
+                search_criteria={"Product ID": "P-200"},
+                values={"Price": "0.00"},
+                first_only=True,
+            )
 
     def test_csv_only_first_match_updated(self, lib: RFExcelLibrary, tmp_path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))

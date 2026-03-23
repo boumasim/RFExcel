@@ -24,7 +24,7 @@ import openpyxl
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException)
+    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -250,10 +250,11 @@ class TestAppendRowCsvStream:
 
 class TestAppendRowNoWorkbook:
 
-    def test_append_row_is_silent_noop_when_no_workbook_open(
+    def test_append_row_raises_when_no_workbook_open(
         self, lib: RFExcelLibrary
     ):
-        lib.append_row(_FULL_ROW)  # must not raise
+        with pytest.raises(WorkbookNotOpenException):
+            lib.append_row(_FULL_ROW)
 
 
 # ---------------------------------------------------------------------------

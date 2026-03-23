@@ -17,7 +17,7 @@ Target file: data.csv  — differs from data.xlsx on 'List 1':
 import openpyxl
 import pytest
 
-from rfexcel.exception.library_exceptions import NotMatchingColumns
+from rfexcel.exception.library_exceptions import NotMatchingColumns, WorkbookNotOpenException
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX2_FILE, XLSX_FILE
 
@@ -226,8 +226,9 @@ class TestCompareDataToHeaderRow:
 
 class TestCompareDataToNegative:
 
-    def test_no_workbook_returns_empty_list(self, lib: RFExcelLibrary):
-        assert lib.compare_data_to(XLSX2_FILE) == []
+    def test_no_workbook_raises(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.compare_data_to(XLSX2_FILE)
 
     def test_unknown_header_in_headers_list_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -290,3 +291,87 @@ class TestCompareDataToSameWorkbook:
         result = lib.compare_data_to(XLSX_FILE)
         assert result == []
         assert len(result) == 0
+
+
+# ─── fail_on_diff parameter ───────────────────────────────────────────────────
+
+class TestCompareDataToFailOnDiff:
+    """fail_on_diff=True raises AssertionError at the first differing row instead
+    of accumulating results.  fail_on_diff=False (the default) returns the full
+    list and never raises."""
+
+    # --- no differences → must never raise regardless of the flag ---------------
+
+    def test_no_diff_does_not_raise_when_fail_on_diff_true(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """Identical files must not raise even when fail_on_diff=True."""
+        result = loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Description"], fail_on_diff=True)
+        assert result == []
+
+    def test_same_file_does_not_raise_when_fail_on_diff_true(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        result = loaded_xlsx.compare_data_to(XLSX_FILE, fail_on_diff=True)
+        assert result == []
+
+    # --- differences present → raises on the first one --------------------------
+
+    def test_raises_assertion_error_on_diff(self, loaded_xlsx: RFExcelLibrary):
+        """fail_on_diff=True must raise AssertionError when any row differs."""
+        with pytest.raises(AssertionError):
+            loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
+
+    def test_assertion_error_message_contains_source_row_index(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """The AssertionError message must reference the differing source row."""
+        with pytest.raises(AssertionError, match="5"):
+            loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
+
+    def test_assertion_error_message_contains_diff_column(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """The AssertionError message must name the differing column."""
+        with pytest.raises(AssertionError, match="Product ID|Price"):
+            loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
+
+    def test_raises_at_first_diff_not_last(self, loaded_xlsx: RFExcelLibrary):
+        """With two diffs (rows 3 and 5 vs CSV), AssertionError must fire at row 3."""
+        with pytest.raises(AssertionError, match="3"):
+            loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
+
+    def test_csv_target_raises_assertion_error(self, loaded_xlsx: RFExcelLibrary):
+        with pytest.raises(AssertionError):
+            loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
+
+    # --- headers subset with fail_on_diff ----------------------------------------
+
+    def test_fail_on_diff_respects_headers_filter_no_raise(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """'Description' is identical between data.xlsx and data2.xlsx — no raise."""
+        result = loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Description"], fail_on_diff=True)
+        assert result == []
+
+    def test_fail_on_diff_respects_headers_filter_raises(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """'Product ID' differs on row 5 between data.xlsx and data2.xlsx — must raise."""
+        with pytest.raises(AssertionError):
+            loaded_xlsx.compare_data_to(XLSX2_FILE, headers=["Product ID"], fail_on_diff=True)
+
+    # --- default value is False --------------------------------------------------
+
+    def test_default_fail_on_diff_returns_list_not_exception(
+        self, loaded_xlsx: RFExcelLibrary
+    ):
+        """Omitting fail_on_diff must behave as False: return diffs, not raise."""
+        result = loaded_xlsx.compare_data_to(XLSX2_FILE)
+        assert isinstance(result, list)
+        assert len(result) == 1
+
+    def test_explicit_false_returns_full_diff_list(self, loaded_xlsx: RFExcelLibrary):
+        """fail_on_diff=False must accumulate all diffs and return the full list."""
+        result = loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=False)
+        assert result == XLSX_VS_CSV_DIFFS

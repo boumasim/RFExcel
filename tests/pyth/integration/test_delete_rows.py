@@ -27,7 +27,7 @@ import shutil
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, LibraryException)
+    HeadersNotDeterminedException, LibraryException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -75,7 +75,7 @@ class TestDeleteRowsXlsxEdit:
         lib.load_workbook(XLSX_FILE)
         lib.update_values(search_criteria={"Product ID": "P-201"}, values={"Location": "SAME"})
         lib.update_values(search_criteria={"Product ID": "P-202"}, values={"Location": "SAME"})
-        count = lib.delete_rows(search_criteria={"Location": "SAME"}, first_only=True)
+        count = lib.delete_rows(search_criteria={"Location": "SAME"}, one_row=True)
         assert count == 1
         rows = lib.get_rows()
         # One row with SAME should still remain
@@ -157,7 +157,7 @@ class TestDeleteRowsCsvEdit:
         # Tag two rows with the same Location so first_only makes a difference
         lib.update_values(search_criteria={"Product ID": "P-200"}, values={"Location": "DUPLICATE_LOC"})
         lib.update_values(search_criteria={"Product ID": "P-201"}, values={"Location": "DUPLICATE_LOC"})
-        count = lib.delete_rows(search_criteria={"Location": "DUPLICATE_LOC"}, first_only=True)
+        count = lib.delete_rows(search_criteria={"Location": "DUPLICATE_LOC"}, one_row=True)
         assert count == 1
         # One row with DUPLICATE_LOC must still remain
         rows = lib.get_rows()
@@ -182,5 +182,6 @@ class TestDeleteRowsCsvStream:
 
 class TestDeleteRowsNoWorkbook:
 
-    def test_returns_zero_when_no_workbook_open(self, lib: RFExcelLibrary):
-        assert lib.delete_rows(search_criteria={"Product ID": "P-200"}) == 0
+    def test_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.delete_rows(search_criteria={"Product ID": "P-200"})

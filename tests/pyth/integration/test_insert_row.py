@@ -28,7 +28,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, LibraryException,
-    RowIndexOutOfBoundsException)
+    RowIndexOutOfBoundsException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -279,10 +279,11 @@ class TestInsertRowCsvStream:
 
 class TestInsertRowNoWorkbook:
 
-    def test_insert_row_is_silent_noop_when_no_workbook_open(
+    def test_insert_row_raises_when_no_workbook_open(
         self, lib: RFExcelLibrary
     ):
-        lib.insert_row(_NEW_ROW, row=2)  # must not raise
+        with pytest.raises(WorkbookNotOpenException):
+            lib.insert_row(_NEW_ROW, row=2)
 
 
 # ---------------------------------------------------------------------------

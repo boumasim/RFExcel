@@ -17,7 +17,8 @@ example.xls (10 total rows: 1 header + 9 data, 8 physical columns):
 import pytest
 
 from rfexcel.exception.library_exceptions import (FileDoesNotExistException,
-                                                  StreamingViolationException)
+                                                  StreamingViolationException,
+                                                  WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -301,13 +302,15 @@ class TestGetRowCsvStream:
 
 class TestGetRowNegative:
 
-    def test_returns_empty_list_when_no_workbook_loaded(self, lib: RFExcelLibrary):
-        assert lib.get_row(1) == []
+    def test_raises_when_no_workbook_loaded(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_row(1)
 
-    def test_returns_empty_list_after_close(self, lib: RFExcelLibrary):
+    def test_raises_after_close(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.close()
-        assert lib.get_row(2) == []
+        with pytest.raises(WorkbookNotOpenException):
+            lib.get_row(2)
 
     def test_partial_headers_list_maps_as_many_as_provided(self, lib: RFExcelLibrary):
         """Fewer headers than columns — extra columns get fillvalue ''."""

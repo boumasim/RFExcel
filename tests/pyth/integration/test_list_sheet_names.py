@@ -14,7 +14,7 @@ Covers:
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat)
+    LibraryException, OperationNotSupportedForFormat, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -83,10 +83,12 @@ class TestListSheetNamesCsv:
 
 class TestListSheetNamesNoWorkbook:
 
-    def test_returns_empty_list_when_no_workbook_open(self, lib: RFExcelLibrary):
-        assert lib.list_sheet_names() == []
+    def test_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.list_sheet_names()
 
-    def test_returns_empty_list_after_close(self, lib: RFExcelLibrary):
+    def test_raises_after_close(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.close()
-        assert lib.list_sheet_names() == []
+        with pytest.raises(WorkbookNotOpenException):
+            lib.list_sheet_names()

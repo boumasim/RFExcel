@@ -25,7 +25,8 @@ import shutil
 import pytest
 
 from rfexcel.exception.library_exceptions import (LibraryException,
-                                                  RowIndexOutOfBoundsException)
+                                                  RowIndexOutOfBoundsException,
+                                                  WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -150,5 +151,6 @@ class TestDeleteRowCsvStream:
 
 class TestDeleteRowNoWorkbook:
 
-    def test_does_nothing_when_no_workbook_open(self, lib: RFExcelLibrary):
-        lib.delete_row(2)  # should not raise
+    def test_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.delete_row(2)

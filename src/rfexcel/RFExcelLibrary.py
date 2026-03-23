@@ -165,7 +165,8 @@ class RFExcelLibrary:
                 one_row=one_row,
                 **kwargs,
             )
-        raise WorkbookNotOpenException()
+        else:
+            raise WorkbookNotOpenException()
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> dict[str, str] | list[str]:
@@ -196,7 +197,7 @@ class RFExcelLibrary:
         """
         resolved: HeaderSpec = headers if headers is not None else []
         if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
     def list_sheet_names(self) -> list[str]:
@@ -217,7 +218,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             return self._active_workbook.list_sheet_names()
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Switch Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_sheet(self, name: str) -> None:
@@ -239,7 +240,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.switch_sheet(name)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
     
     @keyword("Add Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def add_sheet(self, name: str) -> None:
@@ -259,7 +260,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.add_sheet(name)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_sheet(self, name: str) -> None:
@@ -280,7 +281,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.delete_sheet(name)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Save Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def save_workbook(self, path: str | None = None) -> None:
@@ -309,7 +310,7 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.save_workbook(path=path)
             logger.info("Workbook successfully saved")
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def append_row(self, row_data: dict[str, str], header_row: int = 1) -> None:
@@ -334,7 +335,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.append_row(row_data=row_data, header_row=header_row)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def append_rows(self, rows: list[dict[str, str]], header_row: int = 1) -> None:
@@ -353,7 +354,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.append_rows(rows=rows, header_row=header_row)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def insert_row(self, row_data: dict[str, str], row: int, header_row: int = 1) -> None:
@@ -381,7 +382,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.insert_row(row_data=row_data, row=row, header_row=header_row)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
@@ -421,14 +422,14 @@ class RFExcelLibrary:
                 partial_match=partial_match,
                 first_only=first_only,
             )
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_rows(self,
                     search_criteria: dict[str, str] | str,
                     header_row: int = 1,
                     partial_match: bool = False,
-                    first_only: bool = False) -> int:
+                    one_row: bool = False) -> int:
         """Deletes all rows matching ``search_criteria``. Returns the count of deleted rows.
 
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
@@ -438,13 +439,13 @@ class RFExcelLibrary:
         - ``search_criteria``: Filter identifying which rows to delete — see `library description`_ for format details.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
-        - ``first_only``: Delete only the first matching row when ``True``. Defaults to ``False``.
+        - ``one_row``: Delete only the first matching row when ``True``. Defaults to ``False``.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
         | ${count} =     | Delete Rows         | ${{{'Product ID': 'P-001'}}}       |                 |
         | Should Be Equal As Integers | ${count} | 1 |                            |
-        | Delete Rows    | Location=Online     | partial_match=True | first_only=True |
+        | Delete Rows    | Location=Online     | partial_match=True | one_row=True |
         | Save Workbook  |                     |                                    |                 |
         """
         if self._active_workbook:
@@ -452,9 +453,9 @@ class RFExcelLibrary:
                 search_criteria=search_criteria,
                 header_row=header_row,
                 partial_match=partial_match,
-                first_only=first_only,
+                first_only=one_row,
             )
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_row(self, row_number: int) -> None:
@@ -476,7 +477,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.delete_row(row_number=row_number)
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()
 
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
@@ -505,7 +506,8 @@ class RFExcelLibrary:
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> list[dict[str, Any]]:
+                        headers: list[str] | None = None,
+                        fail_on_diff: bool = False) -> list[dict[str, Any]]:
         """Compares the active workbook row-by-row against a target file and returns the differences.
 
         When ``target_path`` resolves to the same file as the active workbook, the
@@ -533,6 +535,7 @@ class RFExcelLibrary:
         - ``target_header_row``: Header row in the target file. Defaults to ``1``.
         - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.
         - ``headers``: List of column names to compare. Defaults to all source headers.
+        - ``fail_on_diff``: If ``True``, raises ``AssertionError`` if any differences are found. Defaults to ``False``.
 
         Returns a list of dicts, one per differing source row:
         | [
@@ -561,10 +564,8 @@ class RFExcelLibrary:
             )
             if same_file:
                 target: IExcel = self._active_workbook
-                close_target = False
             else:
                 target = self._factory.load_workbook(path=str(target_path), read_only=True)
-                close_target = True
 
             return self._active_workbook.compare_data_to(
                 target=target,
@@ -572,6 +573,6 @@ class RFExcelLibrary:
                 target_header_row=target_header_row,
                 target_sheet=target_sheet,
                 headers=headers,
-                close_target=close_target,
+                fail_on_diff=fail_on_diff,
             )
-        raise WorkbookNotOpenException()
+        else: raise WorkbookNotOpenException()

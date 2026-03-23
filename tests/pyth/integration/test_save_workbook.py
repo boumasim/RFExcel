@@ -19,7 +19,8 @@ import shutil
 import pytest
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  LibraryException)
+                                                  LibraryException,
+                                                  WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -234,8 +235,9 @@ class TestSaveWorkbookCsvStream:
 
 class TestSaveWorkbookNoWorkbook:
 
-    def test_save_is_silent_noop_when_no_workbook_open(self, lib: RFExcelLibrary):
-        lib.save_workbook()  # must not raise
+    def test_save_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
+        with pytest.raises(WorkbookNotOpenException):
+            lib.save_workbook()
 
 
 # ---------------------------------------------------------------------------
