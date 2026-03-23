@@ -36,7 +36,7 @@ class XlsEditResource(IResource):
 
         target_xlrd_index = row_index - 1
 
-        if target_xlrd_index >= self._active_sheet.nrows:
+        if target_xlrd_index >= self._active_sheet.nrows or target_xlrd_index < 0:
             raise StopIteration()
 
         return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
@@ -108,7 +108,7 @@ class XlsStreamResource(IResource):
 
         target_xlrd_index = row_index - 1
 
-        if target_xlrd_index >= self._active_sheet.nrows:
+        if target_xlrd_index >= self._active_sheet.nrows or target_xlrd_index < 0:
             raise StopIteration()
 
         return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
