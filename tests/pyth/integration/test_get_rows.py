@@ -1,16 +1,4 @@
 from pathlib import Path
-"""Integration tests for the Get Rows keyword.
-
-Expected data is derived from the actual files:
-
-data.xlsx / data.csv (4 data rows, header on row 1):
-  Headers : Product ID | Description | Price | Location
-
-example.xls (9 data rows, header on row 1):
-  Headers : Index | First Name | Last Name | Gender | Country | Age | '' | ''
-  (The file has 8 physical columns; the last two are empty, so their header
-   key is an empty string '')
-"""
 import csv
 
 import pytest
@@ -21,7 +9,6 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-# ─── expected data ─────────────────────────────────────────────────────────────
 
 XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
 
@@ -39,7 +26,6 @@ CSV_ROWS = [
     {"Product ID": "P-203", "Description": "USB Cable, 3ft",            "Price": "5.99",   "Location": "Online"},
 ]
 
-# example.xls has 8 physical columns; the last two headers are empty strings.
 XLS_FIRST_ROW = {
     "Index": "1.0", "First Name": "Dulce", "Last Name": "Abril",
     "Gender": "Female", "Country": "United States", "Age": "32.0",
@@ -50,7 +36,9 @@ XLS_LAST_ROW = {
 }
 
 
-# ─── xlsx edit mode ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx edit
+# ---------------------------------------------------------------------------
 
 class TestGetRowsXlsxEdit:
 
@@ -68,7 +56,6 @@ class TestGetRowsXlsxEdit:
             assert list(row.keys()) == XLSX_HEADERS
 
     def test_cell_containing_comma_is_not_split(self, lib: RFExcelLibrary):
-        """'Warehouse A, Shelf 2' and 'Paris, France' contain commas."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows()
         assert rows[0]["Location"] == "Warehouse A, Shelf 2"
@@ -79,15 +66,12 @@ class TestGetRowsXlsxEdit:
         assert lib.get_rows() == lib.get_rows(header_row=1)
 
     def test_header_row_2_shifts_data_by_one(self, lib: RFExcelLibrary):
-        """When row 2 is treated as headers, only 3 data rows remain."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(header_row=2)
         assert len(rows) == 3
-        # The key for the first column is now the value of row 2
         assert "P-200" in rows[0]
 
     def test_header_row_beyond_data_returns_empty_list(self, lib: RFExcelLibrary):
-        """When row 5 (the last data row) is used as the header, there are no data rows after it."""
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(header_row=5) == []
 
@@ -97,7 +81,9 @@ class TestGetRowsXlsxEdit:
             lib.get_rows(header_row=9999)
 
 
-# ─── xlsx stream mode ───────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx stream
+# ---------------------------------------------------------------------------
 
 class TestGetRowsXlsxStream:
 
@@ -117,14 +103,15 @@ class TestGetRowsXlsxStream:
         assert lib.get_rows() == stream_rows
 
     def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
-        """Stream is exhausted after the first call — a second call must raise."""
         lib.load_workbook(XLSX_FILE, read_only=True)
         lib.get_rows()
         with pytest.raises(StreamingViolationException):
             lib.get_rows()
 
 
-# ─── xls standard (edit) mode ───────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xls standard
+# ---------------------------------------------------------------------------
 
 class TestGetRowsXlsStandard:
 
@@ -141,18 +128,12 @@ class TestGetRowsXlsStandard:
         assert lib.get_rows()[-1] == XLS_LAST_ROW
 
     def test_numeric_values_stringified_as_floats(self, lib: RFExcelLibrary):
-        """xlrd returns numbers as Python floats; library must stringify them."""
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
         assert rows[0]["Index"] == "1.0"
         assert rows[0]["Age"] == "32.0"
 
     def test_trailing_empty_columns_excluded_from_result(self, lib: RFExcelLibrary):
-        """example.xls trailing empty-header columns are excluded from results.
-
-        get_header_map() only maps columns that have a non-empty header, so
-        the two trailing empty columns in example.xls do not appear as keys.
-        """
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
         assert "" not in rows[0]
@@ -166,7 +147,9 @@ class TestGetRowsXlsStandard:
             assert "Country" in row
 
 
-# ─── xls on_demand mode ─────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xls on demand
+# ---------------------------------------------------------------------------
 
 class TestGetRowsXlsOnDemand:
 
@@ -182,7 +165,9 @@ class TestGetRowsXlsOnDemand:
         assert lib.get_rows() == on_demand_rows
 
 
-# ─── csv edit mode ───────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# csv edit
+# ---------------------------------------------------------------------------
 
 class TestGetRowsCsvEdit:
 
@@ -195,7 +180,6 @@ class TestGetRowsCsvEdit:
         assert lib.get_rows() == CSV_ROWS
 
     def test_quoted_field_with_comma_is_single_value(self, lib: RFExcelLibrary):
-        """'Keyboard, Mechanical, RGB' is quoted in CSV and must not be split."""
         lib.load_workbook(CSV_FILE)
         rows = lib.get_rows()
         assert rows[1]["Description"] == "Keyboard, Mechanical, RGB"
@@ -212,7 +196,9 @@ class TestGetRowsCsvEdit:
             lib.get_rows(header_row=9999)
 
 
-# ─── csv stream mode ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# csv stream
+# ---------------------------------------------------------------------------
 
 class TestGetRowsCsvStream:
 
@@ -232,14 +218,15 @@ class TestGetRowsCsvStream:
         assert lib.get_rows() == stream_rows
 
     def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
-        """Stream is exhausted after the first call — a second call must raise."""
         lib.load_workbook(CSV_FILE, read_only=True)
         lib.get_rows()
         with pytest.raises(StreamingViolationException):
             lib.get_rows()
 
 
-# ─── negative / edge ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# negative
+# ---------------------------------------------------------------------------
 
 class TestGetRowsNegative:
 
@@ -262,13 +249,11 @@ class TestGetRowsNegative:
         assert lib.get_rows() == []
 
     def test_get_rows_on_empty_created_csv_raises(self, lib: RFExcelLibrary, tmp_path: Path):
-        """An empty CSV file has no header row at all; header row 1 is out of range."""
         lib.create_workbook(str(tmp_path / "empty.csv"))
         with pytest.raises(HeadersNotDeterminedException):
             lib.get_rows()
 
     def test_header_row_1_on_single_row_file_returns_empty_list(self, lib: RFExcelLibrary, tmp_path: Path):
-        """A file with only a header row and no data rows must yield []."""
         path = tmp_path / "headers_only.csv"
         with open(path, "w", newline="") as f:
             csv.writer(f).writerow(["A", "B", "C"])
@@ -276,11 +261,12 @@ class TestGetRowsNegative:
         assert lib.get_rows() == []
 
 
-# ─── search_criteria / partial_match ─────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# search criteria
+# ---------------------------------------------------------------------------
 
 class TestGetRowsSearchCriteria:
 
-    # ── exact match (dict) ────────────────────────────────────────────────────
 
     def test_exact_match_dict_single_criteria_returns_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -298,11 +284,9 @@ class TestGetRowsSearchCriteria:
         assert lib.get_rows(search_criteria={"Product ID": "NONEXISTENT"}) == []
 
     def test_exact_match_full_value_required(self, lib: RFExcelLibrary):
-        """'Keyboard' alone must not match 'Keyboard, Mechanical' in exact mode."""
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(search_criteria={"Description": "Keyboard"}) == []
 
-    # ── exact match (string format) ───────────────────────────────────────────
 
     def test_string_criteria_returns_same_as_dict(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -311,9 +295,7 @@ class TestGetRowsSearchCriteria:
         assert dict_rows == str_rows
 
     def test_string_criteria_multiple_segments(self, lib: RFExcelLibrary):
-        """Two key=value pairs via ';': AND — both must match the same row."""
         lib.load_workbook(XLSX_FILE)
-        # P-200 has Price=25.50, so both criteria are satisfied only by that row
         rows = lib.get_rows(search_criteria="Product ID=P-200;Price=25.50")
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
@@ -322,22 +304,18 @@ class TestGetRowsSearchCriteria:
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == lib.get_rows(search_criteria=None)
 
-    # ── AND logic (multiple criteria) ────────────────────────────────────────
 
     def test_and_logic_two_criteria_narrows_result_to_one_row(self, lib: RFExcelLibrary):
-        """Both Product ID and Price must match the same row."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": "150.00"})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-202"
 
     def test_and_logic_conflicting_criteria_returns_empty(self, lib: RFExcelLibrary):
-        """P-200's price is 25.50, not 150.00 — no row satisfies both criteria."""
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Product ID": "P-200", "Price": "150.00"})
         assert rows == []
 
-    # ── partial match ─────────────────────────────────────────────────────────
 
     def test_partial_match_true_substring_matches(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -357,15 +335,11 @@ class TestGetRowsSearchCriteria:
         assert rows == []
 
     def test_partial_match_and_logic_both_criteria_must_match(self, lib: RFExcelLibrary):
-        """partial_match=True: BOTH substrings must be present in the same row.
-        P-200 has 'Mouse' in Description and 'Warehouse' in Location — only that row matches.
-        """
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Description": "Mouse", "Location": "Warehouse"}, partial_match=True)
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
 
-    # ── csv ───────────────────────────────────────────────────────────────────
 
     def test_exact_match_on_csv(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
@@ -374,13 +348,11 @@ class TestGetRowsSearchCriteria:
         assert rows[0]["Location"] == "Paris, France"
 
     def test_partial_match_on_csv_comma_in_value(self, lib: RFExcelLibrary):
-        """CSV row 3 has 'Keyboard, Mechanical, RGB' — partial match on 'Keyboard'."""
         lib.load_workbook(CSV_FILE)
         rows = lib.get_rows(search_criteria={"Description": "Keyboard"}, partial_match=True)
         assert len(rows) == 1
         assert rows[0]["Description"] == "Keyboard, Mechanical, RGB"
 
-    # ── xls ───────────────────────────────────────────────────────────────────
 
     def test_exact_match_on_xls(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -389,35 +361,32 @@ class TestGetRowsSearchCriteria:
         assert rows[0]["Last Name"] == "Abril"
 
     def test_partial_match_on_xls_multiple_rows(self, lib: RFExcelLibrary):
-        """Partial match on 'United' selects every row whose Country contains that substring."""
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows(search_criteria={"Country": "United"}, partial_match=True)
-        # 6 of the 9 data rows have Country='United States'
         assert len(rows) == 6
         assert all("United" in r["Country"] for r in rows)
 
-    # ── edge cases ────────────────────────────────────────────────────────────
 
     def test_criteria_key_not_in_headers_returns_empty(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(search_criteria={"NonExistentColumn": "value"}) == []
 
     def test_criteria_on_xls_stream_mode(self, lib: RFExcelLibrary):
-        """Filtering must work in on-demand (stream) mode too."""
         lib.load_workbook(XLS_FILE, read_only=True)
         rows = lib.get_rows(search_criteria={"First Name": "Dulce"})
         assert len(rows) == 1
         assert rows[0]["First Name"] == "Dulce"
 
 
-# ─── one_row ──────────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# one row
+# ---------------------------------------------------------------------------
 
 class TestGetRowsOneRow:
 
     def test_one_row_returns_dict_not_list(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         result = lib.get_rows(one_row=True)
-        # Should be a dict (DotDict), not a list
         assert isinstance(result, dict)
         assert not isinstance(result, list)
 
@@ -437,7 +406,6 @@ class TestGetRowsOneRow:
         assert result == {}
 
     def test_one_row_stops_after_first_match(self, lib: RFExcelLibrary):
-        """Even though multiple rows would match (no criteria), only the first is returned."""
         lib.load_workbook(XLSX_FILE)
         result = lib.get_rows(one_row=True)
         assert result["Product ID"] == "P-200"
@@ -471,12 +439,8 @@ class TestGetRowsOneRow:
             lib.get_rows(one_row=True)
 
     def test_one_row_early_exit_does_not_exhaust_all_rows(self, lib: RFExcelLibrary, tmp_path: Path):
-        """When one_row=True the loop must stop after the first match.
-        Verified by counting how many rows a second (non-filtered) call returns
-        from a freshly opened edit-mode file — all 4 must still be readable.
-        """
-        lib.load_workbook(XLSX_FILE)  # edit mode: can call multiple times
+        lib.load_workbook(XLSX_FILE)
         first = lib.get_rows(one_row=True)
-        assert first == XLSX_ROWS[0]   # only first row returned
-        all_rows = lib.get_rows()       # full scan still works in edit mode
-        assert len(all_rows) == 4       # all 4 rows are still accessible
+        assert first == XLSX_ROWS[0]
+        all_rows = lib.get_rows()
+        assert len(all_rows) == 4

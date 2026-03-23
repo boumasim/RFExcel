@@ -11,14 +11,15 @@ XLS_FIRST_DATA_ROW  = {"Index": "1.0", "First Name": "Dulce", "Last Name": "Abri
 CSV_FIRST_DATA_ROW  = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
 
 
-# ─── switching from an open workbook ──────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# switch source from open
+# ---------------------------------------------------------------------------
 
 class TestSwitchSourceFromOpen:
 
     def test_switch_xlsx_to_csv_sets_new_active_workbook(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.switch_source(CSV_FILE)
-        # New workbook is open and yields CSV data — confirms the switch occurred
         rows = lib.get_rows()
         assert len(rows) == 4
         assert rows[0] == CSV_FIRST_DATA_ROW
@@ -51,14 +52,11 @@ class TestSwitchSourceFromOpen:
         assert rows[0] == XLSX_FIRST_DATA_ROW
 
     def test_switch_to_same_file_reopens_it(self, lib: RFExcelLibrary):
-        """Switching to the same file should give a fresh workbook instance."""
         lib.load_workbook(XLSX_FILE)
         lib.switch_source(XLSX_FILE)
-        # Fresh load must still return correct data
         assert lib.get_rows()[0] == XLSX_FIRST_DATA_ROW
 
     def test_switch_releases_previous_workbook_and_opens_new(self, lib: RFExcelLibrary):
-        """The old workbook must be fully released; the new one must be readable."""
         lib.load_workbook(CSV_FILE, read_only=True)
         lib.switch_source(XLSX_FILE)
         rows = lib.get_rows()
@@ -67,21 +65,21 @@ class TestSwitchSourceFromOpen:
     def test_switch_with_read_only_opens_in_stream_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.switch_source(XLSX_FILE, read_only=True)
-        # stream mode: rows still readable
         assert len(lib.get_rows()) == 4
 
     def test_switch_xlsx_stream_to_csv_edit(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         lib.switch_source(CSV_FILE)
-        assert lib.get_rows() == lib.get_rows()   # edit mode: repeatable
+        assert lib.get_rows() == lib.get_rows()
 
 
-# ─── switching from no open workbook ──────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# switch source from closed
+# ---------------------------------------------------------------------------
 
 class TestSwitchSourceFromClosed:
 
     def test_switch_with_no_prior_workbook_opens_file(self, lib: RFExcelLibrary):
-        """Switch Source must work even when no workbook was previously open."""
         lib.switch_source(XLSX_FILE)
         assert len(lib.get_rows()) > 0
 
@@ -96,7 +94,9 @@ class TestSwitchSourceFromClosed:
         assert lib.get_rows()[0] == CSV_FIRST_DATA_ROW
 
 
-# ─── chained switches ─────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# switch source chained
+# ---------------------------------------------------------------------------
 
 class TestSwitchSourceChained:
 
@@ -118,7 +118,9 @@ class TestSwitchSourceChained:
         assert csv_rows[0] == CSV_FIRST_DATA_ROW
 
 
-# ─── negative ─────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# switch source negative
+# ---------------------------------------------------------------------------
 
 class TestSwitchSourceNegative:
 
@@ -128,7 +130,6 @@ class TestSwitchSourceNegative:
             lib.switch_source("/nonexistent/missing.xlsx")
 
     def test_active_workbook_is_not_usable_after_failed_switch(self, lib: RFExcelLibrary):
-        """If the new file doesn't exist, the old one is already closed before the attempt."""
         lib.load_workbook(XLSX_FILE)
         with pytest.raises(FileDoesNotExistException):
             lib.switch_source("/nonexistent/missing.xlsx")

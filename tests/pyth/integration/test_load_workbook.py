@@ -1,12 +1,3 @@
-"""Integration tests for the Load Workbook keyword.
-
-Covers:
-  - All six format/mode combinations (xlsx edit, xlsx stream, xls standard,
-    xls on_demand, csv edit, csv stream).
-  - Verifying the workbook is actually usable after loading (Get Rows sanity check).
-  - Negative: non-existent file, unsupported extension.
-  - Edge: loading a second file after the first is still open (replaces it).
-"""
 import pytest
 
 from rfexcel.exception.library_exceptions import (
@@ -14,7 +5,10 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-# ─── positive ─────────────────────────────────────────────────────────────────
+
+# ---------------------------------------------------------------------------
+# load workbook positive
+# ---------------------------------------------------------------------------
 
 class TestLoadWorkbookPositive:
 
@@ -74,7 +68,9 @@ class TestLoadWorkbookPositive:
         assert len(rows) == 4
 
 
-# ─── negative ─────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# negative / edge
+# ---------------------------------------------------------------------------
 
 class TestLoadWorkbookNegative:
 
@@ -103,13 +99,9 @@ class TestLoadWorkbookNegative:
             lib.load_workbook("/nonexistent/path/missing.xlsx")
         assert lib._active_workbook is None
 
-
-# ─── edge cases ───────────────────────────────────────────────────────────────
-
 class TestLoadWorkbookEdge:
 
     def test_loading_second_file_replaces_first(self, lib: RFExcelLibrary):
-        """Loading a new file while one is open must replace the active workbook."""
         lib.load_workbook(XLSX_FILE)
         first_wb = lib._active_workbook
         lib.load_workbook(CSV_FILE)

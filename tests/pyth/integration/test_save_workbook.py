@@ -42,20 +42,18 @@ class TestSaveWorkbookXlsxEdit:
         lib.save_workbook(new_path)
         lib.close()
 
-        # Original must not have the new sheet
         lib2 = RFExcelLibrary()
         lib2.load_workbook(path)
         assert "OnlyInCopy" not in lib2.list_sheet_names()
         lib2.close()
 
     def test_save_as_updates_active_path(self, lib: RFExcelLibrary, tmp_path: Path):
-        """After save-as, a subsequent bare save goes to the new path."""
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         new_path = str(tmp_path / "moved.xlsx")
         lib.load_workbook(path)
         lib.save_workbook(new_path)
         lib.add_sheet("SecondSave")
-        lib.save_workbook()          # should go to new_path, not the original
+        lib.save_workbook()
         lib.close()
 
         lib2 = RFExcelLibrary()
@@ -98,7 +96,6 @@ class TestSaveWorkbookXlsEdit:
     def test_save_triggers_implicit_conversion_and_produces_file(
         self, lib: RFExcelLibrary, tmp_path: Path
     ):
-        """save_workbook on a plain XLS file now triggers conversion automatically."""
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = str(tmp_path / "result.xlsx")
         lib.load_workbook(path)
@@ -109,7 +106,6 @@ class TestSaveWorkbookXlsEdit:
     def test_save_as_xlsx_succeeds_without_prior_write_op(
         self, lib: RFExcelLibrary, tmp_path: Path
     ):
-        """Conversion is triggered by save itself; an explicit write op is not required."""
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = tmp_path / "converted.xlsx"
         lib.load_workbook(path)
@@ -122,7 +118,6 @@ class TestSaveWorkbookXlsEdit:
         lib2.close()
 
     def test_save_preserves_added_sheet(self, lib: RFExcelLibrary, tmp_path: Path):
-        """Sheets added before saving are present in the saved file."""
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = str(tmp_path / "out.xlsx")
         lib.load_workbook(path)
@@ -136,7 +131,6 @@ class TestSaveWorkbookXlsEdit:
         lib2.close()
 
     def test_original_xls_untouched_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
-        """The original .xls file on disk must not be modified."""
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
         new_path = str(tmp_path / "out.xlsx")
         lib.load_workbook(path)

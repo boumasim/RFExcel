@@ -67,7 +67,6 @@ class TestAppendRowXlsxEdit:
         lib2.close()
 
     def test_custom_header_row(self, lib: RFExcelLibrary, tmp_path: Path):
-        """When the sheet has a blank/filler first row and headers on row 2."""
         wb = openpyxl.Workbook()
         ws = wb.active
         assert ws is not None
@@ -244,7 +243,6 @@ class TestAppendRowNoWorkbook:
 
 class TestAppendRowXlsxShifted:
     def _make_shifted_xlsx(self, tmp_path: Path) -> str:
-        """Start at B"""
         wb = openpyxl.Workbook()
         ws = wb.active
         assert ws is not None

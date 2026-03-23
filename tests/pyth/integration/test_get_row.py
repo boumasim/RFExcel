@@ -157,8 +157,8 @@ class TestGetRowXlsStandard:
     def test_numeric_values_stringified_as_floats(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         row = lib.get_row(2)
-        assert row[0] == "1.0"   # Index
-        assert row[5] == "32.0"  # Age
+        assert row[0] == "1.0"
+        assert row[5] == "32.0"
 
     def test_trailing_empty_columns_present_in_list(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -192,7 +192,6 @@ class TestGetRowXlsOnDemand:
         assert lib.get_row(2, headers=XLS_HEADERS) == XLS_ROW2_DICT
 
     def test_random_access_row10_then_row2(self, lib: RFExcelLibrary):
-        """xls on_demand is random-access, not streaming — both orders must work."""
         lib.load_workbook(XLS_FILE, read_only=True)
         row10 = lib.get_row(10)
         row2  = lib.get_row(2)
@@ -261,12 +260,12 @@ class TestGetRowCsvStream:
 
     def test_row_with_headers_returns_dict(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)  # consume header row first
+        lib.get_row(1)
         assert isinstance(lib.get_row(2, headers=XLSX_HEADERS), dict)
 
     def test_stream_row2_dict_matches_edit_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)  # consume header row first
+        lib.get_row(1)
         assert lib.get_row(2, headers=XLSX_HEADERS) == CSV_ROW2_DICT
 
     def test_re_reading_same_row_raises_streaming_violation(self, lib: RFExcelLibrary):

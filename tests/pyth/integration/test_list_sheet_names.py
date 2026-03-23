@@ -10,7 +10,7 @@ XLS_SHEET_NAMES  = ["First", "Second"]
 
 
 # ---------------------------------------------------------------------------
-# XLSX
+# XLSX edit
 # ---------------------------------------------------------------------------
 
 class TestListSheetNamesXlsx:
@@ -23,6 +23,10 @@ class TestListSheetNamesXlsx:
         lib.load_workbook(XLSX_FILE)
         assert isinstance(lib.list_sheet_names(), list)
 
+# ---------------------------------------------------------------------------
+# XLSX stream
+# ---------------------------------------------------------------------------
+
     def test_xlsx_stream_returns_correct_sheet_names(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         assert lib.list_sheet_names() == XLSX_SHEET_NAMES
@@ -33,7 +37,7 @@ class TestListSheetNamesXlsx:
 
 
 # ---------------------------------------------------------------------------
-# XLS
+# XLS edit
 # ---------------------------------------------------------------------------
 
 class TestListSheetNamesXls:
@@ -46,6 +50,10 @@ class TestListSheetNamesXls:
         lib.load_workbook(XLS_FILE)
         assert isinstance(lib.list_sheet_names(), list)
 
+# ---------------------------------------------------------------------------
+# XLS stream / on demand
+# ---------------------------------------------------------------------------
+
     def test_xls_on_demand_returns_correct_sheet_names(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         assert lib.list_sheet_names() == XLS_SHEET_NAMES
@@ -56,7 +64,7 @@ class TestListSheetNamesXls:
 
 
 # ---------------------------------------------------------------------------
-# CSV – no sheet concept
+# CSV – edit
 # ---------------------------------------------------------------------------
 
 class TestListSheetNamesCsv:
@@ -65,6 +73,10 @@ class TestListSheetNamesCsv:
         lib.load_workbook(CSV_FILE)
         with pytest.raises(NullComponentException):
             lib.list_sheet_names()
+
+# ---------------------------------------------------------------------------
+# CSV – stream
+# ---------------------------------------------------------------------------
 
     def test_csv_stream_raises_operation_not_supported(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)

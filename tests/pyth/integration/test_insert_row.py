@@ -35,7 +35,6 @@ class TestInsertRowXlsxEdit:
         assert rows_after[0]["Description"] == "Inserted"
         assert rows_after[0]["Price"] == "5.55"
         assert rows_after[0]["Location"] == "Depot"
-        # Previously first data row shifted down by one
         assert rows_after[1]["Product ID"] == first_row_before
 
     def test_partial_row_fills_missing_columns_with_empty_string(
@@ -73,12 +72,11 @@ class TestInsertRowXlsxEdit:
         lib2.close()
 
     def test_insert_at_last_data_row(self, lib: RFExcelLibrary, tmp_path: Path):
-        """Inserting at the row occupied by the last data row pushes it down."""
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         rows_before = lib.get_rows()
         last_before = cast(str, rows_before[-1]["Product ID"])
-        insert_at = len(rows_before) + 1  # 1-based: header(1) + data rows
+        insert_at = len(rows_before) + 1
 
         lib.insert_row({"Product ID": "P-LAST"}, row=insert_at)
         rows_after = lib.get_rows()
@@ -87,7 +85,6 @@ class TestInsertRowXlsxEdit:
         assert rows_after[-1]["Product ID"] == last_before
 
     def test_custom_header_row(self, lib: RFExcelLibrary, tmp_path: Path):
-        """Sheet with headers on row 2; insert at row 3."""
         wb = openpyxl.Workbook()
         ws = wb.active
         assert ws is not None
@@ -270,8 +267,6 @@ class TestInsertRowNoWorkbook:
 # ---------------------------------------------------------------------------
 
 class TestInsertRowXlsxShifted:
-    """The table starts at column B (col-index 2).  Column A is intentionally
-    left empty.  Rows must be inserted into the correct columns (B, C, D, E)."""
 
     def _make_shifted_xlsx(self, tmp_path: Path) -> str:
         wb = openpyxl.Workbook()
@@ -310,5 +305,4 @@ class TestInsertRowXlsxShifted:
         assert ws.cell(2, 3).value == "Widget", "Description must land in col C"
         assert ws.cell(2, 4).value == "9.99",   "Price must land in col D"
         assert ws.cell(2, 5).value == "Online", "Location must land in col E"
-        # Original row 2 must now be at row 3
         assert ws.cell(3, 2).value == "P-001"

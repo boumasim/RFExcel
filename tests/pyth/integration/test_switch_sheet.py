@@ -1,32 +1,9 @@
-"""Integration tests for the Switch Sheet keyword.
-
-Expected sheet data derived from test resources:
-
-data.xlsx:
-  'List 1' (default, sheet index 0):
-    Headers : Product ID | Description | Price | Location
-    Row 2   : P-200 | Wireless Mouse | 25.50 | Warehouse A, Shelf 2
-  'Sheet2' (sheet index 1):
-    Headers : Product ID | Description | Price | Location
-    Row 2   : P-300 | Wireless Mouse | 25.50 | Warehouse A, Shelf 2
-
-example.xls:
-  'First' (default, sheet index 0):
-    Headers : Index | First Name | Last Name | Gender | Country | Age | '' | ''
-    Row 2   : 1.0 | Dulce | Abril | Female | United States | 32.0 | '' | ''
-  'Second' (sheet index 1):
-    Headers : Index | Date | Id
-    Row 2   : 1.0 | 43023.0 | 1562.0
-
-data.csv: raises OperationNotSupportedForFormat (no sheet concept)
-"""
 import pytest
 
 from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-# ─── expected data ─────────────────────────────────────────────────────────────
 
 XLSX_SHEET1_FIRST_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
 XLSX_SHEET2_FIRST_ROW = {"Product ID": "P-300", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
@@ -38,7 +15,9 @@ XLS_SHEET1_HEADERS = ["Index", "First Name", "Last Name", "Gender", "Country", "
 XLS_SHEET2_HEADERS = ["Index", "Date", "Id"]
 
 
-# ─── xlsx edit mode ─────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx edit
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsxEdit:
 
@@ -71,7 +50,9 @@ class TestSwitchSheetXlsxEdit:
         assert lib.list_sheet_names() == ["List 1", "Sheet2", "Sheet3"]
 
 
-# ─── xlsx streaming mode ──────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xlsx stream
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsxStream:
 
@@ -92,11 +73,10 @@ class TestSwitchSheetXlsxStream:
         assert len(lib.get_rows()) == 4
 
     def test_switch_resets_stream_position(self, lib: RFExcelLibrary):
-        """Switching sheet resets the row generator so row 1 is read again."""
         lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_rows()  # exhaust the stream on List 1
+        lib.get_rows()
         lib.switch_sheet("Sheet2")
-        rows = lib.get_rows()  # must read from row 1 of Sheet2
+        rows = lib.get_rows()
         assert rows[0] == XLSX_SHEET2_FIRST_ROW
 
     def test_switch_back_to_sheet1_resets_stream(self, lib: RFExcelLibrary):
@@ -107,7 +87,9 @@ class TestSwitchSheetXlsxStream:
         assert rows[0] == XLSX_SHEET1_FIRST_ROW
 
 
-# ─── xls standard (edit) mode ─────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xls edit
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsEdit:
 
@@ -146,7 +128,9 @@ class TestSwitchSheetXlsEdit:
         assert list(rows[0].keys()) == XLS_SHEET1_HEADERS
 
 
-# ─── xls on-demand (streaming) mode ──────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# xls on demand
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsOnDemand:
 
@@ -174,7 +158,9 @@ class TestSwitchSheetXlsOnDemand:
         assert rows[0] == XLS_SHEET1_FIRST_ROW
 
 
-# ─── csv (unsupported) ────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# csv edit
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetCsv:
 
@@ -194,21 +180,18 @@ class TestSwitchSheetCsv:
             lib.switch_sheet("anything")
 
 
-# ─── negative ─────────────────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# negative
+# ---------------------------------------------------------------------------
 
 class TestSwitchSheetNegative:
-    """Note: the implementation currently leaks raw underlying exceptions
-    (KeyError from openpyxl, XLRDError from xlrd) when a sheet name does not
-    exist. Ideally these should be wrapped in LibraryException. The tests pin
-    the current (buggy) behaviour using the base Exception type so that a future
-    fix that raises LibraryException still passes."""
 
     def test_switch_to_nonexistent_sheet_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        with pytest.raises(Exception):  # currently KeyError from openpyxl
+        with pytest.raises(Exception):
             lib.switch_sheet("DoesNotExist")
 
     def test_switch_to_nonexistent_sheet_xls_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
-        with pytest.raises(Exception):  # currently XLRDError from xlrd
+        with pytest.raises(Exception):
             lib.switch_sheet("DoesNotExist")

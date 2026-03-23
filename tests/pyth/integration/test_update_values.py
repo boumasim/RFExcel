@@ -129,7 +129,6 @@ class TestUpdateValuesXlsxEdit:
             values={"NonExistentColumn": "X"},
             header_row=_XLSX_HEADER_ROW,
         )
-        # Row was matched but no cells changed (column key not in headers)
         assert count == 1
         assert lib.get_rows(header_row=_XLSX_HEADER_ROW) == rows_before
 
@@ -283,7 +282,6 @@ class TestUpdateFirst:
 
     def test_only_first_match_is_updated(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        # Set two rows to the same location so both would match
         lib.update_values(search_criteria={"Product ID": "P-201"}, values={"Location": "SHARED"})
         lib.update_values(search_criteria={"Product ID": "P-202"}, values={"Location": "SHARED"})
 

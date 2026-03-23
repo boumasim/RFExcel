@@ -3,21 +3,6 @@ from typing import cast
 
 from rfexcel.utils.types import ColumnDifference
 
-"""Integration tests for the Compare Data To keyword.
-
-Source file: data.xlsx  (4 data rows on 'List 1', header on row 1)
-  Headers: Product ID | Description | Price | Location
-
-Target file: data2.xlsx  — identical except 'List 1', row 5:
-  data.xlsx:  P-203 | USB Cable           | 5.99 | OnlineP
-  data2.xlsx: P-205 | USB Cable           | 6    | OnlineP
-  Differences on row 5: Product ID (P-203 vs P-205), Price (5.99 vs 6)
-
-Target file: data.csv  — differs from data.xlsx on 'List 1':
-  row 3: Description  'Keyboard, Mechanical' vs 'Keyboard, Mechanical, RGB'
-  row 5: Description  'USB Cable'            vs 'USB Cable, 3ft'
-         Location     'OnlineP'              vs 'Online'
-"""
 
 import openpyxl
 import pytest
@@ -27,9 +12,7 @@ from rfexcel.exception.library_exceptions import (NotMatchingColumns,
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX2_FILE, XLSX_FILE
 
-# ─── expected differences ─────────────────────────────────────────────────────
 
-# data.xlsx List 1  vs  data2.xlsx List 1
 XLSX_VS_XLSX2_DIFFS = [
     {
         "source_row_index": 5,
@@ -40,7 +23,6 @@ XLSX_VS_XLSX2_DIFFS = [
     },
 ]
 
-# data.xlsx List 1  vs  data.csv
 XLSX_VS_CSV_DIFFS = [
     {
         "source_row_index": 3,
@@ -104,7 +86,6 @@ class TestCompareDataToXlsxVsXlsx2:
         assert lib.compare_data_to(XLSX2_FILE) == XLSX_VS_XLSX2_DIFFS
 
     def test_headers_subset_only_reports_requested_columns(self, lib: RFExcelLibrary):
-        """Requesting only 'Product ID' must not include the Price difference."""
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX2_FILE, headers=["Product ID"])
         assert len(result) == 1
@@ -112,7 +93,6 @@ class TestCompareDataToXlsxVsXlsx2:
         assert "Price" not in result[0]["differences"]
 
     def test_headers_identical_column_returns_no_diffs(self, lib: RFExcelLibrary):
-        """'Description' is the same on every row — result must be empty."""
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(XLSX2_FILE, headers=["Description"]) == []
 
@@ -124,7 +104,6 @@ class TestCompareDataToXlsxVsXlsx2:
 class TestCompareDataToTargetSheet:
 
     def test_default_uses_first_sheet(self, lib: RFExcelLibrary):
-        """Omitting target_sheet must produce the same result as target_sheet='List 1'."""
         lib.load_workbook(XLSX_FILE)
         default_result = lib.compare_data_to(XLSX2_FILE)
         lib.close()
@@ -133,13 +112,11 @@ class TestCompareDataToTargetSheet:
         assert default_result == explicit_result
 
     def test_identical_target_sheet_returns_empty(self, lib: RFExcelLibrary):
-        """Sheet2 is identical in both files — no differences expected."""
         lib.load_workbook(XLSX_FILE)
         lib.switch_sheet("Sheet2")
         assert lib.compare_data_to(XLSX2_FILE, target_sheet="Sheet2") == []
 
     def test_different_source_sheet_still_compares_against_target_sheet(self, lib: RFExcelLibrary):
-        """Source on 'List 1' compared against target 'Sheet2': Sheet2 rows differ."""
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX2_FILE, target_sheet="Sheet2")
         assert len(result) == 4
@@ -181,7 +158,6 @@ class TestCompareDataToXlsxVsCsv:
         assert lib.compare_data_to(CSV_FILE) == XLSX_VS_CSV_DIFFS
 
     def test_price_is_identical_across_all_rows(self, lib: RFExcelLibrary):
-        """Price column is unchanged between data.xlsx and data.csv."""
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(CSV_FILE, headers=["Price"]) == []
 
@@ -197,7 +173,6 @@ class TestCompareDataToXlsxVsCsv:
 class TestCompareDataToHeaderRow:
 
     def test_custom_header_rows_both_offset(self, lib: RFExcelLibrary, tmp_path: Path):
-        """Both files have their header on row 2; row 1 is a title row."""
         def _make(path: str, pid: str) -> None:
             wb = openpyxl.Workbook()
             ws = wb.active
@@ -252,7 +227,6 @@ class TestCompareDataToNegative:
             lib.compare_data_to(XLSX2_FILE, headers=["Nonexistent"])
 
     def test_source_header_absent_in_target_raises(self, lib: RFExcelLibrary, tmp_path: Path):
-        """Target with a subset of source columns must raise NotMatchingColumns."""
         wb = openpyxl.Workbook()
         ws = wb.active
         assert ws is not None
@@ -263,7 +237,7 @@ class TestCompareDataToNegative:
 
         lib.load_workbook(XLSX_FILE)
         with pytest.raises(NotMatchingColumns):
-            lib.compare_data_to(target_path)  # Description & Location absent in target
+            lib.compare_data_to(target_path)
 
 
 # ---------------------------------------------------------------------------
@@ -272,14 +246,12 @@ class TestCompareDataToNegative:
 
 class TestCompareDataToSameWorkbook:
     def test_xlsx_same_path_returns_no_differences(self, lib: RFExcelLibrary):
-        """A workbook compared against itself must have no differences."""
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(XLSX_FILE) == []
 
     def test_workbook_remains_open_and_usable_after_same_path_compare(
         self, lib: RFExcelLibrary
     ):
-        """The active workbook must not be closed by a same-path comparison."""
         lib.load_workbook(XLSX_FILE)
         lib.compare_data_to(XLSX_FILE)
         rows = lib.get_rows()

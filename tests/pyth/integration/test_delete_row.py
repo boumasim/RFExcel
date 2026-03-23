@@ -61,7 +61,6 @@ class TestDeleteRowXlsxEdit:
             lib.delete_row(9999)
 
     def test_delete_header_row_removes_first_row(self, lib: RFExcelLibrary):
-        """Deleting row 1 (the header row) shifts all rows up; row count decreases."""
         lib.load_workbook(XLSX_FILE)
         before = lib.get_row(2)
         lib.delete_row(1)
