@@ -10,7 +10,7 @@ class NullRawRowData(IRawRowData):
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        logger.warn("No headers were loaded")
+        logger.warn("No row data values were returned")
         return []
 
     @override

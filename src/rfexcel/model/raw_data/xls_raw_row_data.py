@@ -5,7 +5,7 @@ from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class XlsRawRowData(IRawRowData):
-    def __init__(self, data: list[str | int | float | bool]):
+    def __init__(self, data: list[str | int | float | bool | None]):
         self._data = data
 
     @override
@@ -15,7 +15,7 @@ class XlsRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (str(self._data[col - 1]) if col - 1 < len(self._data) else "")
+            name: (str(self._data[col - 1]) if 0 < col <= len(self._data) else "")
             for name, col in header_map.items()
         }
 
@@ -24,5 +24,5 @@ class XlsRawRowData(IRawRowData):
         return {
             str(v): i + 1
             for i, v in enumerate(self._data)
-            if str(v).strip() != ""
+            if v is not None and str(v).strip() != ""
         }

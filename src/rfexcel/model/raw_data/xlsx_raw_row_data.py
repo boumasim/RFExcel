@@ -1,4 +1,4 @@
-from typing import Any, override
+from typing import Any, cast, override
 
 from openpyxl.cell.cell import Cell
 
@@ -24,7 +24,7 @@ class XlsxRawRowData(IRawRowData):
             return {
                 name: (
                     str(self._data[col - 1])
-                    if col - 1 < len(self._data) and self._data[col - 1] is not None
+                    if 0 < col <= len(self._data) and self._data[col - 1] is not None
                     else ""
                 )
                 for name, col in header_map.items()
@@ -39,10 +39,11 @@ class XlsxRawRowData(IRawRowData):
     @override
     def get_header_map(self) -> HeaderMap:
         if self._value_only:
+            values = cast(tuple[Any, ...], self._data)
             return {
                 str(v): i + 1
-                for i, v in enumerate(self._data)
-                if str(v).strip() != ""
+                for i, v in enumerate(values)
+                if v is not None and str(v).strip() != ""
             }
         return {
             str(cell.value): cell.column  # type: ignore[union-attr]

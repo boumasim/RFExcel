@@ -15,14 +15,14 @@ class CsvRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (self._data[col - 1] if col - 1 < len(self._data) else "")
+            name: (self._data[col - 1] if 0 < col <= len(self._data) else "")
             for name, col in header_map.items()
         }
 
     @override
     def get_header_map(self) -> HeaderMap:
         return {
-            name: i + 1
+            name.strip(): i + 1
             for i, name in enumerate(self._data)
             if name.strip() != ""
         }
