@@ -16,7 +16,7 @@ class NullRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         logger.warn("No row data values were returned")
-        return DictRowData()
+        return {}
 
     @override
     def get_header_map(self) -> HeaderMap:

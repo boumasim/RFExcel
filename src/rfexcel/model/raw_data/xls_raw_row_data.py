@@ -14,10 +14,10 @@ class XlsRawRowData(IRawRowData):
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
-        return DictRowData({
+        return {
             name: (str(self._data[col - 1]) if col - 1 < len(self._data) else "")
             for name, col in header_map.items()
-        })
+        }
 
     @override
     def get_header_map(self) -> HeaderMap:

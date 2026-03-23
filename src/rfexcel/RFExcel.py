@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union, cast, override
+from typing import Any, Dict, List, Union, override
 
 from openpyxl import Workbook
 from robot.api import logger
@@ -97,7 +97,7 @@ class RFExcel(IExcel, ISetExcel):
             except StopIteration:
                 break
 
-        return result if not one_row else (result[0] if result else DictRowData())
+        return result if not one_row else (result[0] if result else {})
 
     @override
     def list_sheet_names(self) -> list[str]:
@@ -295,12 +295,12 @@ class RFExcel(IExcel, ISetExcel):
                         target_row_index += 1
                     except StopIteration:
                         target_exhausted = True
-                        target_dict = DictRowData()
+                        target_dict = {}
                 else:
-                    target_dict = DictRowData()
+                    target_dict = {}
 
-                source_values = cast(dict[str, str], source_dict)
-                target_values = cast(dict[str, str], target_dict)
+                source_values = source_dict
+                target_values = target_dict
                 differences: Dict[str, Any] = {
                     h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
                     for h in compare_headers

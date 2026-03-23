@@ -21,20 +21,20 @@ class XlsxRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         if self._value_only:
-            return DictRowData({
+            return {
                 name: (
                     str(self._data[col - 1])
                     if col - 1 < len(self._data) and self._data[col - 1] is not None
                     else ""
                 )
                 for name, col in header_map.items()
-            })
+            }
         col_to_value: ColumnValues = {
             cell.column: (str(cell.value) if cell.value is not None else "")  # type: ignore[union-attr]
             for cell in self._data
             if hasattr(cell, 'column')
         }
-        return DictRowData({name: col_to_value.get(col, "") for name, col in header_map.items()})
+        return {name: col_to_value.get(col, "") for name, col in header_map.items()}
 
     @override
     def get_header_map(self) -> HeaderMap:

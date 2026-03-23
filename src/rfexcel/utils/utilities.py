@@ -59,8 +59,8 @@ def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = '
     without ``=`` are silently ignored.
     """
     if isinstance(data, dict):
-        return DictRowData(data)
-    result: DictRowData = DictRowData()
+        return dict(data)
+    result: DictRowData = {}
     for segment in data.split(delimiter):
         segment = segment.strip()
         if '=' not in segment:

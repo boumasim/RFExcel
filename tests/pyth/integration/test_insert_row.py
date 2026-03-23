@@ -275,6 +275,7 @@ class TestInsertRowXlsxShifted:
     def _make_shifted_xlsx(self, tmp_path: Path) -> str:
         wb = openpyxl.Workbook()
         ws = wb.active
+        assert ws is not None
         ws["B1"] = "Product ID"
         ws["C1"] = "Description"
         ws["D1"] = "Price"
@@ -302,6 +303,7 @@ class TestInsertRowXlsxShifted:
 
         wb = openpyxl.load_workbook(path)
         ws = wb.active
+        assert ws is not None
         assert ws.cell(2, 1).value is None,    "Column A must stay empty"
         assert ws.cell(2, 2).value == "P-NEW",  "Product ID must land in col B"
         assert ws.cell(2, 3).value == "Widget", "Description must land in col C"

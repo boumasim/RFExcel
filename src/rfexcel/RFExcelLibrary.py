@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, cast, overload
 
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
@@ -7,7 +7,7 @@ from robot.utils import DotDict  # type: ignore
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utils.types import DictRowData, HeaderSpec  # type: ignore
+from rfexcel.utils.types import HeaderSpec  # type: ignore
 
 from .backend.interfaces.i_library import IExcel
 
@@ -53,6 +53,15 @@ class RFExcelLibrary:
     def __init__(self):
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
+
+    @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
+    def _wrap_public_result(self, value: Any) -> Any:
+        if isinstance(value, list):
+            items = cast(list[Any], value)
+            return [self._wrap_public_result(item) for item in items]
+        if isinstance(value, dict) and not isinstance(value, DotDict):
+            return DotDict(value)
+        return value
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def end_test(self, name: str, attrs: dict[str, Any]) -> None:
@@ -120,6 +129,25 @@ class RFExcelLibrary:
         logger.info("File successfully closed")
         self._active_workbook = None
 
+    @overload
+    def get_rows(self,
+                header_row: int = 1,
+                search_criteria: dict[str, str] | str | None = None,
+                partial_match: bool = False,
+                one_row: Literal[False] = False,
+                **kwargs: Any) -> list[DotDict]:
+        ...
+
+    @overload
+    def get_rows(self,
+                header_row: int = 1,
+                search_criteria: dict[str, str] | str | None = None,
+                partial_match: bool = False,
+                *,
+                one_row: Literal[True],
+                **kwargs: Any) -> DotDict:
+        ...
+
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
                 header_row: int = 1,
@@ -158,24 +186,31 @@ class RFExcelLibrary:
         | ${rows} =     | Get Rows            | header_row=2                            |                    |
         """
         if self._active_workbook:
-            return self._active_workbook.get_rows(
+            result = self._active_workbook.get_rows(
                 header_row=header_row,
                 search_criteria=search_criteria,
                 partial_match=partial_match,
                 one_row=one_row,
                 **kwargs,
             )
+            return self._wrap_public_result(result)
         else:
             raise WorkbookNotOpenException()
 
+    @overload
+    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[str]: ...
+
+    @overload
+    def get_row(self, row: int, headers: dict[str, int] | list[str], **kwargs: Any) -> DotDict: ...
+
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> dict[str, str] | list[str]:
+    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[str]:
         """Returns a single row by its row number as a list or dict.
 
         - No ``headers``: Returns a plain ``list`` of string values.
-        - ``headers`` as a list: Maps values by position to the given column names; returns a ``dict``.
-        - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``dict``.
-          Use this for tables that do not start at column A.
+        - ``headers`` as a list: Maps values by position to the given column names; returns a ``DotDict``.
+        - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``DotDict``.
+        Use this for tables that do not start at column A.
 
         Returns ``[]`` if no workbook is open or the row is beyond the last row.
         Any ``**kwargs`` are forwarded to the backend (e.g. ``data_only=True`` for xlsx).
@@ -196,7 +231,9 @@ class RFExcelLibrary:
         | ${row} =       | Get Row             | 2    | headers=${hmap}           |               |
         """
         resolved: HeaderSpec = headers if headers is not None else []
-        if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
+        if self._active_workbook:
+            result = self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
+            return self._wrap_public_result(result)
         else: raise WorkbookNotOpenException()
 
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
@@ -567,7 +604,7 @@ class RFExcelLibrary:
             else:
                 target = self._factory.load_workbook(path=str(target_path), read_only=True)
 
-            return self._active_workbook.compare_data_to(
+            result = self._active_workbook.compare_data_to(
                 target=target,
                 source_header_row=source_header_row,
                 target_header_row=target_header_row,
@@ -575,4 +612,5 @@ class RFExcelLibrary:
                 headers=headers,
                 fail_on_diff=fail_on_diff,
             )
+            return self._wrap_public_result(result)
         else: raise WorkbookNotOpenException()
