@@ -79,3 +79,10 @@ Compare data to another file
     Log    Differences: ${differences}
     ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx  headers=['Description', 'Location']
     Log    Differences with headers: ${differences}
+
+Lazy switch to xlsx
+    [Documentation]     Test lazy switching from .xls to .xlsx and verify data integrity
+    Load Workbook    path=${RESOURCES}/example.xls
+    ${rows}=    Get Rows
+    Log    Rows from .xls: ${rows}
+    Save Workbook

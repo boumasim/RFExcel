@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Union, cast, override
 
 from openpyxl import Workbook
 from robot.api import logger
-from xls2xlsx import XLS2XLSX  # pyright: ignore[reportMissingTypeStubs]
 
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
@@ -14,7 +13,7 @@ from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
 from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
-                                     headers_to_header_map, search_in_row)
+                                     headers_to_header_map, search_in_row, convert_xls_to_xslx)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
@@ -124,10 +123,10 @@ class RFExcel(IExcel, ISetExcel):
             f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
-        x2x = XLS2XLSX(str(self._resource.path))
-        wb : Workbook = cast(Workbook, x2x.to_xlsx()) # type: ignore
+        wb: Workbook = convert_xls_to_xslx(Path(self._resource.path))
+        new_path: Path = self._resource.path.with_suffix('.xlsx')
         self._resource.close()
-        self._resource = XlsxEditResource(wb, self._resource.path)
+        self._resource = XlsxEditResource(wb, new_path)
         self._reader = XlsxEditReader()
         self._metadata = XlsxMetadata()
         self._writer = XlsxWriter()
