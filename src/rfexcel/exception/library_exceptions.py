@@ -75,3 +75,8 @@ class NotMatchingColumns(RFExcelException):
         if missing_in_source:
             parts.append(f"missing in source: {missing_in_source}")
         super().__init__(f"Column mismatch - {', '.join(parts)}")
+
+class WorkbookNotOpenException(RFExcelException):
+    """Exception raised when trying to operate on a workbook that is not open"""
+    def __init__(self, msg: str = "No workbook is currently open"):
+        super().__init__(msg)
