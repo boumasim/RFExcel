@@ -3,8 +3,7 @@ from pathlib import Path
 import xlrd
 from openpyxl import Workbook
 
-from rfexcel.utils.types import (DictRowData, HeaderMap, HeaderSpec,
-                                 RowInputData)
+from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 
 def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
@@ -49,7 +48,7 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = ';') -> DictRowData:
+def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';') -> DictRowData:
     """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything

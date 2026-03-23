@@ -1,5 +1,6 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
+from typing import cast
 
 import openpyxl
 import pytest
@@ -24,7 +25,7 @@ class TestInsertRowXlsxEdit:
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         rows_before = lib.get_rows()
-        first_row_before = rows_before[0]["Product ID"]
+        first_row_before = cast(str, rows_before[0]["Product ID"])
 
         lib.insert_row(_NEW_ROW, row=2)
         rows_after = lib.get_rows()
@@ -76,7 +77,7 @@ class TestInsertRowXlsxEdit:
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
         rows_before = lib.get_rows()
-        last_before = rows_before[-1]["Product ID"]
+        last_before = cast(str, rows_before[-1]["Product ID"])
         insert_at = len(rows_before) + 1  # 1-based: header(1) + data rows
 
         lib.insert_row({"Product ID": "P-LAST"}, row=insert_at)
@@ -202,7 +203,7 @@ class TestInsertRowCsvEdit:
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         rows_before = lib.get_rows()
-        first_before = rows_before[0]["Product ID"]
+        first_before = cast(str, rows_before[0]["Product ID"])
 
         lib.insert_row(_NEW_ROW, row=2)
         rows_after = lib.get_rows()

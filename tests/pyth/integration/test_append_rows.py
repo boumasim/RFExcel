@@ -1,5 +1,5 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -53,7 +53,7 @@ class TestAppendRowsXlsxEdit:
 
         lib2 = RFExcelLibrary()
         lib2.load_workbook(path)
-        ids = [r["Product ID"] for r in lib2.get_rows()]
+        ids: list[str] = [r["Product ID"] for r in lib2.get_rows()]
         assert "P-001" in ids
         assert "P-002" in ids
         lib2.close()

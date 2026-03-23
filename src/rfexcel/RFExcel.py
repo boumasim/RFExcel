@@ -28,7 +28,7 @@ from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
 from .utils.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
-                          ListRowData, RowInputData)
+                          ListRowData)
 
 
 class RFExcel(IExcel, ISetExcel):
@@ -74,7 +74,7 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | RowInputData | None = None,
+                search_criteria: str | DictRowData | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -146,7 +146,7 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.save(Path(path) if path else None, self._resource)
 
     @override
-    def append_row(self, row_data: RowInputData, header_row: int) -> None:
+    def append_row(self, row_data: DictRowData, header_row: int) -> None:
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
@@ -158,12 +158,12 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.append_row(cell_data, self._resource)
 
     @override
-    def append_rows(self, rows: list[RowInputData], header_row: int) -> None:
+    def append_rows(self, rows: list[DictRowData], header_row: int) -> None:
         for row_data in rows:
             self.append_row(row_data, header_row)
 
     @override
-    def insert_row(self, row_data: RowInputData, row: int, header_row: int) -> None:
+    def insert_row(self, row_data: DictRowData, row: int, header_row: int) -> None:
         if row <= header_row:
             raise RowIndexOutOfBoundsException(
                 row, f"Row {row} must be greater than header_row {header_row}"
@@ -180,7 +180,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_rows(self,
-                    search_criteria: str | RowInputData,
+                    search_criteria: str | DictRowData,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -217,8 +217,8 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: str | RowInputData,
-                      values: str | RowInputData,
+                      search_criteria: str | DictRowData,
+                      values: str | DictRowData,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool = False) -> int:
