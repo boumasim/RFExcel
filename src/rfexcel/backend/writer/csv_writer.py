@@ -13,7 +13,7 @@ class CsvWriter(IWriter):
 
     @override
     def print(self):
-        print("csv reader")
+        print("csv writer")
 
     @override
     def add_sheet(self, name: str, resource: IResource):

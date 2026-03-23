@@ -13,7 +13,7 @@ class IResource(ABC):
 
     @property
     @abstractmethod
-    def get_active_sheet(self) -> Any:
+    def active_sheets(self) -> Any:
         pass
 
     @property

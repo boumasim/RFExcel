@@ -18,7 +18,7 @@ class NullResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         raise NullComponentException()
 
     @property

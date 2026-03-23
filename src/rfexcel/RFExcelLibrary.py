@@ -486,7 +486,7 @@ class RFExcelLibrary:
         This is a convenience method that combines ``Close Workbook`` and
         ``Load Workbook`` into a single step. It first closes the currently
         active workbook (if any), then opens the new file specified by
-        ``source``.
+        ``path``.
 
         Arguments:
         - ``path``: Path to the new workbook to load.
@@ -530,7 +530,7 @@ class RFExcelLibrary:
         Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
 
         Arguments:
-        - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparision, argument can be ommited.
+        - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparison, argument can be omitted.
         - ``source_header_row``: Header row in the source (active workbook). Defaults to ``1``.
         - ``target_header_row``: Header row in the target file. Defaults to ``1``.
         - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.

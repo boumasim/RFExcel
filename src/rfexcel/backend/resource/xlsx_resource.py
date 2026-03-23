@@ -25,7 +25,7 @@ class XlsxEditResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
 
     @property
@@ -123,7 +123,7 @@ class XlsxStreamResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
     
     @property

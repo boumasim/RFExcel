@@ -26,7 +26,7 @@ class CsvEditResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> None:
+    def active_sheets(self) -> None:
         return None
 
     @property
@@ -122,7 +122,7 @@ class CsvStreamResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> None:
+    def active_sheets(self) -> None:
         return None
 
     @property

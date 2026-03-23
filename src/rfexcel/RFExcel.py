@@ -13,7 +13,8 @@ from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
-                                     headers_to_header_map, search_in_row, convert_xls_to_xslx)
+                                     convert_xls_to_xlsx,
+                                     headers_to_header_map, search_in_row)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
@@ -123,7 +124,7 @@ class RFExcel(IExcel, ISetExcel):
             f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
-        wb: Workbook = convert_xls_to_xslx(Path(self._resource.path))
+        wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
         new_path: Path = self._resource.path.with_suffix('.xlsx')
         self._resource.close()
         self._resource = XlsxEditResource(wb, new_path)

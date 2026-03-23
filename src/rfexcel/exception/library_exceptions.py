@@ -10,7 +10,7 @@ class FileFormatNotSupportedException(RFExcelException):
         super().__init__(msg)
 
 class FileAlreadyExistsException(RFExcelException):
-    def __init__(self, msg: str = "File with same name already exits"):
+    def __init__(self, msg: str = "File with same name already exists"):
         super().__init__(msg)
 
 class FileDoesNotExistException(RFExcelException):

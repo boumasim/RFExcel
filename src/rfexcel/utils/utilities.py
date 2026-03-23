@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from openpyxl import Workbook
 import xlrd
+from openpyxl import Workbook
 
 from rfexcel.utils.types import (DictRowData, HeaderMap, HeaderSpec,
                                  RowInputData)
@@ -69,7 +69,7 @@ def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = '
         result[key.strip()] = value.strip()
     return result
 
-def convert_xls_to_xslx(xls_path: Path) -> Workbook:
+def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     """
     Converts an .xls file to a new openpyxl Workbook object.
     """

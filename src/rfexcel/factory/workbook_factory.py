@@ -10,7 +10,7 @@ from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.csv_edit_reader import CsvEditReader
 from rfexcel.backend.reader.csv_stream_reader import CsvStreamReader
 from rfexcel.backend.reader.xls_on_demand_reader import XlsOnDemandReader
-from rfexcel.backend.reader.xls_standart_reader import XlsStandardReader
+from rfexcel.backend.reader.xls_standard_reader import XlsStandardReader
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.reader.xlsx_stream_reader import XlsxStreamReader
 from rfexcel.backend.resource.csv_resource import (CsvEditResource,
