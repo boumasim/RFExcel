@@ -139,6 +139,9 @@ class XlsxStreamResource(IResource):
                 if self._active_sheet
                 else iter([])
             )
+        while(self._last_read_row_index < row_index - 1):
+            next(self._row_generator)
+            self._last_read_row_index += 1
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data, False)

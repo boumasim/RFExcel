@@ -74,6 +74,7 @@ class CsvEditResource(IResource):
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
         if not cell_data:
+            self._all_rows.append([])
             return
         max_col = max(cell_data.keys())
         row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
@@ -131,10 +132,10 @@ class CsvStreamResource(IResource):
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
-        try:
-            raw_row = next(self._reader)
-        except StopIteration:
-            raise StopIteration()
+        while self._last_read_row_index < row_index - 1:
+            next(self._reader)
+            self._last_read_row_index += 1
+        raw_row = next(self._reader)
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)
 
