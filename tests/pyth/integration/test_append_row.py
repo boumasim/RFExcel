@@ -305,4 +305,3 @@ class TestAppendRowXlsxShifted:
         assert rows[-1]["Description"] == "Gamma"
         assert rows[-1]["Price"] == "8.88"
         assert rows[-1]["Location"] == "Depot"
-        assert rows[-1]["Location"] == "Depot"

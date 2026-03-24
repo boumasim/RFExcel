@@ -340,4 +340,3 @@ class TestCompareDataToFailOnDiff:
     def test_explicit_false_returns_full_diff_list(self, loaded_xlsx: RFExcelLibrary):
         result = loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=False)
         assert result == XLSX_VS_CSV_DIFFS
-        assert result == XLSX_VS_CSV_DIFFS

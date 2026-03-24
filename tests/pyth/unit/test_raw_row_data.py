@@ -30,7 +30,7 @@ def _make_xlsx_value_only(values: list[Any]) -> IRawRowData:
 
 def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
     wb = Workbook()
-    ws = wb.active  # type: ignore[union-attr]
+    ws = wb.active
     for col, value in enumerate(values, start=1):
         ws.cell(row=1, column=col, value=value)
     row_data = XlsxRawRowData(tuple(ws[1]), value_only=False)

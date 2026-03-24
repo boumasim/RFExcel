@@ -44,6 +44,9 @@ class RFExcelLibrary:
     When ``partial_match=True``, the criterion value only needs to be a *substring*
     of the cell value (e.g. ``"Keyboard"`` matches ``"Keyboard, Mechanical"``).
     Defaults to exact match (``partial_match=False``).
+
+    = Error Handling =
+    - Calling a keyword that requires an open workbook when none is open raises ``WorkbookNotOpenException``.
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -214,7 +217,7 @@ class RFExcelLibrary:
         - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``DotDict``.
         Use this for tables that do not start at column A.
 
-        Returns ``[]`` if no workbook is open or the row is beyond the last row.
+        Returns ``[]`` if the row is beyond the last row.
         Any ``**kwargs`` are forwarded to the backend (e.g. ``data_only=True`` for xlsx).
 
         Arguments:
@@ -246,8 +249,6 @@ class RFExcelLibrary:
         Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook,
         as CSV files do not have the concept of sheets.
 
-        Returns an empty list if no workbook is currently open.
-
         Examples:
         | Load Workbook       | ${CURDIR}/data.xlsx  |
         | ${sheets} =         | List Sheet Names     |
@@ -265,7 +266,6 @@ class RFExcelLibrary:
 
         Supported for ``.xlsx`` and ``.xls`` formats in all modes.
         Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook.
-        Raises ``LibraryException`` if no workbook is currently open.
 
         Arguments:
         - ``name``: The exact name of the sheet to activate.

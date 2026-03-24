@@ -81,7 +81,7 @@ class TestCreateWorkbookNegative:
         with pytest.raises(FileFormatNotSupportedException):
             lib.create_workbook(path)
 
-    def test_active_workbook_unchanged_after_failed_create(self, lib: RFExcelLibrary, tmp_path: Path):
+    def test_active_workbook_changed_after_failed_create(self, lib: RFExcelLibrary, tmp_path: Path):
         lib.load_workbook(XLSX_FILE)
         active_before = lib._active_workbook
         with pytest.raises(FileFormatNotSupportedException):
