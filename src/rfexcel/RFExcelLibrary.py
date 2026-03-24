@@ -7,7 +7,8 @@ from robot.utils import DotDict  # type: ignore
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utils.types import HeaderSpec, RowDifference  # type: ignore
+from rfexcel.utils.library_logger import logger as library_logger
+from rfexcel.utils.types import HeaderSpec
 
 from .backend.interfaces.i_library import IExcel
 
@@ -54,16 +55,21 @@ class RFExcelLibrary:
     ROBOT_LISTENER_API_VERSION = 2
 
     def __init__(self):
+        library_logger.configure(logger)
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def _wrap_public_result(self, value: Any) -> Any:
-        if isinstance(value, list):
-            items = cast(list[Any], value)
-            return [self._wrap_public_result(item) for item in items]
+        """Recursively converts dictionaries to Robot Framework DotDicts."""
         if isinstance(value, dict) and not isinstance(value, DotDict):
-            return DotDict(value)
+            dict_val = cast(dict[Any, Any], value)
+            return DotDict({str(k): self._wrap_public_result(v) for k, v in dict_val.items()})
+        
+        if isinstance(value, list):
+            list_val = cast(list[Any], value)
+            return [self._wrap_public_result(item) for item in list_val]
+            
         return value
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]

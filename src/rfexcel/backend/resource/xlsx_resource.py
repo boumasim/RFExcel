@@ -5,13 +5,13 @@ from typing import Any, override
 from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
-from robot.api import logger
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
                                                   LibraryException,
                                                   NotSupportedInReadOnlyMode)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
+from rfexcel.utils.library_logger import logger
 from rfexcel.utils.types import ColumnValues
 
 from .i_resource import IResource

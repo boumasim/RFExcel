@@ -58,4 +58,6 @@ generovani docs - python -m robot.libdoc src/rfexcel docs/RFExcel.html
 
 State Mutation Pattern kvuli zapisovani.
 
+Adapter in logger
+
 python-calamine -> potencialne pro be, napsano v rustu, mnohem rychlejsi -> moznost na to prejit pozdjei

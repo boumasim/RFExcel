@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any, List, Union, override
 
 from openpyxl import Workbook
-from robot.api import logger
 
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
@@ -12,6 +11,7 @@ from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
+from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
                                      headers_to_header_map, search_in_row)

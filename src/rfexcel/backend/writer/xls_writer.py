@@ -1,13 +1,16 @@
+from __future__ import annotations
 import weakref
 from pathlib import Path
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from rfexcel.advice.interceptors import auto_convert_xls_to_xlsx
-from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.RFExcel import RFExcel
+from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.utils.types import ColumnValues
+
+if TYPE_CHECKING:
+    from rfexcel.RFExcel import RFExcel
 
 
 class XlsWriter(IWriter):

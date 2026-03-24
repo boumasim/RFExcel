@@ -5,6 +5,7 @@ import xlrd
 from openpyxl import Workbook
 from openpyxl.reader import excel
 
+from rfexcel.backend.interfaces.i_library import IExcel
 from rfexcel.backend.metadata.xls_metadata import XlsMetadata
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.csv_edit_reader import CsvEditReader
@@ -34,7 +35,7 @@ from rfexcel.rfexcel_constants import (CSV_SUFFIX, VALID_SUFFIXES, XLS_SUFFIX,
 
 class WorkbookFactory:
 
-    def create_workbook(self, path: str, **kwargs: Any) -> RFExcel:
+    def create_workbook(self, path: str, **kwargs: Any) -> IExcel:
         file_path: Path = Path(path)
         extension: str = file_path.suffix.lower()
 
@@ -53,7 +54,7 @@ class WorkbookFactory:
             raise Exception("Exception in create_workbook occured")
 
 
-    def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> RFExcel:
+    def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> IExcel:
         file_path: Path = Path(path)
         extension: str = file_path.suffix.lower()
 
