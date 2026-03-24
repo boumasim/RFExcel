@@ -46,7 +46,7 @@ class RFExcelLibrary:
     Defaults to exact match (``partial_match=False``).
 
     = Error Handling =
-    - Calling a keyword that requires an open workbook when none is open raises ``WorkbookNotOpenException``.
+    - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -68,6 +68,7 @@ class RFExcelLibrary:
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def end_test(self, name: str, attrs: dict[str, Any]) -> None:
+        """Robot listener hook that closes any active workbook at test end."""
         logger.info("Cleanup after test execution...")
         if self._active_workbook: self.close()
 
@@ -75,12 +76,18 @@ class RFExcelLibrary:
     def create_workbook(self, path: str, **kwargs: Any) -> None:
         """Creates a new empty workbook at ``path`` and opens it in edit mode.
 
-        Parent directories are created automatically. Supported: ``.xlsx``, ``.csv``.
-        Raises ``FileAlreadyExistsException`` if a file already exists at ``path``.
-        Raises ``FileFormatNotSupportedException`` for unsupported or ``.xls`` paths.
+        Parent directories are created automatically. Supported formats: ``.xlsx``, ``.csv``.
 
         Arguments:
         - ``path``: Destination path including the file extension.
+        - ``**kwargs``: Forwarded to backend creation logic.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileAlreadyExistsException``: If a file already exists at ``path``.
+        - ``FileFormatNotSupportedException``: For unsupported formats or ``.xls``.
 
         Examples:
         | Create Workbook | ${OUTPUT_DIR}${/}result.xlsx |
@@ -99,13 +106,17 @@ class RFExcelLibrary:
           For ``.xlsx`` and ``.csv`` access is strictly forward-only.
           For ``.xls`` on-demand sheet loading allows random row access.
 
-        Raises ``FileDoesNotExistException`` if the file is not found at ``path``.
-        Raises ``FileFormatNotSupportedException`` for unsupported file extensions.
-
         Arguments:
         - ``path``: Path to the existing file.
         - ``read_only``: Open in streaming mode if ``True``. Defaults to ``False``.
         - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx streaming).
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileDoesNotExistException``: If the file is not found at ``path``.
+        - ``FileFormatNotSupportedException``: For unsupported file extensions.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                |                |
@@ -123,7 +134,10 @@ class RFExcelLibrary:
         """Closes the active workbook and releases all associated resources.
 
         Called automatically at the end of each test case; explicit cleanup is
-        optional but recommended for clarity. Safe to call with no open workbook.
+        optional but recommended for clarity. Safe to call when no workbook is open.
+
+        Returns:
+        - ``None``.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |
@@ -171,8 +185,8 @@ class RFExcelLibrary:
         In streaming mode, rows are consumed sequentially — calling ``Get Rows`` twice
         on the same open workbook raises ``StreamingViolationException``.
 
-        Returns ``[]`` (or ``{}`` when ``one_row=True``) if no workbook is open,
-        ``header_row`` is beyond the file, or no row matches.
+        Returns ``[]`` (or ``{}`` when ``one_row=True``) when ``header_row`` is beyond
+        the file or no row matches.
 
         Arguments:
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
@@ -180,6 +194,13 @@ class RFExcelLibrary:
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
         - ``one_row``: Return first match as a flat dict when ``True``. Defaults to ``False``.
         - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx).
+
+        Returns:
+        - ``list[DotDict]`` when ``one_row=False``.
+        - ``DotDict`` when ``one_row=True``.
+
+        Raises:
+        - ``StreamingViolationException``: When called again after stream consumption in forward-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                         |                    |
@@ -225,6 +246,10 @@ class RFExcelLibrary:
         - ``headers``: Optional list of column names or dict mapping column names to column numbers.
         - ``**kwargs``: Forwarded to the backend.
 
+        Returns:
+        - ``list[str]`` when ``headers`` is omitted.
+        - ``DotDict`` when ``headers`` is provided.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
         | ${row} =       | Get Row             | 2                             |               |
@@ -246,8 +271,12 @@ class RFExcelLibrary:
         """Returns the names of all sheets in the active workbook.
 
         Works for ``.xlsx`` and ``.xls`` formats (both edit and streaming modes).
-        Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook,
-        as CSV files do not have the concept of sheets.
+
+        Returns:
+        - ``list[str]``: Sheet names in workbook order.
+
+        Raises:
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
 
         Examples:
         | Load Workbook       | ${CURDIR}/data.xlsx  |
@@ -270,6 +299,13 @@ class RFExcelLibrary:
         Arguments:
         - ``name``: The exact name of the sheet to activate.
 
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: If the named sheet does not exist.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |        |
         | Switch Sheet   | Sheet2              |        |
@@ -291,6 +327,14 @@ class RFExcelLibrary:
         Arguments:
         - ``name``: Name of the new sheet.
 
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: For invalid/duplicate sheet operations.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |          |
         | Add Sheet      | NewSheet            |          |
@@ -306,11 +350,18 @@ class RFExcelLibrary:
         """Deletes a sheet from the active workbook; the first remaining sheet becomes active.
 
         Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
-        Streaming mode and ``.csv`` raise ``LibraryException`` or ``OperationNotSupportedForFormat``.
-        Raises ``LibraryException`` if the sheet does not exist.
+        Streaming mode and ``.csv`` are not supported.
 
         Arguments:
         - ``name``: The exact name of the sheet to delete.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: If the sheet does not exist or deletion is invalid.
 
         Examples:
         | Load Workbook      | ${CURDIR}/data.xlsx |          |
@@ -332,10 +383,16 @@ class RFExcelLibrary:
         Streaming / read-only mode raises ``NotSupportedInReadOnlyMode``.
         For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
         trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
-        Safe to call when no workbook is open — does nothing.
 
         Arguments:
         - ``path``: Optional destination path. Omit to save to the original path.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: For unsupported save scenarios (for example untouched ``.xls``).
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
@@ -364,6 +421,12 @@ class RFExcelLibrary:
         - ``row_data``: Dict mapping column header names to cell values.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
 
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
         | Append Row    | ${{{"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"}}} |
@@ -383,6 +446,12 @@ class RFExcelLibrary:
         Arguments:
         - ``rows``: List of dicts, each mapping column header names to cell values.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
@@ -410,6 +479,13 @@ class RFExcelLibrary:
         - ``row_data``: Dict mapping column header names to cell values.
         - ``row``: 1-based row index at which the new row is inserted (must be > ``header_row``).
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``RowIndexOutOfBoundsException``: If ``row`` is invalid.
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                       |
@@ -443,6 +519,12 @@ class RFExcelLibrary:
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
         - ``first_only``: Update only the first matching row when ``True``. Defaults to ``False``.
+
+        Returns:
+        - ``int``: Number of updated rows.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid header/search operations.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
@@ -480,6 +562,12 @@ class RFExcelLibrary:
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
         - ``one_row``: Delete only the first matching row when ``True``. Defaults to ``False``.
 
+        Returns:
+        - ``int``: Number of deleted rows.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
         | ${count} =     | Delete Rows         | ${{{'Product ID': 'P-001'}}}       |                 |
@@ -500,14 +588,20 @@ class RFExcelLibrary:
     def delete_row(self, row_number: int) -> None:
         """Deletes the row at the given ``row_number``.
 
-        ``row_number`` row_number 1 is the first row.
+        ``row_number`` 1 is the first row.
         Raises ``RowIndexOutOfBoundsException`` if ``row_number`` is less than 1 or
         beyond the last row in the sheet.
         Streaming / read-only mode raises ``LibraryException``.
-        Safe to call when no workbook is open — does nothing.
 
         Arguments:
         - ``row_number``: 1-based row number to delete.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``RowIndexOutOfBoundsException``: If ``row_number`` is outside valid range.
+        - ``LibraryException``: In read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |   |
@@ -531,6 +625,13 @@ class RFExcelLibrary:
         - ``path``: Path to the new workbook to load.
         - ``read_only``: Whether to open the workbook in read-only mode. Defaults to ``False``.
         - ``**kwargs``: Additional keyword arguments passed to ``Load Workbook``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileDoesNotExistException``: If the target file does not exist.
+        - ``FileFormatNotSupportedException``: For unsupported file extension.
 
         Examples:
         | Switch Source | ${CURDIR}/data.xlsx | read_only=True |
@@ -575,6 +676,16 @@ class RFExcelLibrary:
         - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.
         - ``headers``: List of column names to compare. Defaults to all source headers.
         - ``fail_on_diff``: If ``True``, raises ``AssertionError`` if any differences are found. Defaults to ``False``.
+
+        Returns:
+        - ``list[DotDict]``: One item per source row with at least one compared difference.
+
+        Raises:
+        - ``FileDoesNotExistException``: If ``target_path`` is provided and file is missing.
+        - ``FileFormatNotSupportedException``: If target format is unsupported.
+        - ``HeadersNotDeterminedException``: If header rows are empty/out of range.
+        - ``NotMatchingColumns``: If required compared columns are not present in both sources.
+        - ``AssertionError``: If ``fail_on_diff=True`` and differences are found.
 
         Returns a list of dicts, one per differing source row:
         | [
