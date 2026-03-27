@@ -118,7 +118,7 @@ class XlsxStreamResource(IResource):
         super().__init__(path)
         self._wb = wb
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
-        self._row_generator: Iterator[tuple[Any, ...]] | None = None  # lazily initialised on first fetch_row call
+        self._row_generator: Iterator[tuple[Any, ...]] | None = None
         self._last_read_row_index = 0
 
     @property
@@ -140,8 +140,8 @@ class XlsxStreamResource(IResource):
                 else iter([])
             )
         while(self._last_read_row_index < row_index - 1):
-            next(self._row_generator)
             self._last_read_row_index += 1
+            next(self._row_generator)
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data, False)
@@ -152,6 +152,8 @@ class XlsxStreamResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if self._row_generator is not None:
+            self._row_generator.close()  # type: ignore[attr-defined]
         self._active_sheet = self._wb[name]
         self._row_generator = None
         self._last_read_row_index = 0
@@ -186,4 +188,7 @@ class XlsxStreamResource(IResource):
 
     @override
     def close(self):
+        if self._row_generator is not None:
+            self._row_generator.close()  # type: ignore[attr-defined]
+            self._row_generator = None
         self._wb.close()

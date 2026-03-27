@@ -132,8 +132,8 @@ class CsvStreamResource(IResource):
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         while self._last_read_row_index < row_index - 1:
-            next(self._reader)
             self._last_read_row_index += 1
+            next(self._reader)
         raw_row = next(self._reader)
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)

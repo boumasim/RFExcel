@@ -98,3 +98,14 @@ Lazy switch to xlsx
     Log    Rows from .xls: ${rows}
     Should Be True    len($rows) > 0
     Save Workbook    path=${RESULTS}/example_converted.xlsx
+
+Test xlsx generator close
+    [Documentation]     Test that the row generator is properly closed when switching sheets or closing the workbook
+    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    Switch Sheet    name=Sheet2
+    ${row1}=   Get Row    row=2
+    Log    First row: ${row1}
+    Switch Sheet    name=Sheet3
+    ${row2}=   Get Row    row=2
+    Log    First row of Sheet2: ${row2}
+    Close Workbook

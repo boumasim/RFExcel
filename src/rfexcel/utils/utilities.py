@@ -73,20 +73,22 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     Converts an .xls file to a new openpyxl Workbook object.
     """
     xls_book = xlrd.open_workbook(str(xls_path), formatting_info=False)
-    xlsx_book = Workbook()
-        
-    if xlsx_book.active:
-        xlsx_book.remove(xlsx_book.active)
-            
-    for sheet_idx in range(xls_book.nsheets):
-        xls_sheet = xls_book.sheet_by_index(sheet_idx)
-        xlsx_sheet = xlsx_book.create_sheet(title=xls_sheet.name)
-            
-        for row_idx in range(xls_sheet.nrows):
-            for col_idx in range(xls_sheet.ncols):
-                xlsx_sheet.cell(
-                    row=row_idx + 1,
-                    column=col_idx + 1,
-                    value=xls_sheet.cell_value(row_idx, col_idx)
-                )
+    try:
+        xlsx_book = Workbook()   
+        if xlsx_book.active:
+            xlsx_book.remove(xlsx_book.active)
+                
+        for sheet_idx in range(xls_book.nsheets):
+            xls_sheet = xls_book.sheet_by_index(sheet_idx)
+            xlsx_sheet = xlsx_book.create_sheet(title=xls_sheet.name)
+                
+            for row_idx in range(xls_sheet.nrows):
+                for col_idx in range(xls_sheet.ncols):
+                    xlsx_sheet.cell(
+                        row=row_idx + 1,
+                        column=col_idx + 1,
+                        value=xls_sheet.cell_value(row_idx, col_idx)
+                    )
+    finally:
+        xls_book.release_resources()
     return xlsx_book
