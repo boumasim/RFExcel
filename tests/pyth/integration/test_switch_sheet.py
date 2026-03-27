@@ -1,9 +1,10 @@
 import pytest
 
-from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
+from rfexcel.exception.library_exceptions import (
+    LibraryException, OperationNotSupportedForFormat,
+    SheetDoesNotExistException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
-
 
 XLSX_SHEET1_FIRST_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
 XLSX_SHEET2_FIRST_ROW = {"Product ID": "P-300", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
@@ -188,10 +189,45 @@ class TestSwitchSheetNegative:
 
     def test_switch_to_nonexistent_sheet_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        with pytest.raises(Exception):
+        with pytest.raises(SheetDoesNotExistException):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xlsx_message(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE)
+        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xlsx_stream_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE, read_only=True)
+        with pytest.raises(SheetDoesNotExistException):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xlsx_stream_message(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE, read_only=True)
+        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
             lib.switch_sheet("DoesNotExist")
 
     def test_switch_to_nonexistent_sheet_xls_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
-        with pytest.raises(Exception):
+        with pytest.raises(SheetDoesNotExistException):
             lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xls_message(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE)
+        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xls_on_demand_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(SheetDoesNotExistException):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_xls_on_demand_message(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
+            lib.switch_sheet("DoesNotExist")
+
+    def test_switch_to_nonexistent_sheet_csv_raises(self, lib: RFExcelLibrary):
+        lib.load_workbook(CSV_FILE)
+        with pytest.raises(OperationNotSupportedForFormat):
+            lib.switch_sheet("DoesNotExist")            lib.switch_sheet("DoesNotExist")

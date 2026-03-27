@@ -8,7 +8,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
                                                   LibraryException,
-                                                  NotSupportedInReadOnlyMode)
+                                                  NotSupportedInReadOnlyMode,
+                                                  SheetDoesNotExistException)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 from rfexcel.utils.library_logger import logger
@@ -50,6 +51,8 @@ class XlsxEditResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheetnames:
+            raise SheetDoesNotExistException(name)
         self._active_sheet = self._wb[name]
 
     @override
@@ -152,6 +155,8 @@ class XlsxStreamResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheetnames:
+            raise SheetDoesNotExistException(name)
         if self._row_generator is not None:
             self._row_generator.close()  # type: ignore[attr-defined]
         self._active_sheet = self._wb[name]

@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any, Literal, cast, overload
+from xmlrpc.client import Boolean
 
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore
@@ -48,6 +49,7 @@ class RFExcelLibrary:
 
     = Error Handling =
     - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
+    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode)
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -81,6 +83,7 @@ class RFExcelLibrary:
     @keyword("Create Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def create_workbook(self, path: str, **kwargs: Any) -> None:
         """Creates a new empty workbook at ``path`` and opens it in edit mode.
+        Closes any previously open workbook.
 
         Parent directories are created automatically. Supported formats: ``.xlsx``, ``.csv``.
 
@@ -106,6 +109,7 @@ class RFExcelLibrary:
     @keyword("Load Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Opens an existing workbook for reading or editing.
+        Closes any previously open workbook.
 
         - ``read_only=False`` *(default — Edit mode)*: Loads the full file into memory; read/write.
         - ``read_only=True`` *(Streaming mode)*: Memory-efficient, read-only.
@@ -718,7 +722,7 @@ class RFExcelLibrary:
                 target_path is None or
                 Path(target_path).resolve() == self._active_workbook.resource.path.resolve()
             )
-            if same_file:
+            if same_file and not self._active_workbook.read_only:
                 target: IExcel = self._active_workbook
             else:
                 target = self._factory.load_workbook(path=str(target_path), read_only=True)

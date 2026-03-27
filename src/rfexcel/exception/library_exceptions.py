@@ -80,3 +80,8 @@ class WorkbookNotOpenException(RFExcelException):
     """Exception raised when trying to operate on a workbook that is not open"""
     def __init__(self, msg: str = "No workbook is currently open"):
         super().__init__(msg)
+
+class SheetDoesNotExistException(RFExcelException):
+    """Exception raised when a requested sheet name does not exist in the workbook"""
+    def __init__(self, sheet_name: str):
+        super().__init__(f"Sheet with this name: {sheet_name} does not exist")

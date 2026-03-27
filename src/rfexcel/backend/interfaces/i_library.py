@@ -14,6 +14,11 @@ class IExcel(ABC):
 
     @property
     @abstractmethod
+    def read_only(self) -> bool:
+        pass
+
+    @property
+    @abstractmethod
     def resource(self) -> IResource:
         pass
 

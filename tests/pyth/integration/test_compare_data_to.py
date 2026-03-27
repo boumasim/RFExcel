@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import cast
 
+from openpyxl.cell import read_only
+
 from rfexcel.utils.types import ColumnDifference
 
 
@@ -275,6 +277,27 @@ class TestCompareDataToSameWorkbook:
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(XLSX_FILE)
         assert result == []
+
+    def test_same_workbook_with_stream_mode_xlsx_same_sheet(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE, read_only=True)
+        assert lib.compare_data_to(XLSX_FILE) == []
+
+    def test_same_workbook_with_stream_mode_xlsx_different_sheet(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE, read_only=True)
+        assert lib.compare_data_to(XLSX_FILE, target_sheet="Sheet2") != []
+
+    def test_same_workbook_with_stream_mode_xls_same_sheet(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        assert lib.compare_data_to(XLS_FILE) == []
+
+    def test_same_workbook_with_stream_mode_xls_different_sheet(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLS_FILE, read_only=True)
+        with pytest.raises(NotMatchingColumns):
+            lib.compare_data_to(XLS_FILE, target_sheet="Second")
+
+    def test_same_workbook_with_stream_mode_csv(self, lib: RFExcelLibrary):
+        lib.load_workbook(CSV_FILE, read_only=True)
+        assert lib.compare_data_to(CSV_FILE) == []
 
 
 # ---------------------------------------------------------------------------

@@ -96,7 +96,7 @@ Lazy switch to xlsx
     Load Workbook    path=${RESOURCES}/example.xls
     ${rows}=    Get Rows
     Log    Rows from .xls: ${rows}
-    Should Be True    len($rows) > 0
+    Should Not Be Empty    ${rows}
     Save Workbook    path=${RESULTS}/example_converted.xlsx
 
 Test xlsx generator close

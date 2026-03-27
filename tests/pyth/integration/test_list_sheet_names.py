@@ -1,7 +1,7 @@
 import pytest
 
-from rfexcel.exception.library_exceptions import (NullComponentException,
-                                                  WorkbookNotOpenException)
+from rfexcel.exception.library_exceptions import (WorkbookNotOpenException,
+                                                  OperationNotSupportedForFormat)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -71,7 +71,7 @@ class TestListSheetNamesCsv:
 
     def test_csv_edit_raises_operation_not_supported(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
-        with pytest.raises(NullComponentException):
+        with pytest.raises(OperationNotSupportedForFormat):
             lib.list_sheet_names()
 
 # ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ class TestListSheetNamesCsv:
 
     def test_csv_stream_raises_operation_not_supported(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
+        with pytest.raises(OperationNotSupportedForFormat):
             lib.list_sheet_names()
 
 

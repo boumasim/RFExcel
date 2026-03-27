@@ -5,7 +5,8 @@ import xlrd.sheet
 from xlrd import Book
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat)
+    LibraryException, OperationNotSupportedForFormat,
+    SheetDoesNotExistException)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
 from rfexcel.utils.types import ColumnValues
@@ -47,6 +48,8 @@ class XlsEditResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheet_names():
+            raise SheetDoesNotExistException(name)
         self._active_sheet = self._wb.sheet_by_name(name)
 
     @override
@@ -121,6 +124,8 @@ class XlsStreamResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheet_names():
+            raise SheetDoesNotExistException(name)
         self._active_sheet = self._wb.sheet_by_name(name)
 
     @override

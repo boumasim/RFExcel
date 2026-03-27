@@ -34,16 +34,23 @@ from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
 class RFExcel(IExcel, ISetExcel):
 
     def __init__(self,
+                read_only: bool,
                 writer: IWriter = NullWriter(),
                 reader: IReader = NullReader(),
                 style: IStyle = NullStyle(),
                 metadata: IMetadata = NullMetadata(),
                 resource: IResource = NullResource()):
+        self._read_only = read_only
         self._writer: IWriter = writer
         self._reader: IReader = reader
         self._style: IStyle = style
         self._metadata: IMetadata = metadata
         self._resource: IResource = resource
+
+    @property
+    @override
+    def read_only(self) -> bool:
+        return self._read_only
 
     @property
     @override
