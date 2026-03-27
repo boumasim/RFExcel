@@ -127,6 +127,7 @@ class XlsStreamResource(IResource):
         if name not in self._wb.sheet_names():
             raise SheetDoesNotExistException(name)
         self._active_sheet = self._wb.sheet_by_name(name)
+        self._last_read_row_index = 0
 
     @override
     def add_sheet(self, name: str) -> None:

@@ -1,8 +1,7 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, OperationNotSupportedForFormat,
-    SheetDoesNotExistException)
+    OperationNotSupportedForFormat, SheetDoesNotExistException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
@@ -230,4 +229,4 @@ class TestSwitchSheetNegative:
     def test_switch_to_nonexistent_sheet_csv_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         with pytest.raises(OperationNotSupportedForFormat):
-            lib.switch_sheet("DoesNotExist")            lib.switch_sheet("DoesNotExist")
+            lib.switch_sheet("DoesNotExist")

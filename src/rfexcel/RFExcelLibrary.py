@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Any, Literal, cast, overload
-from xmlrpc.client import Boolean
 
 from robot.api import logger  # type: ignore
 from robot.api.deco import keyword, not_keyword  # type: ignore

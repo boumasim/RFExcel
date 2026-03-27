@@ -2,8 +2,7 @@ class RFExcelException(Exception):
     """Base exception for RFExcelLibrary related errors"""
 
     def __init__(self, msg: str):
-        self._message: str = msg
-        super().__init__(self._message)
+        super().__init__(msg)
 
 class FileFormatNotSupportedException(RFExcelException):
     def __init__(self, msg: str = "File format not supported in this library"):
@@ -29,8 +28,8 @@ class NullComponentException(RFExcelException):
 
 class RowIndexOutOfBoundsException(RFExcelException):
     """Exception when row index is out of valid range"""
-    def __init__(self, row_index: int, msg: str = ""):
-        if msg:
+    def __init__(self, row_index: int, msg: str | None = None):
+        if msg is not None:
             super().__init__(msg)
         else:
             super().__init__(f"Row index {row_index} is out of bounds")
@@ -74,7 +73,8 @@ class NotMatchingColumns(RFExcelException):
             parts.append(f"missing in target: {missing_in_target}")
         if missing_in_source:
             parts.append(f"missing in source: {missing_in_source}")
-        super().__init__(f"Column mismatch - {', '.join(parts)}")
+        detail = f" - {', '.join(parts)}" if parts else ""
+        super().__init__(f"Column mismatch{detail}")
 
 class WorkbookNotOpenException(RFExcelException):
     """Exception raised when trying to operate on a workbook that is not open"""
