@@ -2,6 +2,7 @@ from pathlib import Path
 
 import xlrd
 from openpyxl import Workbook
+from openpyxl.utils import coordinate_to_tuple
 
 from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
@@ -74,7 +75,7 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     """
     xls_book = xlrd.open_workbook(str(xls_path), formatting_info=False)
     try:
-        xlsx_book = Workbook()   
+        xlsx_book = Workbook()
         if xlsx_book.active:
             xlsx_book.remove(xlsx_book.active)
                 
@@ -92,3 +93,15 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     finally:
         xls_book.release_resources()
     return xlsx_book
+
+def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[int, int]:
+    """
+    Parses a cell coordinate like "A1" into (row_index, column_index).
+    If zero_based is True, returns zero-based indices; otherwise, returns one-based.
+    Xlrd is 0-based, openpyxl is 1-based, so this function can be used to convert coordinates accordingly.
+    """
+    
+    row, col = coordinate_to_tuple(coordinate)
+    if zero_based:
+        return row - 1, col - 1
+    return row, col

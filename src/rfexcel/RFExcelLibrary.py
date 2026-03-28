@@ -54,6 +54,7 @@ class RFExcelLibrary:
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
     ROBOT_LIBRARY_LISTENER = "SELF"
     ROBOT_LISTENER_API_VERSION = 2
+    ROBOT_AUTO_KEYWORDS = False
 
     def __init__(self):
         library_logger.configure(logger)
