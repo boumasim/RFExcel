@@ -10,18 +10,18 @@ from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 _NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
 
-def normalize_string_cast(value: Any) -> str:
-    """
-    Transforms arbitrary value to string.
-    Handles the issue where Excel returns integers as floats (100.0 -> '100').
-    """
-    if value is None:
-        return ""
+# def normalize_string_cast(value: Any) -> str:
+#     """
+#     Transforms arbitrary value to string.
+#     Handles the issue where Excel returns integers as floats (100.0 -> '100').
+#     """
+#     if value is None:
+#         return ""
     
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
+#     if isinstance(value, float) and value.is_integer():
+#         return str(int(value))
         
-    return str(value).strip()
+#     return str(value).strip()
 
 def fast_safe_number_cast(value: str) -> str | int | float:
     """
@@ -50,15 +50,14 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
     """
     for key, criteria_value in search_criteria.items():
         key_str: str = str(key)
-        criteria_str: str = normalize_string_cast(criteria_value)
         if key_str not in source_row:
             return False
-        row_value: str = normalize_string_cast(source_row[key_str])
+        row_value: str = source_row[key_str]
         if partial_match:
-            if criteria_str not in row_value:
+            if criteria_value not in row_value:
                 return False
         else:
-            if criteria_str != row_value:
+            if criteria_value != row_value:
                 return False
     return True
 

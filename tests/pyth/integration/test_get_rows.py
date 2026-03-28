@@ -307,7 +307,7 @@ class TestGetRowsSearchCriteria:
 
     def test_and_logic_two_criteria_narrows_result_to_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": "150"})
+        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": 150})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-202"
 
