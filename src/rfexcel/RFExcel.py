@@ -74,14 +74,6 @@ class RFExcel(IExcel, ISetExcel):
         except StopIteration:
             raise HeadersNotDeterminedException(header_row)
 
-    @staticmethod
-    def _normalize_search_criteria(
-        search_criteria: dict[str, Any] | str | None,
-    ) -> DictRowData | None:
-        if search_criteria is None:
-            return None
-        return convert_string_to_dict_row_data(search_criteria)
-
     @override
     def close(self):
         self._resource.close()
@@ -89,11 +81,11 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: dict[str, Any] | str | None = None,
+                search_criteria: DictRowData | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
-        search_criteria_dict = self._normalize_search_criteria(search_criteria)
+        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria is not None else None
 
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
 
@@ -195,7 +187,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_rows(self,
-                    search_criteria: dict[str, Any] | str,
+                    search_criteria: DictRowData | str,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -232,7 +224,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: dict[str, Any] | str,
+                      search_criteria: DictRowData | str,
                       values: str | DictRowData,
                       header_row: int,
                       partial_match: bool,

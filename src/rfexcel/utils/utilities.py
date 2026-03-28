@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Any
 
 import xlrd
 from openpyxl import Workbook
