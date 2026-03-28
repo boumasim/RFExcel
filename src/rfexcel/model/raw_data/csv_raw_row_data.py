@@ -15,7 +15,7 @@ class CsvRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (self._data[col - 1] if 0 < col <= len(self._data) else "")
+            name: (self._data[col - 1] if 0 < col <= len(self._data) else None)
             for name, col in header_map.items()
         }
 

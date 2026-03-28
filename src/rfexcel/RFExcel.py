@@ -14,7 +14,8 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
-                                     headers_to_header_map, search_in_row)
+                                     headers_to_header_map, normalize_string_cast,
+                                     search_in_row)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
@@ -29,7 +30,6 @@ from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
 from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
                           HeaderMap, HeaderSpec, ListRowData, RowDifference)
-
 
 class RFExcel(IExcel, ISetExcel):
 
@@ -74,6 +74,14 @@ class RFExcel(IExcel, ISetExcel):
         except StopIteration:
             raise HeadersNotDeterminedException(header_row)
 
+    @staticmethod
+    def _normalize_search_criteria(
+        search_criteria: dict[str, Any] | str | None,
+    ) -> DictRowData | None:
+        if search_criteria is None:
+            return None
+        return convert_string_to_dict_row_data(search_criteria)
+
     @override
     def close(self):
         self._resource.close()
@@ -81,11 +89,11 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | DictRowData | None = None,
+                search_criteria: dict[str, Any] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
-        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria else None
+        search_criteria_dict = self._normalize_search_criteria(search_criteria)
 
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
 
@@ -187,7 +195,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_rows(self,
-                    search_criteria: str | DictRowData,
+                    search_criteria: dict[str, Any] | str,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -224,7 +232,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: str | DictRowData,
+                      search_criteria: dict[str, Any] | str,
                       values: str | DictRowData,
                       header_row: int,
                       partial_match: bool,
@@ -311,7 +319,7 @@ class RFExcel(IExcel, ISetExcel):
                 differences: ColumnDifference = {
                     h: {"source": source_values.get(h), "target": target_values.get(h)}
                     for h in compare_headers
-                    if source_values.get(h) != target_values.get(h)
+                    if normalize_string_cast(source_values.get(h)) != normalize_string_cast(target_values.get(h))
                 }
 
                 if differences:

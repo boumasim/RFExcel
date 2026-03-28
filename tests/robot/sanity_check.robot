@@ -109,3 +109,14 @@ Test xlsx generator close
     ${row2}=   Get Row    row=2
     Log    First row of Sheet2: ${row2}
     Close Workbook
+
+Compare xls to xslx
+    [Documentation]     Test comparing data between .xls and .xlsx files and verify differences
+    Load Workbook    path=${RESOURCES}/data.csv  read_only=True
+    ${differences}=    Compare Data To    target_path=${RESOURCES}/data.xlsx  target_sheet=Sheet4
+    Log    Differences between .xls and .xlsx: ${differences}
+
+Get Rowss    [Documentation]     Test getting rows with various header and row configurations
+    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    ${rows} =   Get Rows
+    Log    All rows: ${rows}

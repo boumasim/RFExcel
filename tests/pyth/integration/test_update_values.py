@@ -1,5 +1,6 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -40,7 +41,7 @@ class TestUpdateValuesXlsxEdit:
 
     def test_unspecified_columns_are_not_touched(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows_before = lib.get_rows(header_row=_XLSX_HEADER_ROW)
+        rows_before = cast(list[dict[str, Any]], lib.get_rows(header_row=_XLSX_HEADER_ROW))
         original_desc = next(r["Description"] for r in rows_before if r["Product ID"] == "P-201")
 
         lib.update_values(
@@ -96,7 +97,7 @@ class TestUpdateValuesXlsxEdit:
             partial_match=True,
         )
         assert count >= 1
-        rows = lib.get_rows(header_row=_XLSX_HEADER_ROW)
+        rows = cast(list[dict[str, Any]], lib.get_rows(header_row=_XLSX_HEADER_ROW))
         updated = [r for r in rows if "Warehouse" in r["Location"]]
         assert all(r["Price"] == "0.01" for r in updated)
 
@@ -111,6 +112,19 @@ class TestUpdateValuesXlsxEdit:
         rows = lib.get_rows(header_row=_XLSX_HEADER_ROW)
         row = next(r for r in rows if r["Product ID"] == "P-203")
         assert row["Location"] == "Archived"
+
+    def test_dict_search_criteria_numeric_value_matches_native_type(self, lib: RFExcelLibrary):
+        """Search with numeric value matches XLSX native int type."""
+        lib.load_workbook(XLSX_FILE)
+        count = lib.update_values(
+            search_criteria={"Price": 150},
+            values={"Location": "Updated"},
+            header_row=_XLSX_HEADER_ROW,
+        )
+        assert count == 1
+        rows = lib.get_rows(header_row=_XLSX_HEADER_ROW)
+        row = next(r for r in rows if r["Product ID"] == "P-202")
+        assert row["Location"] == "Updated"
 
     def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -202,7 +216,7 @@ class TestUpdateValuesCsvEdit:
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
         lib.load_workbook(path)
         original_desc = next(
-            r["Description"] for r in lib.get_rows() if r["Product ID"] == "P-201"
+            r["Description"] for r in cast(list[dict[str, Any]], lib.get_rows()) if r["Product ID"] == "P-201"
         )
         lib.update_values(
             search_criteria={"Product ID": "P-201"},
@@ -221,7 +235,7 @@ class TestUpdateValuesCsvEdit:
             partial_match=True,
         )
         assert count >= 1
-        rows = lib.get_rows()
+        rows = cast(list[dict[str, Any]], lib.get_rows())
         assert all(
             r["Price"] == "FREE" for r in rows if "Online" in r["Location"]
         )

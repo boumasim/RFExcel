@@ -38,7 +38,8 @@ class XlsxEditResource(IResource):
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
-        if row_index > self._active_sheet.max_row or row_index < 1:
+        max_rows = self._active_sheet.max_row or 0
+        if row_index > max_rows or row_index < 1:
             raise StopIteration()
         row_values = next(
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)

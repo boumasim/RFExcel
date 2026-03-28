@@ -1,5 +1,6 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -23,7 +24,7 @@ class TestDeleteRowsXlsxEdit:
     def test_row_is_removed(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.delete_rows(search_criteria={"Product ID": "P-200"})
-        rows = lib.get_rows()
+        rows = cast(list[dict[str, Any]], lib.get_rows())
         assert all(r["Product ID"] != "P-200" for r in rows)
 
     def test_row_count_decreases(self, lib: RFExcelLibrary):
@@ -45,7 +46,7 @@ class TestDeleteRowsXlsxEdit:
         lib.update_values(search_criteria={"Product ID": "P-202"}, values={"Location": "SAME"})
         count = lib.delete_rows(search_criteria={"Location": "SAME"})
         assert count == 2
-        rows = lib.get_rows()
+        rows = cast(list[dict[str, Any]], lib.get_rows())
         assert all(r["Location"] != "SAME" for r in rows)
 
     def test_first_only_deletes_single_row(self, lib: RFExcelLibrary):
@@ -65,10 +66,18 @@ class TestDeleteRowsXlsxEdit:
         assert len(lib.get_rows()) == before - count
         assert all("Warehouse" not in r["Location"] for r in lib.get_rows())
 
+    def test_dict_search_criteria_numeric_value_matches_native_type(self, lib: RFExcelLibrary):
+        """Delete with numeric value matches XLSX native int type."""
+        lib.load_workbook(XLSX_FILE)
+        count = lib.delete_rows(search_criteria={"Price": 150})
+        assert count == 1
+        rows = cast(list[dict[str, Any]], lib.get_rows())
+        assert all(r["Product ID"] != "P-202" for r in rows)
+
     def test_remaining_rows_are_readable(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.delete_rows(search_criteria={"Product ID": "P-202"})
-        ids = [r["Product ID"] for r in lib.get_rows()]
+        ids = [r["Product ID"] for r in cast(list[dict[str, Any]], lib.get_rows())]
         assert "P-200" in ids
         assert "P-201" in ids
         assert "P-202" not in ids
@@ -104,7 +113,8 @@ class TestDeleteRowsXlsEdit:
         count = lib.delete_rows(search_criteria={"First Name": "Dulce"})
         assert count == 1
         assert len(lib.get_rows()) == before - 1
-        assert all(r["First Name"] != "Dulce" for r in lib.get_rows())
+        rows = cast(list[dict[str, Any]], lib.get_rows())
+        assert all(r["First Name"] != "Dulce" for r in rows)
 
 
 # ---------------------------------------------------------------------------
@@ -130,7 +140,8 @@ class TestDeleteRowsCsvEdit:
         lib.load_workbook(path)
         count = lib.delete_rows(search_criteria={"Product ID": "P-200"})
         assert count == 1
-        assert all(r["Product ID"] != "P-200" for r in lib.get_rows())
+        rows = cast(list[dict[str, Any]], lib.get_rows())
+        assert all(r["Product ID"] != "P-200" for r in rows)
 
     def test_row_count_decreases(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))

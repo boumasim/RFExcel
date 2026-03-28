@@ -15,16 +15,28 @@ XLSX_VS_XLSX2_DIFFS = [
         "source_row_index": 5,
         "differences": {
             "Product ID": {"source": "P-203", "target": "P-205"},
-            "Price":      {"source": "5.99",  "target": 6},
+            "Price":      {"source": 5.99,  "target": 6},
         },
     },
 ]
 
 XLSX_VS_CSV_DIFFS = [
     {
+        "source_row_index": 2,
+        "differences": {
+            "Price": {"source": 25.5, "target": "25.50"},
+        },
+    },
+    {
         "source_row_index": 3,
         "differences": {
             "Description": {"source": "Keyboard, Mechanical", "target": "Keyboard, Mechanical, RGB"},
+        },
+    },
+    {
+        "source_row_index": 4,
+        "differences": {
+            "Price": {"source": 150, "target": "150.00"},
         },
     },
     {
@@ -60,7 +72,7 @@ class TestCompareDataToXlsxVsXlsx2:
     def test_price_diff_on_row_5(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         diffs: ColumnDifference  = cast(ColumnDifference, lib.compare_data_to(XLSX2_FILE)[0]["differences"])
-        assert diffs["Price"] == {"source": "5.99", "target": 6}
+        assert diffs["Price"] == {"source": 5.99, "target": 6}
 
     def test_unchanged_columns_absent_from_differences(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -125,9 +137,9 @@ class TestCompareDataToTargetSheet:
 
 class TestCompareDataToXlsxVsCsv:
 
-    def test_returns_two_diff_entries(self, lib: RFExcelLibrary):
+    def test_returns_four_diff_entries(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        assert len(lib.compare_data_to(CSV_FILE)) == 2
+        assert len(lib.compare_data_to(CSV_FILE)) == 4
 
     def test_row_3_description_differs(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -154,9 +166,10 @@ class TestCompareDataToXlsxVsCsv:
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(CSV_FILE) == XLSX_VS_CSV_DIFFS
 
-    def test_price_is_identical_across_all_rows(self, lib: RFExcelLibrary):
+    def test_price_differs_where_csv_has_trailing_zeros(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        assert lib.compare_data_to(CSV_FILE, headers=["Price"]) == []
+        result = lib.compare_data_to(CSV_FILE, headers=["Price"])
+        assert len(result) == 2
 
     def test_product_id_is_identical_across_all_rows(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -329,7 +342,7 @@ class TestCompareDataToFailOnDiff:
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_raises_at_first_diff_not_last(self, loaded_xlsx: RFExcelLibrary):
-        with pytest.raises(AssertionError, match=r"source_row_index 3"):
+        with pytest.raises(AssertionError, match=r"source_row_index 2"):
             loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
 
     def test_csv_target_raises_assertion_error(self, loaded_xlsx: RFExcelLibrary):

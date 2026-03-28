@@ -181,9 +181,9 @@ class TestAppendRowCsvEdit:
         lib.append_row({"Description": "Only Desc"})
         last = lib.get_rows()[-1]
         assert last["Description"] == "Only Desc"
-        assert last["Product ID"] == ""
-        assert last["Price"] == ""
-        assert last["Location"] == ""
+        assert last["Product ID"] == ""   # explicitly written as "" by append_row
+        assert last["Price"] is None      # column beyond written range → absent
+        assert last["Location"] is None   # column beyond written range → absent
 
     def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))

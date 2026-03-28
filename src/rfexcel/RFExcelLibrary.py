@@ -49,6 +49,36 @@ class RFExcelLibrary:
     = Error Handling =
     - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
     - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode)
+
+    = Data Types =
+
+    To provide the most accurate test data possible, this library does not force all cell values into strings. It preserves the native data types exactly as they are parsed by the underlying engines (``openpyxl``, ``xlrd``, ``csv``).
+
+    When reading rows, cell values will be returned as native Python objects. Depending on the cell format in your Excel file, expect the following Robot Framework equivalents:
+    - **Text/General:** ``string``
+    - **Whole Numbers:** ``int`` (e.g., ``${42}``)
+    - **Decimals/Currency:** ``float`` (e.g., ``${3.14}``)
+    - **Dates/Times:** Python ``datetime`` objects
+    - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
+    - **Empty Cells:** ``None`` (``${NONE}``)
+
+    *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
+
+    *Example:*
+    | ${row} =           | Get Row           | 2    | headers=${headers} |
+    |                    |                   |      |                    |
+    | # CORRECT: Asserting against a numeric variable |
+    | Should Be Equal    | ${row.Quantity}   | ${5} |                    |
+    |                    |                   |      |                    |
+    | # INCORRECT: This fails because int(5) != str("5") |
+    | Should Be Equal    | ${row.Quantity}   | 5    |                    |
+    |                    |                   |      |                    |
+    | # CORRECT: If you prefer string comparisons, convert it first |
+    | ${str_qty} =       | Convert To String | ${row.Quantity} |         |
+    | Should Be Equal    | ${str_qty}        | 5    |                    |
+
+    Only exception to this is compare_to_data, which performs string cast for everything.
+
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -161,7 +191,7 @@ class RFExcelLibrary:
     @overload
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, str] | str | None = None,
+                search_criteria: dict[str, Any] | str | None = None,
                 partial_match: bool = False,
                 one_row: Literal[False] = False,
                 **kwargs: Any) -> list[DotDict]:
@@ -170,7 +200,7 @@ class RFExcelLibrary:
     @overload
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, str] | str | None = None,
+                search_criteria: dict[str, Any] | str | None = None,
                 partial_match: bool = False,
                 *,
                 one_row: Literal[True],
@@ -180,7 +210,7 @@ class RFExcelLibrary:
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, str] | str | None = None,
+                search_criteria: dict[str, Any] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> list[DotDict] | DotDict:
@@ -511,7 +541,7 @@ class RFExcelLibrary:
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
-                      search_criteria: dict[str, str] | str,
+                      search_criteria: dict[str, Any] | str,
                       values: dict[str, str] | str,
                       header_row: int = 1,
                       partial_match: bool = False,
@@ -557,7 +587,7 @@ class RFExcelLibrary:
 
     @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_rows(self,
-                    search_criteria: dict[str, str] | str,
+                    search_criteria: dict[str, Any] | str,
                     header_row: int = 1,
                     partial_match: bool = False,
                     one_row: bool = False) -> int:

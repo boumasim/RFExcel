@@ -1,13 +1,14 @@
 from typing import override
 
-from openpyxl.cell import MergedCell, ReadOnlyCell, Cell
+from openpyxl.cell import Cell, MergedCell, ReadOnlyCell
+from openpyxl.cell.read_only import EmptyCell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class XlsxRawRowData(IRawRowData):
-    def __init__(self, data: tuple[Cell | MergedCell | ReadOnlyCell, ...]):
+    def __init__(self, data: tuple[Cell | MergedCell | ReadOnlyCell | EmptyCell, ...]):
         self._data = data
 
     @override
@@ -16,16 +17,19 @@ class XlsxRawRowData(IRawRowData):
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
-        col_to_value = {
-            cell.column: cell.value
-            for cell in self._data
-        }
-        return {name: col_to_value.get(col) for name, col in header_map.items()}
+        wanted: dict[int, str] = {col: name for name, col in header_map.items()}
+        result: DictRowData = {name: None for name in header_map}
+        for cell in self._data:
+            if not isinstance(cell, EmptyCell) and cell.column in wanted:
+                result[wanted[cell.column]] = cell.value
+        return result
 
     @override
     def get_header_map(self) -> HeaderMap:
         return {
-            str(cell.value): cell.column
+            s: cell.column
             for cell in self._data
-            if cell.value is not None and str(cell.value).strip() != ""
+            if not isinstance(cell, EmptyCell)
+            and cell.value is not None
+            and (s := str(cell.value)).strip() != ""
         }

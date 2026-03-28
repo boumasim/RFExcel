@@ -13,8 +13,9 @@ from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 
 RawFactory: TypeAlias = Callable[[list[Any]], IRawRowData]
 
+
 # ---------------------------------------------------------------------------
-# Factories — normalise a conceptual value list to each format's storage type
+# Factories - normalise a conceptual value list to each format's storage type
 # ---------------------------------------------------------------------------
 
 def _make_csv(values: list[Any]) -> IRawRowData:
@@ -22,23 +23,29 @@ def _make_csv(values: list[Any]) -> IRawRowData:
     return CsvRawRowData([str(v) if v is not None else "" for v in values])
 
 
+def _xlrd_cell(ctype: int, value: Any) -> xlrd.sheet.Cell:
+    """Build an xlrd Cell while keeping test intent explicit."""
+    return xlrd.sheet.Cell(ctype, value)  # type: ignore[arg-type]
+
+
 def _make_xls(values: list[Any]) -> IRawRowData:
-    cells = []
+    cells: list[xlrd.sheet.Cell] = []
     for v in values:
         if v is None:
-            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_EMPTY, ""))
+            cells.append(_xlrd_cell(xlrd.XL_CELL_EMPTY, ""))
         elif isinstance(v, bool):
-            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_BOOLEAN, v))
+            cells.append(_xlrd_cell(xlrd.XL_CELL_BOOLEAN, v))
         elif isinstance(v, (int, float)):
-            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_NUMBER, float(v)))
+            cells.append(_xlrd_cell(xlrd.XL_CELL_NUMBER, float(v)))
         else:
-            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_TEXT, v))
+            cells.append(_xlrd_cell(xlrd.XL_CELL_TEXT, str(v)))
     return XlsRawRowData(cells)
 
 
 def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
     wb = Workbook()
     ws = wb.active
+    assert ws is not None
     for col, value in enumerate(values, start=1):
         ws.cell(row=1, column=col, value=value)
     row_data = XlsxRawRowData(tuple(ws[1]))
@@ -58,17 +65,14 @@ _IDS = ["csv", "xls", "xlsx_cell_mode"]
 # other edge cases
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("factory,expected_missing", [
-    (_make_csv, ""),
-    (_make_xls, None),
-    (_make_xlsx_cell_mode, None),
-], ids=["csv", "xls", "xlsx_cell_mode"])
-def test_col_out_of_bounds_returns_correct_missing_value(factory: RawFactory, expected_missing: Any) -> None:
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+def test_col_out_of_bounds_returns_none(factory: RawFactory) -> None:
     """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
     result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
-    assert result["invalid_col"] == expected_missing
+    assert result["invalid_col"] is None
     assert result["valid_col"] == "second"
+
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_none_or_empty_column(factory: RawFactory) -> None:
@@ -83,6 +87,7 @@ def test_get_header_map_skips_whitespace_only_column(factory: RawFactory) -> Non
     row = factory(["Name", "   ", "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
+
 def test_csv_header_keys_are_stripped() -> None:
     row = CsvRawRowData(["  Product ID  ", " Description", "Location "])
     assert row.get_header_map() == {
@@ -90,6 +95,7 @@ def test_csv_header_keys_are_stripped() -> None:
         "Description": 2,
         "Location": 3,
     }
+
 
 def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyPatch) -> None:
     messages: list[str] = []

@@ -1,4 +1,6 @@
+import re
 from pathlib import Path
+from typing import Any
 
 import xlrd
 from openpyxl import Workbook
@@ -6,6 +8,33 @@ from openpyxl.utils import coordinate_to_tuple
 
 from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
+_NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
+
+def normalize_string_cast(value: Any) -> str:
+    """
+    Transforms arbitrary value to string.
+    Handles the issue where Excel returns integers as floats (100.0 -> '100').
+    """
+    if value is None:
+        return ""
+    
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+        
+    return str(value).strip()
+
+def fast_safe_number_cast(value: str) -> str | int | float:
+    """
+    Transforms string to either float, int or keeps it as a string.
+    """
+    cleaned = value.strip()
+    
+    if _NUMBER_REGEX.match(cleaned):
+        num = float(cleaned)
+        if num.is_integer():
+            return int(num)
+        return num
+    return cleaned
 
 def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
@@ -19,12 +48,12 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
     Returns True only when every rule in search_criteria produces a match.
     An empty search_criteria always returns True.
     """
-    for key, criteria_value in search_criteria.items():  # type: ignore[misc]
-        key_str: str = str(key)  # type: ignore[arg-type]
-        criteria_str: str = str(criteria_value)  # type: ignore[arg-type]
+    for key, criteria_value in search_criteria.items():
+        key_str: str = str(key)
+        criteria_str: str = normalize_string_cast(criteria_value)
         if key_str not in source_row:
             return False
-        row_value: str = str(source_row[key_str])  # type: ignore[arg-type]
+        row_value: str = normalize_string_cast(source_row[key_str])
         if partial_match:
             if criteria_str not in row_value:
                 return False
@@ -49,7 +78,7 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';') -> DictRowData:
+def convert_string_to_dict_row_data(data: DictRowData | str, delimiter: str = ';') -> DictRowData:
     """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
@@ -66,7 +95,8 @@ def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';
         if '=' not in segment:
             continue
         key, _, value = segment.partition('=')
-        result[key.strip()] = value.strip()
+        value = fast_safe_number_cast(value)
+        result[key.strip()] = value
     return result
 
 def convert_xls_to_xlsx(xls_path: Path) -> Workbook:

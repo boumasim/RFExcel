@@ -1,7 +1,7 @@
 import pytest
+from typing import Any, cast
 
-from rfexcel.exception.library_exceptions import (FileDoesNotExistException,
-                                                  StreamingViolationException,
+from rfexcel.exception.library_exceptions import (StreamingViolationException,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
@@ -9,9 +9,9 @@ from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
 XLS_HEADERS  = ["Index", "First Name", "Last Name", "Gender", "Country", "Age", "", ""]
 
-XLSX_ROW2_LIST = ["P-200", "Wireless Mouse",            "25.50",  "Warehouse A, Shelf 2"]
-XLSX_ROW3_LIST = ["P-201", "Keyboard, Mechanical",      "89.99",  "Store Front"]
-XLSX_ROW5_LIST = ["P-203", "USB Cable",                 "5.99",   "OnlineP"]
+XLSX_ROW2_LIST = ["P-200", "Wireless Mouse",            25.50,  "Warehouse A, Shelf 2"]
+XLSX_ROW3_LIST = ["P-201", "Keyboard, Mechanical",      89.99,  "Store Front"]
+XLSX_ROW5_LIST = ["P-203", "USB Cable",                 5.99,   "OnlineP"]
 
 CSV_ROW2_LIST  = ["P-200", "Wireless Mouse",            "25.50",  "Warehouse A, Shelf 2"]
 CSV_ROW3_LIST  = ["P-201", "Keyboard, Mechanical, RGB", "89.99",  "Store Front"]
@@ -19,8 +19,8 @@ CSV_ROW3_LIST  = ["P-201", "Keyboard, Mechanical, RGB", "89.99",  "Store Front"]
 XLS_ROW2_LIST  = [1.0, "Dulce", "Abril", "Female", "United States", 32.0, "", ""]
 XLS_ROW10_LIST = [9.0, "Vincenza", "Weiland", "Female", "United States", 40.0, "", ""]
 
-XLSX_ROW2_DICT = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": "25.50",  "Location": "Warehouse A, Shelf 2"}
-XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",                 "Price": "5.99",   "Location": "OnlineP"}
+XLSX_ROW2_DICT = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.50,  "Location": "Warehouse A, Shelf 2"}
+XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,   "Location": "OnlineP"}
 
 CSV_ROW2_DICT  = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": "25.50",  "Location": "Warehouse A, Shelf 2"}
 CSV_ROW3_DICT  = {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": "89.99",  "Location": "Store Front"}
@@ -82,7 +82,7 @@ class TestGetRowXlsxEdit:
         lib.load_workbook(XLSX_FILE)
         row = lib.get_row(2, headers=XLSX_HEADERS)
         assert isinstance(row, dict)
-        assert list(row.keys()) == XLSX_HEADERS
+        assert list(cast(dict[str, Any], row).keys()) == XLSX_HEADERS
 
 # ---------------------------------------------------------------------------
 # xlsx stream mode

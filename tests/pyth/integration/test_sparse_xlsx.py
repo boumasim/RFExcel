@@ -1,14 +1,14 @@
 from pathlib import Path
 
-import pytest
 from openpyxl import Workbook
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 
 
-def _make_offset_xlsx(path, start_col: int = 2) -> None:
+def _make_offset_xlsx(path: str, start_col: int = 2) -> None:
     wb = Workbook()
     ws = wb.active
+    assert ws is not None
     ws.cell(row=1, column=start_col,     value="Name")
     ws.cell(row=1, column=start_col + 1, value="Score")
     ws.cell(row=2, column=start_col,     value="Alice")
@@ -19,9 +19,10 @@ def _make_offset_xlsx(path, start_col: int = 2) -> None:
     wb.close()
 
 
-def _make_gap_xlsx(path) -> None:
+def _make_gap_xlsx(path: str) -> None:
     wb = Workbook()
     ws = wb.active
+    assert ws is not None
     ws.cell(row=1, column=1, value="Name")
     ws.cell(row=1, column=3, value="Score")
     ws.cell(row=2, column=1, value="Alice")
@@ -49,7 +50,7 @@ class TestOffsetTableXlsxEdit:
         _make_offset_xlsx(path)
         lib.load_workbook(path)
         rows = lib.get_rows()
-        assert list(rows[0].keys()) == ["Name", "Score"]
+        assert list(rows[0]) == ["Name", "Score"]
 
     def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
@@ -110,7 +111,7 @@ class TestGapColumnXlsxEdit:
         _make_gap_xlsx(path)
         lib.load_workbook(path)
         rows = lib.get_rows()
-        assert list(rows[0].keys()) == ["Name", "Score"]
+        assert list(rows[0]) == ["Name", "Score"]
 
     def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
@@ -143,5 +144,4 @@ class TestGapColumnXlsxStream:
         assert rows[0]["Name"] == "Alice"
         assert rows[0]["Score"] == 90
         assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == 75
         assert rows[1]["Score"] == 75

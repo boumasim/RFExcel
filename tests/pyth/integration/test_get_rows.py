@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -12,10 +13,10 @@ from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
 
 XLSX_ROWS = [
-    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": "25.50",  "Location": "Warehouse A, Shelf 2"},
-    {"Product ID": "P-201", "Description": "Keyboard, Mechanical",      "Price": "89.99",  "Location": "Store Front"},
-    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": "150.00", "Location": "Paris, France"},
-    {"Product ID": "P-203", "Description": "USB Cable",                 "Price": "5.99",   "Location": "OnlineP"},
+    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,  "Location": "Warehouse A, Shelf 2"},
+    {"Product ID": "P-201", "Description": "Keyboard, Mechanical",      "Price": 89.99, "Location": "Store Front"},
+    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": 150,   "Location": "Paris, France"},
+    {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,  "Location": "OnlineP"},
 ]
 
 CSV_ROWS = [
@@ -51,7 +52,7 @@ class TestGetRowsXlsxEdit:
 
     def test_each_row_has_all_four_keys(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        for row in lib.get_rows():
+        for row in cast(list[dict[str, Any]], lib.get_rows()):
             assert list(row.keys()) == XLSX_HEADERS
 
     def test_cell_containing_comma_is_not_split(self, lib: RFExcelLibrary):
@@ -136,7 +137,7 @@ class TestGetRowsXlsStandard:
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
         assert "" not in rows[0]
-        assert list(rows[0].keys()) == ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
+        assert list(cast(dict[str, Any], rows[0]).keys()) == ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
 
     def test_all_rows_contain_expected_name_columns(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -186,7 +187,7 @@ class TestGetRowsCsvEdit:
 
     def test_all_rows_have_all_four_header_keys(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
-        for row in lib.get_rows():
+        for row in cast(list[dict[str, Any]], lib.get_rows()):
             assert list(row.keys()) == ["Product ID", "Description", "Price", "Location"]
 
     def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
@@ -295,7 +296,7 @@ class TestGetRowsSearchCriteria:
 
     def test_string_criteria_multiple_segments(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria="Product ID=P-200;Price=25.50")
+        rows = lib.get_rows(search_criteria="Product ID=P-200;Price=25.5")
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
 
@@ -306,9 +307,22 @@ class TestGetRowsSearchCriteria:
 
     def test_and_logic_two_criteria_narrows_result_to_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": "150.00"})
+        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": "150"})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-202"
+
+    def test_exact_match_accepts_non_string_value_in_dict_criteria(self, lib: RFExcelLibrary):
+        lib.load_workbook(XLSX_FILE)
+        rows = lib.get_rows(search_criteria={"Price": 150})
+        assert len(rows) == 1
+        assert rows[0]["Product ID"] == "P-202"
+
+    def test_dict_search_criteria_float_matches_native_xlsx_type(self, lib: RFExcelLibrary):
+        """Search with float 25.5 matches XLSX native float type."""
+        lib.load_workbook(XLSX_FILE)
+        rows = lib.get_rows(search_criteria={"Price": 25.5})
+        assert len(rows) == 1
+        assert rows[0]["Product ID"] == "P-200"
 
     def test_and_logic_conflicting_criteria_returns_empty(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)

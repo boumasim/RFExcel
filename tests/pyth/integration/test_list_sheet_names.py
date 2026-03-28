@@ -5,7 +5,7 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-XLSX_SHEET_NAMES = ["List 1", "Sheet2", "Sheet3"]
+XLSX_SHEET_NAMES = ["List 1", "Sheet2", "Sheet3", "Sheet4"]
 XLS_SHEET_NAMES  = ["First", "Second"]
 
 

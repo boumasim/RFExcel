@@ -1,12 +1,13 @@
 import pytest
+from typing import Any, cast
 
 from rfexcel.exception.library_exceptions import (
     OperationNotSupportedForFormat, SheetDoesNotExistException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-XLSX_SHEET1_FIRST_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
-XLSX_SHEET2_FIRST_ROW = {"Product ID": "P-300", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
+XLSX_SHEET1_FIRST_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": 25.5, "Location": "Warehouse A, Shelf 2"}
+XLSX_SHEET2_FIRST_ROW = {"Product ID": "P-300", "Description": "Wireless Mouse", "Price": 25.5, "Location": "Warehouse A, Shelf 2"}
 
 XLS_SHEET1_FIRST_ROW = {"Index": 1.0, "First Name": "Dulce", "Last Name": "Abril", "Gender": "Female", "Country": "United States", "Age": 32.0}
 XLS_SHEET2_FIRST_ROW = {"Index": 1.0, "Date": 43023.0, "Id": 1562.0}
@@ -47,7 +48,7 @@ class TestSwitchSheetXlsxEdit:
     def test_switch_does_not_affect_sheet_list(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.switch_sheet("Sheet2")
-        assert lib.list_sheet_names() == ["List 1", "Sheet2", "Sheet3"]
+        assert lib.list_sheet_names() == ["List 1", "Sheet2", "Sheet3", "Sheet4"]
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +114,7 @@ class TestSwitchSheetXlsEdit:
         lib.load_workbook(XLS_FILE)
         lib.switch_sheet("Second")
         rows = lib.get_rows()
-        assert list(rows[0].keys()) == XLS_SHEET2_HEADERS
+        assert list(cast(dict[str, Any], rows[0]).keys()) == XLS_SHEET2_HEADERS
 
     def test_switch_back_to_first_restores_data(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -125,7 +126,7 @@ class TestSwitchSheetXlsEdit:
     def test_default_sheet_headers(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
-        assert list(rows[0].keys()) == XLS_SHEET1_HEADERS
+        assert list(cast(dict[str, Any], rows[0]).keys()) == XLS_SHEET1_HEADERS
 
 
 # ---------------------------------------------------------------------------
