@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/boumasim/RFExcel/compare/v0.5.0...v0.6.0) (2026-03-28)
+
+
+### Features
+
+* **refactor:** refactoring, api changes, tests ([#13](https://github.com/boumasim/RFExcel/issues/13)) ([f0be92e](https://github.com/boumasim/RFExcel/commit/f0be92e4a09507b5c91964150af2ae0bbdd7f623))
+
 ## [0.5.0](https://github.com/boumasim/RFExcel/compare/v0.4.0...v0.5.0) (2026-03-17)
 
 
