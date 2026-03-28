@@ -8,7 +8,7 @@ from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 XLSX_FIRST_DATA_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": 25.5, "Location": "Warehouse A, Shelf 2"}
 XLS_FIRST_DATA_ROW  = {"Index": 1.0, "First Name": "Dulce", "Last Name": "Abril", "Gender": "Female", "Country": "United States", "Age": 32.0}
-CSV_FIRST_DATA_ROW  = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": "25.50", "Location": "Warehouse A, Shelf 2"}
+CSV_FIRST_DATA_ROW  = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": 25.50, "Location": "Warehouse A, Shelf 2"}
 
 
 # ---------------------------------------------------------------------------

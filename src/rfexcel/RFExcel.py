@@ -14,7 +14,7 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
-                                     headers_to_header_map, normalize_string_cast,
+                                     headers_to_header_map,
                                      search_in_row)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel

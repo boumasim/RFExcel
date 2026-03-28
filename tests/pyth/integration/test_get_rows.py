@@ -20,10 +20,10 @@ XLSX_ROWS = [
 ]
 
 CSV_ROWS = [
-    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": "25.50",  "Location": "Warehouse A, Shelf 2"},
-    {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": "89.99",  "Location": "Store Front"},
-    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": "150.00", "Location": "Paris, France"},
-    {"Product ID": "P-203", "Description": "USB Cable, 3ft",            "Price": "5.99",   "Location": "Online"},
+    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,   "Location": "Warehouse A, Shelf 2"},
+    {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": 89.99,  "Location": "Store Front"},
+    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": 150,    "Location": "Paris, France"},
+    {"Product ID": "P-203", "Description": "USB Cable, 3ft",            "Price": 5.99,   "Location": "Online"},
 ]
 
 XLS_FIRST_ROW = {

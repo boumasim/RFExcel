@@ -22,21 +22,9 @@ XLSX_VS_XLSX2_DIFFS = [
 
 XLSX_VS_CSV_DIFFS = [
     {
-        "source_row_index": 2,
-        "differences": {
-            "Price": {"source": 25.5, "target": "25.50"},
-        },
-    },
-    {
         "source_row_index": 3,
         "differences": {
             "Description": {"source": "Keyboard, Mechanical", "target": "Keyboard, Mechanical, RGB"},
-        },
-    },
-    {
-        "source_row_index": 4,
-        "differences": {
-            "Price": {"source": 150, "target": "150.00"},
         },
     },
     {
@@ -137,9 +125,9 @@ class TestCompareDataToTargetSheet:
 
 class TestCompareDataToXlsxVsCsv:
 
-    def test_returns_four_diff_entries(self, lib: RFExcelLibrary):
+    def test_returns_two_diff_entries(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        assert len(lib.compare_data_to(CSV_FILE)) == 4
+        assert len(lib.compare_data_to(CSV_FILE)) == 2
 
     def test_row_3_description_differs(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -166,10 +154,10 @@ class TestCompareDataToXlsxVsCsv:
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(CSV_FILE) == XLSX_VS_CSV_DIFFS
 
-    def test_price_differs_where_csv_has_trailing_zeros(self, lib: RFExcelLibrary):
+    def test_price_is_identical_when_numeric_casted(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         result = lib.compare_data_to(CSV_FILE, headers=["Price"])
-        assert len(result) == 2
+        assert result == []
 
     def test_product_id_is_identical_across_all_rows(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -342,7 +330,7 @@ class TestCompareDataToFailOnDiff:
             loaded_xlsx.compare_data_to(XLSX2_FILE, fail_on_diff=True)
 
     def test_raises_at_first_diff_not_last(self, loaded_xlsx: RFExcelLibrary):
-        with pytest.raises(AssertionError, match=r"source_row_index 2"):
+        with pytest.raises(AssertionError, match=r"source_row_index 3"):
             loaded_xlsx.compare_data_to(CSV_FILE, fail_on_diff=True)
 
     def test_csv_target_raises_assertion_error(self, loaded_xlsx: RFExcelLibrary):

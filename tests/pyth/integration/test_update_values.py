@@ -210,7 +210,7 @@ class TestUpdateValuesCsvEdit:
         )
         assert count == 1
         row = next(r for r in lib.get_rows() if r["Product ID"] == "P-200")
-        assert row["Price"] == "0.00"
+        assert row["Price"] == 0
 
     def test_unspecified_columns_untouched(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
@@ -224,7 +224,7 @@ class TestUpdateValuesCsvEdit:
         )
         row = next(r for r in lib.get_rows() if r["Product ID"] == "P-201")
         assert row["Description"] == original_desc
-        assert row["Price"] == "1.11"
+        assert row["Price"] == 1.11
 
     def test_partial_match(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
