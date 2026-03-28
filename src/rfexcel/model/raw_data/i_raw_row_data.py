@@ -20,7 +20,7 @@ class IRawRowData(ABC):
         
         - Empty cells MUST be returned as `""` (never `None`).
         - Numeric strings and .0 floats MUST be safely cast to `int` or `float`.
-        - Trailing empty cells MUST be trimmed to the physical width of the data.
+        - Ignores empty or None values.
         """
         pass
 
@@ -31,7 +31,7 @@ class IRawRowData(ABC):
         
         - Uses 1-based column indices provided by the `header_map`.
         - Existing, but empty cells MUST return `""`.
-        - Requested columns that are out-of-bounds MUST return `None`.
+        - Requested columns that are out-of-bounds MUST return `""`.
         """
         pass
 
