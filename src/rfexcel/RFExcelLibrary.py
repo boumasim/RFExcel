@@ -53,6 +53,7 @@ class RFExcelLibrary:
     = Data Types =
 
     To provide the most accurate test data possible, this library does not force all cell values into strings. It preserves the native data types exactly as they are parsed by the underlying engines (``openpyxl``, ``xlrd``, ``csv``).
+    * For xls, floats like 5.00 are implicitly cast to int.
 
     When reading rows, cell values will be returned as native Python objects. Depending on the cell format in your Excel file, expect the following Robot Framework equivalents:
     - **Text/General:** ``string``
@@ -60,24 +61,12 @@ class RFExcelLibrary:
     - **Decimals/Currency:** ``float`` (e.g., ``${3.14}``)
     - **Dates/Times:** Python ``datetime`` objects
     - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
-    - **Empty Cells:** ``None`` (``${NONE}``)
+    - **Empty Cells:** ``""`` (``${EMPTY}``)
 
     *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
-
-    *Example:*
-    | ${row} =           | Get Row           | 2    | headers=${headers} |
-    |                    |                   |      |                    |
-    | # CORRECT: Asserting against a numeric variable |
-    | Should Be Equal    | ${row.Quantity}   | ${5} |                    |
-    |                    |                   |      |                    |
-    | # INCORRECT: This fails because int(5) != str("5") |
-    | Should Be Equal    | ${row.Quantity}   | 5    |                    |
-    |                    |                   |      |                    |
-    | # CORRECT: If you prefer string comparisons, convert it first |
-    | ${str_qty} =       | Convert To String | ${row.Quantity} |         |
-    | Should Be Equal    | ${str_qty}        | 5    |                    |
-
-    Only exception to this is compare_to_data, which performs string cast for everything.
+    * Search Criteria values, if provided as strings, are also casted to match the native types of the cell values for accurate matching. 
+      For example, a search criterion of ``Price=25.50`` will match a cell containing the float value 25.5
+      If provided as dict, values are compared with the types they are provided from the library user.
 
     """
 
