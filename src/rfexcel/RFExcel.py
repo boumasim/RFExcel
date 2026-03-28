@@ -319,7 +319,7 @@ class RFExcel(IExcel, ISetExcel):
                 differences: ColumnDifference = {
                     h: {"source": source_values.get(h), "target": target_values.get(h)}
                     for h in compare_headers
-                    if normalize_string_cast(source_values.get(h)) != normalize_string_cast(target_values.get(h))
+                    if source_values.get(h) != target_values.get(h)
                 }
 
                 if differences:

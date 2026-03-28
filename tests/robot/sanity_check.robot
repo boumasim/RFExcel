@@ -113,7 +113,7 @@ Test xlsx generator close
 Compare xls to xslx
     [Documentation]     Test comparing data between .xls and .xlsx files and verify differences
     Load Workbook    path=${RESOURCES}/data.csv  read_only=True
-    ${differences}=    Compare Data To    target_path=${RESOURCES}/data.xlsx  target_sheet=Sheet4
+    ${differences}=    Compare Data To    target_path=${RESOURCES}/data.xlsx  target_sheet=Sheet4  fail_on_diff=True
     Log    Differences between .xls and .xlsx: ${differences}
 
 Get Rowss    [Documentation]     Test getting rows with various header and row configurations
