@@ -717,14 +717,18 @@ class RFExcelLibrary:
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
         """
         if self._active_workbook:
+            if target_path is None:
+                target_path_p = self._active_workbook.resource.path.resolve()
+            else:
+                target_path_p = Path(target_path).resolve()
             same_file = (
                 target_path is None or
-                Path(target_path).resolve() == self._active_workbook.resource.path.resolve()
+                target_path_p == self._active_workbook.resource.path.resolve()
             )
             if same_file and not self._active_workbook.read_only:
                 target: IExcel = self._active_workbook
             else:
-                target = self._factory.load_workbook(path=str(target_path), read_only=True)
+                target = self._factory.load_workbook(path=str(target_path_p), read_only=True)
 
             result = self._active_workbook.compare_data_to(
                 target=target,

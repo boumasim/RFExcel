@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import cast
 
-from openpyxl.cell import read_only
-
 from rfexcel.utils.types import ColumnDifference
 
 
