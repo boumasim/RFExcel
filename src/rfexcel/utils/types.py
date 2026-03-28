@@ -1,16 +1,19 @@
-from typing import TypeAlias, TypedDict
+from datetime import datetime, timedelta
+from typing import Any, TypeAlias, TypedDict
 
-ListRowData: TypeAlias = list[str]             # A row as a plain list of string values
+CellValue: TypeAlias = str | int | float | bool | datetime | timedelta | None  # Normalised cell value across xlrd and openpyxl
+
+ListRowData: TypeAlias = list[Any]             # A row as a plain list of cell values
 HeaderMap: TypeAlias = dict[str, int]          # {header_name : column_index}
-DictRowData: TypeAlias = dict[str, str]        # User-supplied {header_name : value} for writes / search
+DictRowData: TypeAlias = dict[str, Any]        # {header_name : cell value}
 HeaderSpec: TypeAlias = HeaderMap | list[str]
 ColumnValues: TypeAlias = dict[int, str]       # Internal {column_index : value} passed to writers/resources
 
 
 # Support types for compare_data_to
 class ValueDifference(TypedDict):
-    source: str
-    target: str
+    source: Any
+    target: Any
 ColumnDifference: TypeAlias = dict[str, ValueDifference]
 class RowDifference(TypedDict):
     source_row_index: int

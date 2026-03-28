@@ -41,8 +41,8 @@ class TestAppendRowXlsxEdit:
         last = lib.get_rows()[-1]
         assert last["Product ID"] == "P-888"
         assert last["Price"] == "0.01"
-        assert last["Description"] == ""
-        assert last["Location"] == ""
+        assert last["Description"] is None
+        assert last["Location"] is None
 
     def test_unknown_keys_are_silently_ignored(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))

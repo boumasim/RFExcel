@@ -43,7 +43,7 @@ class XlsxEditResource(IResource):
         row_values = next(
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
         )
-        return XlsxRawRowData(row_values, False)
+        return XlsxRawRowData(row_values)
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -147,7 +147,7 @@ class XlsxStreamResource(IResource):
             next(self._row_generator)
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
-        return XlsxRawRowData(row_data, False)
+        return XlsxRawRowData(row_data)
 
     @override
     def get_sheet_names(self) -> list[str]:

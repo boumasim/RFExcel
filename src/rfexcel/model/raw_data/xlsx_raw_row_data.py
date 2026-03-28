@@ -1,52 +1,31 @@
-from typing import Any, cast, override
+from typing import override
 
-from openpyxl.cell.cell import Cell
+from openpyxl.cell import MergedCell, ReadOnlyCell, Cell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utils.types import (ColumnValues, DictRowData, HeaderMap,
-                                 ListRowData)
+from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class XlsxRawRowData(IRawRowData):
-    def __init__(self, data: tuple[Cell, ...] | tuple[Any, ...], value_only: bool):
+    def __init__(self, data: tuple[Cell | MergedCell | ReadOnlyCell, ...]):
         self._data = data
-        self._value_only = value_only
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        if self._value_only:
-            return [str(v) if v is not None else "" for v in self._data]
-        return [str(cell.value) if cell.value is not None else "" for cell in self._data]  # type: ignore[union-attr]
+        return [cell.value for cell in self._data]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
-        if self._value_only:
-            return {
-                name: (
-                    str(self._data[col - 1])
-                    if 0 < col <= len(self._data) and self._data[col - 1] is not None
-                    else ""
-                )
-                for name, col in header_map.items()
-            }
-        col_to_value: ColumnValues = {
-            cell.column: (str(cell.value) if cell.value is not None else "")  # type: ignore[union-attr]
+        col_to_value = {
+            cell.column: cell.value
             for cell in self._data
-            if hasattr(cell, 'column')
         }
-        return {name: col_to_value.get(col, "") for name, col in header_map.items()}
+        return {name: col_to_value.get(col) for name, col in header_map.items()}
 
     @override
     def get_header_map(self) -> HeaderMap:
-        if self._value_only:
-            values = cast(tuple[Any, ...], self._data)
-            return {
-                str(v): i + 1
-                for i, v in enumerate(values)
-                if v is not None and str(v).strip() != ""
-            }
         return {
-            str(cell.value): cell.column  # type: ignore[union-attr]
+            str(cell.value): cell.column
             for cell in self._data
-            if cell.value is not None and str(cell.value).strip() != ""  # type: ignore[union-attr]
+            if cell.value is not None and str(cell.value).strip() != ""
         }

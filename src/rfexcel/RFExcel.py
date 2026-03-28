@@ -309,9 +309,9 @@ class RFExcel(IExcel, ISetExcel):
                 source_values = source_dict
                 target_values = target_dict
                 differences: ColumnDifference = {
-                    h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
+                    h: {"source": source_values.get(h), "target": target_values.get(h)}
                     for h in compare_headers
-                    if source_values.get(h, "") != target_values.get(h, "")
+                    if source_values.get(h) != target_values.get(h)
                 }
 
                 if differences:

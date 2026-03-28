@@ -40,7 +40,7 @@ class XlsEditResource(IResource):
         if target_xlrd_index >= self._active_sheet.nrows or target_xlrd_index < 0:
             raise StopIteration()
 
-        return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
+        return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -116,7 +116,7 @@ class XlsStreamResource(IResource):
             raise StopIteration()
 
         self._last_read_row_index = row_index
-        return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
+        return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
 
     @override
     def get_sheet_names(self) -> list[str]:

@@ -1,5 +1,5 @@
-from pathlib import Path
 import csv
+from pathlib import Path
 
 import pytest
 
@@ -8,7 +8,6 @@ from rfexcel.exception.library_exceptions import (
     StreamingViolationException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
-
 
 XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
 
@@ -27,12 +26,12 @@ CSV_ROWS = [
 ]
 
 XLS_FIRST_ROW = {
-    "Index": "1.0", "First Name": "Dulce", "Last Name": "Abril",
-    "Gender": "Female", "Country": "United States", "Age": "32.0",
+    "Index": 1.0, "First Name": "Dulce", "Last Name": "Abril",
+    "Gender": "Female", "Country": "United States", "Age": 32.0,
 }
 XLS_LAST_ROW = {
-    "Index": "9.0", "First Name": "Vincenza", "Last Name": "Weiland",
-    "Gender": "Female", "Country": "United States", "Age": "40.0",
+    "Index": 9.0, "First Name": "Vincenza", "Last Name": "Weiland",
+    "Gender": "Female", "Country": "United States", "Age": 40.0,
 }
 
 
@@ -127,11 +126,11 @@ class TestGetRowsXlsStandard:
         lib.load_workbook(XLS_FILE)
         assert lib.get_rows()[-1] == XLS_LAST_ROW
 
-    def test_numeric_values_stringified_as_floats(self, lib: RFExcelLibrary):
+    def test_numeric_values_are_native_floats(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows()
-        assert rows[0]["Index"] == "1.0"
-        assert rows[0]["Age"] == "32.0"
+        assert rows[0]["Index"] == 1.0
+        assert rows[0]["Age"] == 32.0
 
     def test_trailing_empty_columns_excluded_from_result(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)

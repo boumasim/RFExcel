@@ -1,24 +1,21 @@
 from pathlib import Path
 from typing import cast
 
-from rfexcel.utils.types import ColumnDifference
-
-
 import openpyxl
 import pytest
 
 from rfexcel.exception.library_exceptions import (NotMatchingColumns,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
+from rfexcel.utils.types import ColumnDifference
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX2_FILE, XLSX_FILE
-
 
 XLSX_VS_XLSX2_DIFFS = [
     {
         "source_row_index": 5,
         "differences": {
             "Product ID": {"source": "P-203", "target": "P-205"},
-            "Price":      {"source": "5.99",  "target": "6"},
+            "Price":      {"source": "5.99",  "target": 6},
         },
     },
 ]
@@ -63,7 +60,7 @@ class TestCompareDataToXlsxVsXlsx2:
     def test_price_diff_on_row_5(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         diffs: ColumnDifference  = cast(ColumnDifference, lib.compare_data_to(XLSX2_FILE)[0]["differences"])
-        assert diffs["Price"] == {"source": "5.99", "target": "6"}
+        assert diffs["Price"] == {"source": "5.99", "target": 6}
 
     def test_unchanged_columns_absent_from_differences(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)

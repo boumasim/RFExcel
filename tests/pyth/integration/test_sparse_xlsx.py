@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pytest
 from openpyxl import Workbook
 
@@ -56,9 +57,9 @@ class TestOffsetTableXlsxEdit:
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == "90"
+        assert rows[0]["Score"] == 90
         assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == "75"
+        assert rows[1]["Score"] == 75
 
     def test_column_c_start(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset_c.xlsx")
@@ -66,7 +67,7 @@ class TestOffsetTableXlsxEdit:
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == "90"
+        assert rows[0]["Score"] == 90
 
 
 # ---------------------------------------------------------------------------
@@ -87,9 +88,9 @@ class TestOffsetTableXlsxStream:
         lib.load_workbook(path, read_only=True)
         rows = lib.get_rows()
         assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == "90"
+        assert rows[0]["Score"] == 90
         assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == "75"
+        assert rows[1]["Score"] == 75
 
 
 # ---------------------------------------------------------------------------
@@ -117,9 +118,9 @@ class TestGapColumnXlsxEdit:
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == "90"
+        assert rows[0]["Score"] == 90
         assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == "75"
+        assert rows[1]["Score"] == 75
 
 
 # ---------------------------------------------------------------------------
@@ -140,6 +141,7 @@ class TestGapColumnXlsxStream:
         lib.load_workbook(path, read_only=True)
         rows = lib.get_rows()
         assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == "90"
+        assert rows[0]["Score"] == 90
         assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == "75"
+        assert rows[1]["Score"] == 75
+        assert rows[1]["Score"] == 75

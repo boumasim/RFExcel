@@ -1,6 +1,8 @@
 from typing import Any, Callable, TypeAlias
 
 import pytest
+import xlrd
+import xlrd.sheet
 from openpyxl import Workbook
 
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
@@ -21,11 +23,17 @@ def _make_csv(values: list[Any]) -> IRawRowData:
 
 
 def _make_xls(values: list[Any]) -> IRawRowData:
-    return XlsRawRowData(values)
-
-
-def _make_xlsx_value_only(values: list[Any]) -> IRawRowData:
-    return XlsxRawRowData(tuple(values), value_only=True)
+    cells = []
+    for v in values:
+        if v is None:
+            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_EMPTY, ""))
+        elif isinstance(v, bool):
+            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_BOOLEAN, v))
+        elif isinstance(v, (int, float)):
+            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_NUMBER, float(v)))
+        else:
+            cells.append(xlrd.sheet.Cell(xlrd.XL_CELL_TEXT, v))
+    return XlsRawRowData(cells)
 
 
 def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
@@ -33,7 +41,7 @@ def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
     ws = wb.active
     for col, value in enumerate(values, start=1):
         ws.cell(row=1, column=col, value=value)
-    row_data = XlsxRawRowData(tuple(ws[1]), value_only=False)
+    row_data = XlsxRawRowData(tuple(ws[1]))
     wb.close()
     return row_data
 
@@ -41,24 +49,26 @@ def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
 _FACTORIES: list[RawFactory] = [
     _make_csv,
     _make_xls,
-    _make_xlsx_value_only,
     _make_xlsx_cell_mode,
 ]
-_IDS = ["csv", "xls", "xlsx_value_only", "xlsx_cell_mode"]
+_IDS = ["csv", "xls", "xlsx_cell_mode"]
 
 
 # ---------------------------------------------------------------------------
 # other edge cases
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
-def test_col_zero_returns_empty_string(factory: RawFactory) -> None:
+@pytest.mark.parametrize("factory,expected_missing", [
+    (_make_csv, ""),
+    (_make_xls, None),
+    (_make_xlsx_cell_mode, None),
+], ids=["csv", "xls", "xlsx_cell_mode"])
+def test_col_out_of_bounds_returns_correct_missing_value(factory: RawFactory, expected_missing: Any) -> None:
     """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
-    assert row.get_dict_row_data({"invalid_col": 0, "valid_col": 2}) == {
-        "invalid_col": "",
-        "valid_col": "second",
-    }
+    result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
+    assert result["invalid_col"] == expected_missing
+    assert result["valid_col"] == "second"
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_none_or_empty_column(factory: RawFactory) -> None:
