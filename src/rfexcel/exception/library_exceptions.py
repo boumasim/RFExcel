@@ -2,15 +2,14 @@ class RFExcelException(Exception):
     """Base exception for RFExcelLibrary related errors"""
 
     def __init__(self, msg: str):
-        self._message: str = msg
-        super().__init__(self._message)
+        super().__init__(msg)
 
 class FileFormatNotSupportedException(RFExcelException):
     def __init__(self, msg: str = "File format not supported in this library"):
         super().__init__(msg)
 
 class FileAlreadyExistsException(RFExcelException):
-    def __init__(self, msg: str = "File with same name already exits"):
+    def __init__(self, msg: str = "File with same name already exists"):
         super().__init__(msg)
 
 class FileDoesNotExistException(RFExcelException):
@@ -22,15 +21,15 @@ class LibraryException(RFExcelException):
     def __init__(self, msg: str):
         super().__init__(msg)
 
-class NullComponentException(LibraryException):
+class NullComponentException(RFExcelException):
     """Raised when a Null Object method is called."""
     def __init__(self):
         super().__init__("Library uses null component for this operation.")
 
 class RowIndexOutOfBoundsException(RFExcelException):
     """Exception when row index is out of valid range"""
-    def __init__(self, row_index: int, msg: str = ""):
-        if msg:
+    def __init__(self, row_index: int, msg: str | None = None):
+        if msg is not None:
             super().__init__(msg)
         else:
             super().__init__(f"Row index {row_index} is out of bounds")
@@ -74,4 +73,15 @@ class NotMatchingColumns(RFExcelException):
             parts.append(f"missing in target: {missing_in_target}")
         if missing_in_source:
             parts.append(f"missing in source: {missing_in_source}")
-        super().__init__(f"Column mismatch - {', '.join(parts)}")
+        detail = f" - {', '.join(parts)}" if parts else ""
+        super().__init__(f"Column mismatch{detail}")
+
+class WorkbookNotOpenException(RFExcelException):
+    """Exception raised when trying to operate on a workbook that is not open"""
+    def __init__(self, msg: str = "No workbook is currently open"):
+        super().__init__(msg)
+
+class SheetDoesNotExistException(RFExcelException):
+    """Exception raised when a requested sheet name does not exist in the workbook"""
+    def __init__(self, sheet_name: str):
+        super().__init__(f"Sheet with this name: {sheet_name} does not exist")

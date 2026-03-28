@@ -21,19 +21,17 @@ class XlsxStreamReader(IReader):
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         if resource.last_read_row_index >= header_row_idx:
             raise StreamingViolationException(header_row_idx, resource.last_read_row_index)
-        for i in range(header_row_idx):
-            row_data = resource.fetch_row(row_index=i, **kwargs)
-            if i == header_row_idx - 1:
-                return row_data
-        return NullRawRowData()
+        try:
+            row_data = resource.fetch_row(row_index=header_row_idx, **kwargs)
+            return row_data
+        except StopIteration:
+            return NullRawRowData()
     
     @override
     def get_row(self, row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         if row_idx <= resource.last_read_row_index:
             raise StreamingViolationException(row_idx, resource.last_read_row_index)
         
-        row_data: IRawRowData = NullRawRowData()
-        while resource.last_read_row_index < row_idx:
-            row_data = resource.fetch_row(row_index=resource.last_read_row_index, **kwargs)
+        row_data = resource.fetch_row(row_index=row_idx, **kwargs)
 
         return row_data

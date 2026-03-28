@@ -5,12 +5,14 @@ import xlrd
 from openpyxl import Workbook
 from openpyxl.reader import excel
 
+from rfexcel.backend.interfaces.i_library import IExcel
+from rfexcel.backend.metadata.csv_metadata import CsvMetadata
 from rfexcel.backend.metadata.xls_metadata import XlsMetadata
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.csv_edit_reader import CsvEditReader
 from rfexcel.backend.reader.csv_stream_reader import CsvStreamReader
 from rfexcel.backend.reader.xls_on_demand_reader import XlsOnDemandReader
-from rfexcel.backend.reader.xls_standart_reader import XlsStandardReader
+from rfexcel.backend.reader.xls_standard_reader import XlsStandardReader
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.reader.xlsx_stream_reader import XlsxStreamReader
 from rfexcel.backend.resource.csv_resource import (CsvEditResource,
@@ -34,7 +36,7 @@ from rfexcel.rfexcel_constants import (CSV_SUFFIX, VALID_SUFFIXES, XLS_SUFFIX,
 
 class WorkbookFactory:
 
-    def create_workbook(self, path: str, **kwargs: Any) -> RFExcel:
+    def create_workbook(self, path: str, **kwargs: Any) -> IExcel:
         file_path: Path = Path(path)
         extension: str = file_path.suffix.lower()
 
@@ -50,10 +52,10 @@ class WorkbookFactory:
         elif extension == CSV_SUFFIX:
             return self._create_csv_edit(path=file_path, **kwargs)
         else:
-            raise Exception("Exception in create_workbook occured")
+            raise FileFormatNotSupportedException("Unknown file format for creating: " + extension)
 
 
-    def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> RFExcel:
+    def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> IExcel:
         file_path: Path = Path(path)
         extension: str = file_path.suffix.lower()
 
@@ -76,46 +78,46 @@ class WorkbookFactory:
             else:
                 return self._load_csv_edit(path=file_path, **kwargs)
         else:
-            raise Exception("Exception in load_workbook occured")
+            raise FileFormatNotSupportedException("Unknown file format for loading: " + extension)
 
     def _create_xlsx_edit(self, path: Path, **kwargs: Any) -> RFExcel:
         wb: Workbook = Workbook(**kwargs)
         ws = wb.active
         assert ws is not None
         wb.save(filename=path)
-        return RFExcel(XlsxWriter(), XlsxEditReader(), XlsxStyle(), XlsxMetadata(), XlsxEditResource(wb=wb, path=path))
+        return RFExcel(False, XlsxWriter(), XlsxEditReader(), XlsxStyle(), XlsxMetadata(), XlsxEditResource(wb=wb, path=path))
 
     def _load_xlsx_stream(self, path: Path, **kwargs: Any) -> RFExcel:
         _data_only: bool = bool(kwargs.get('data_only', False))
         wb: Workbook = excel.load_workbook(filename=path, read_only=True, data_only=_data_only)
-        return RFExcel(reader=XlsxStreamReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxStreamResource(wb, path))
+        return RFExcel(read_only=True, reader=XlsxStreamReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxStreamResource(wb, path))
 
     def _load_xlsx_edit(self, path: Path, **kwargs: Any) -> RFExcel:
         wb: Workbook = excel.load_workbook(filename=path, read_only=False, **kwargs)
-        return RFExcel(writer=XlsxWriter(), reader=XlsxEditReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxEditResource(wb, path))
+        return RFExcel(read_only=False, writer=XlsxWriter(), reader=XlsxEditReader(), style=XlsxStyle(), metadata=XlsxMetadata(), resource=XlsxEditResource(wb, path))
 
     def _load_xls_on_demand(self, path: Path, **kwargs: Any) -> RFExcel:
         _formating_info: bool = bool(kwargs.get('formatting_info', True))
         wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=True, formatting_info=_formating_info)
-        return RFExcel(reader=XlsOnDemandReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsStreamResource(wb, path))
+        return RFExcel(read_only=True, reader=XlsOnDemandReader(), style=XlsStyle(), metadata=XlsMetadata(), resource=XlsStreamResource(wb, path))
 
     def _load_xls_standard(self, path: Path, **kwargs: Any) -> RFExcel:
         _formating_info: bool = bool(kwargs.get('formatting_info', True))
         wb: xlrd.Book = xlrd.open_workbook(str(path), on_demand=False, formatting_info=_formating_info)
         writer = XlsWriter()
-        lib = RFExcel(reader=XlsStandardReader(), writer=writer, style=XlsStyle(), metadata=XlsMetadata(), resource=XlsEditResource(wb, path))
+        lib = RFExcel(read_only=False, reader=XlsStandardReader(), writer=writer, style=XlsStyle(), metadata=XlsMetadata(), resource=XlsEditResource(wb, path))
         writer.set_excel_reference(lib)
         return lib
 
     def _load_csv_stream(self, path: Path, **kwargs: Any) -> RFExcel:
         """Opens CSV in read-only streaming mode."""
         resource = CsvStreamResource(path, **kwargs)
-        return RFExcel(reader=CsvStreamReader(), resource=resource)
+        return RFExcel(read_only=True, reader=CsvStreamReader(), resource=resource, metadata=CsvMetadata())
 
     def _load_csv_edit(self, path: Path, **kwargs: Any) -> RFExcel:
         """Opens CSV in buffered edit mode (Read into memory)."""
         resource = CsvEditResource(path, **kwargs)
-        return RFExcel(reader=CsvEditReader(), writer=CsvWriter(), resource=resource)
+        return RFExcel(read_only=False, reader=CsvEditReader(), writer=CsvWriter(), resource=resource, metadata=CsvMetadata())
     
     def _create_csv_edit(self, path: Path, **kwargs: Any) -> RFExcel:
         """Creates an empty CSV file and returns an Edit object."""

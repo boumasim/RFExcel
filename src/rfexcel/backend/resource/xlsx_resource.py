@@ -5,14 +5,15 @@ from typing import Any, override
 from openpyxl import Workbook
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
-from robot.api import logger
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
                                                   LibraryException,
-                                                  NotSupportedInReadOnlyMode)
+                                                  NotSupportedInReadOnlyMode,
+                                                  SheetDoesNotExistException)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.library_logger import logger
+from rfexcel.utils.types import ColumnValues
 
 from .i_resource import IResource
 
@@ -25,7 +26,7 @@ class XlsxEditResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
 
     @property
@@ -37,7 +38,7 @@ class XlsxEditResource(IResource):
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
-        if row_index > self._active_sheet.max_row:
+        if row_index > self._active_sheet.max_row or row_index < 1:
             raise StopIteration()
         row_values = next(
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
@@ -50,6 +51,8 @@ class XlsxEditResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheetnames:
+            raise SheetDoesNotExistException(name)
         self._active_sheet = self._wb[name]
 
     @override
@@ -101,6 +104,14 @@ class XlsxEditResource(IResource):
         self._active_sheet.delete_rows(row_index, 1)
 
     @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        self._active_sheet.insert_rows(row_index)
+        for col, value in cell_data.items():
+            self._active_sheet.cell(row=row_index, column=col, value=value)
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -110,12 +121,12 @@ class XlsxStreamResource(IResource):
         super().__init__(path)
         self._wb = wb
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
-        self._row_generator: Iterator[tuple[Any, ...]] | None = None  # lazily initialised on first fetch_row call
+        self._row_generator: Iterator[tuple[Any, ...]] | None = None
         self._last_read_row_index = 0
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
     
     @property
@@ -131,6 +142,9 @@ class XlsxStreamResource(IResource):
                 if self._active_sheet
                 else iter([])
             )
+        while(self._last_read_row_index < row_index - 1):
+            self._last_read_row_index += 1
+            next(self._row_generator)
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data, False)
@@ -141,6 +155,10 @@ class XlsxStreamResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
+        if name not in self._wb.sheetnames:
+            raise SheetDoesNotExistException(name)
+        if self._row_generator is not None:
+            self._row_generator.close()  # type: ignore[attr-defined]
         self._active_sheet = self._wb[name]
         self._row_generator = None
         self._last_read_row_index = 0
@@ -166,9 +184,16 @@ class XlsxStreamResource(IResource):
         raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
 
     @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NotSupportedInReadOnlyMode("Inserting rows is not supported in streaming mode")
+
+    @override
     def save(self, path: Path | None = None) -> None:
         raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
 
     @override
     def close(self):
+        if self._row_generator is not None:
+            self._row_generator.close()  # type: ignore[attr-defined]
+            self._row_generator = None
         self._wb.close()

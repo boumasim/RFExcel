@@ -6,7 +6,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import NullComponentException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 from .i_resource import IResource
 
@@ -18,7 +18,7 @@ class NullResource(IResource):
 
     @property
     @override
-    def get_active_sheet(self) -> Worksheet | Chartsheet | None:
+    def active_sheets(self) -> Worksheet | Chartsheet | None:
         raise NullComponentException()
 
     @property
@@ -64,4 +64,8 @@ class NullResource(IResource):
 
     @override
     def delete_row(self, row_index: int) -> None:
+        raise NullComponentException()
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NullComponentException()

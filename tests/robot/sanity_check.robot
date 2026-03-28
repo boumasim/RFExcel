@@ -18,18 +18,21 @@ Get Rows from Workbook
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
     ${rows}=    Get Rows  one_row=true
     Log    ${rows}
+    Should Not Be Empty    ${rows}
+    Dictionary Should Contain Key    ${rows}    Product ID
 
 Get Rows by each row
     [Documentation]     Get rows one by one and verify data structure
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
     ${my_list}=    Create List
-    ${headers}=   Get Row    row=2
-    FOR    ${i}    IN RANGE    3    5
+    ${headers}=   Get Row    row=1
+    FOR    ${i}    IN RANGE    2    4
         ${row}=    Get Row    row=${i}    headers=${headers}
         Append To List    ${my_list}    ${row}
         Log    Row ${i}: ${row}
     END
     Log    All rows: ${my_list}
+    Length Should Be    ${my_list}    2
 
 Switch Source Test
     [Documentation]     Test switching between different sources and verify data integrity
@@ -39,6 +42,8 @@ Switch Source Test
     Switch Source    path=${RESOURCES}/data.xlsx     read_only=true
     ${xlsx_rows}=   Get Rows
     Log    XLSX Rows: ${xlsx_rows}
+    Length Should Be    ${csv_rows}     4
+    Length Should Be    ${xlsx_rows}    4
 
 Get Rows with Search Criteria
     [Documentation]     Get rows matching search criteria and verify results
@@ -46,17 +51,22 @@ Get Rows with Search Criteria
     ${criteria}=    Create Dictionary    Product ID=P-201    Price=89.99
     ${matching_rows}=    Get Rows    search_criteria=${criteria}
     Log    Matching Rows: ${matching_rows}
+    Length Should Be    ${matching_rows}    1
+    Should Be Equal    ${matching_rows}[0][Product ID]    P-201
 
 Sheet test
     [Documentation]     Test sheet operations: create, switch, and verify data
     Load Workbook    path=${RESOURCES}/data.xlsx
     ${sheets}=     List Sheet Names
+    Log    Sheets before add: ${sheets}
     Add Sheet       name=Test 1
     ${sheet1}=     List Sheet Names
+    Should Contain    ${sheet1}    Test 1
     Switch Sheet    name=List 1
     Delete Sheet    name=Test 1
     ${sheet_names}=     List Sheet Names
     Log    Remaining Sheets: ${sheet_names}
+    Should Not Contain    ${sheet_names}    Test 1
 
 Save sheet test
     [Documentation]     Test saving a workbook after modifications
@@ -77,5 +87,25 @@ Compare data to another file
     Load Workbook    path=${RESOURCES}/data.xlsx  read_only=False
     ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx
     Log    Differences: ${differences}
-    ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx  headers=['Description', 'Location']
+    ${headers_filter}=    Create List    Description    Location
+    ${differences}=    Compare Data To    target_path=${RESOURCES}/data2.xlsx    headers=${headers_filter}
     Log    Differences with headers: ${differences}
+
+Lazy switch to xlsx
+    [Documentation]     Test lazy switching from .xls to .xlsx and verify data integrity
+    Load Workbook    path=${RESOURCES}/example.xls
+    ${rows}=    Get Rows
+    Log    Rows from .xls: ${rows}
+    Should Not Be Empty    ${rows}
+    Save Workbook    path=${RESULTS}/example_converted.xlsx
+
+Test xlsx generator close
+    [Documentation]     Test that the row generator is properly closed when switching sheets or closing the workbook
+    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    Switch Sheet    name=Sheet2
+    ${row1}=   Get Row    row=2
+    Log    First row: ${row1}
+    Switch Sheet    name=Sheet3
+    ${row2}=   Get Row    row=2
+    Log    First row of Sheet2: ${row2}
+    Close Workbook

@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from rfexcel.backend.resource.i_resource import IResource
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class IWriter(ABC):
@@ -33,4 +33,8 @@ class IWriter(ABC):
 
     @abstractmethod
     def delete_row(self, row_index: int, resource: IResource) -> None:
+        pass
+
+    @abstractmethod
+    def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         pass

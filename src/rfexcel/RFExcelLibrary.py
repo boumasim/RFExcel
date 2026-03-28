@@ -1,11 +1,14 @@
-from typing import Any
+from pathlib import Path
+from typing import Any, Literal, cast, overload
 
 from robot.api import logger  # type: ignore
-from robot.api.deco import keyword, not_keyword # type: ignore
+from robot.api.deco import keyword, not_keyword  # type: ignore
 from robot.utils import DotDict  # type: ignore
 
+from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utlis.types import DictRowData, HeaderSpec  # type: ignore
+from rfexcel.utils.library_logger import logger as library_logger
+from rfexcel.utils.types import HeaderSpec
 
 from .backend.interfaces.i_library import IExcel
 
@@ -42,6 +45,10 @@ class RFExcelLibrary:
     When ``partial_match=True``, the criterion value only needs to be a *substring*
     of the cell value (e.g. ``"Keyboard"`` matches ``"Keyboard, Mechanical"``).
     Defaults to exact match (``partial_match=False``).
+
+    = Error Handling =
+    - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
+    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode)
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -49,48 +56,76 @@ class RFExcelLibrary:
     ROBOT_LISTENER_API_VERSION = 2
 
     def __init__(self):
+        library_logger.configure(logger)
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
+    def _wrap_public_result(self, value: Any) -> Any:
+        """Recursively converts dictionaries to Robot Framework DotDicts."""
+        if isinstance(value, dict) and not isinstance(value, DotDict):
+            dict_val = cast(dict[Any, Any], value)
+            return DotDict({str(k): self._wrap_public_result(v) for k, v in dict_val.items()})
+        
+        if isinstance(value, list):
+            list_val = cast(list[Any], value)
+            return [self._wrap_public_result(item) for item in list_val]
+            
+        return value
+
+    @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def end_test(self, name: str, attrs: dict[str, Any]) -> None:
+        """Robot listener hook that closes any active workbook at test end."""
         logger.info("Cleanup after test execution...")
         if self._active_workbook: self.close()
 
     @keyword("Create Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def create_workbook(self, path: str, **kwargs: Any) -> None:
         """Creates a new empty workbook at ``path`` and opens it in edit mode.
+        Closes any previously open workbook.
 
-        Parent directories are created automatically. Supported: ``.xlsx``, ``.csv``.
-        Raises ``FileAlreadyExistsException`` if a file already exists at ``path``.
-        Raises ``FileFormatNotSupportedException`` for unsupported or ``.xls`` paths.
+        Parent directories are created automatically. Supported formats: ``.xlsx``, ``.csv``.
 
         Arguments:
         - ``path``: Destination path including the file extension.
+        - ``**kwargs``: Forwarded to backend creation logic.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileAlreadyExistsException``: If a file already exists at ``path``.
+        - ``FileFormatNotSupportedException``: For unsupported formats or ``.xls``.
 
         Examples:
         | Create Workbook | ${OUTPUT_DIR}${/}result.xlsx |
         | Create Workbook | ${OUTPUT_DIR}${/}output.csv  |
         """
+        if self._active_workbook: self.close()
         self._active_workbook = self._factory.create_workbook(path=path, **kwargs)
         logger.info("Workbook successfully created")
 
     @keyword("Load Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def load_workbook(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
         """Opens an existing workbook for reading or editing.
+        Closes any previously open workbook.
 
         - ``read_only=False`` *(default — Edit mode)*: Loads the full file into memory; read/write.
         - ``read_only=True`` *(Streaming mode)*: Memory-efficient, read-only.
           For ``.xlsx`` and ``.csv`` access is strictly forward-only.
           For ``.xls`` on-demand sheet loading allows random row access.
 
-        Raises ``FileDoesNotExistException`` if the file is not found at ``path``.
-        Raises ``FileFormatNotSupportedException`` for unsupported file extensions.
-
         Arguments:
         - ``path``: Path to the existing file.
         - ``read_only``: Open in streaming mode if ``True``. Defaults to ``False``.
         - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx streaming).
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileDoesNotExistException``: If the file is not found at ``path``.
+        - ``FileFormatNotSupportedException``: For unsupported file extensions.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                |                |
@@ -99,6 +134,7 @@ class RFExcelLibrary:
         | Load Workbook | ${CURDIR}/data.csv  | read_only=True |                |
         | Load Workbook | ${CURDIR}/data.xlsx | read_only=True | data_only=True |
         """
+        if self._active_workbook: self.close()
         self._active_workbook = self._factory.load_workbook(path=path, read_only=read_only, **kwargs)
         logger.info("Workbook successfully opened")
 
@@ -107,7 +143,10 @@ class RFExcelLibrary:
         """Closes the active workbook and releases all associated resources.
 
         Called automatically at the end of each test case; explicit cleanup is
-        optional but recommended for clarity. Safe to call with no open workbook.
+        optional but recommended for clarity. Safe to call when no workbook is open.
+
+        Returns:
+        - ``None``.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |
@@ -117,6 +156,25 @@ class RFExcelLibrary:
         if self._active_workbook: self._active_workbook.close()
         logger.info("File successfully closed")
         self._active_workbook = None
+
+    @overload
+    def get_rows(self,
+                header_row: int = 1,
+                search_criteria: dict[str, str] | str | None = None,
+                partial_match: bool = False,
+                one_row: Literal[False] = False,
+                **kwargs: Any) -> list[DotDict]:
+        ...
+
+    @overload
+    def get_rows(self,
+                header_row: int = 1,
+                search_criteria: dict[str, str] | str | None = None,
+                partial_match: bool = False,
+                *,
+                one_row: Literal[True],
+                **kwargs: Any) -> DotDict:
+        ...
 
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
@@ -136,8 +194,8 @@ class RFExcelLibrary:
         In streaming mode, rows are consumed sequentially — calling ``Get Rows`` twice
         on the same open workbook raises ``StreamingViolationException``.
 
-        Returns ``[]`` (or ``{}`` when ``one_row=True``) if no workbook is open,
-        ``header_row`` is beyond the file, or no row matches.
+        Returns ``[]`` (or ``{}`` when ``one_row=True``) when ``header_row`` is beyond
+        the file or no row matches.
 
         Arguments:
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
@@ -145,6 +203,13 @@ class RFExcelLibrary:
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
         - ``one_row``: Return first match as a flat dict when ``True``. Defaults to ``False``.
         - ``**kwargs``: Forwarded to the backend (e.g. ``data_only=True`` for xlsx).
+
+        Returns:
+        - ``list[DotDict]`` when ``one_row=False``.
+        - ``DotDict`` when ``one_row=True``.
+
+        Raises:
+        - ``StreamingViolationException``: When called again after stream consumption in forward-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                         |                    |
@@ -156,31 +221,43 @@ class RFExcelLibrary:
         | ${rows} =     | Get Rows            | header_row=2                            |                    |
         """
         if self._active_workbook:
-            return self._active_workbook.get_rows(
+            result = self._active_workbook.get_rows(
                 header_row=header_row,
                 search_criteria=search_criteria,
                 partial_match=partial_match,
                 one_row=one_row,
                 **kwargs,
             )
-        return DotDict() if one_row else []
+            return self._wrap_public_result(result)
+        else:
+            raise WorkbookNotOpenException()
+
+    @overload
+    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[str]: ...
+
+    @overload
+    def get_row(self, row: int, headers: dict[str, int] | list[str], **kwargs: Any) -> DotDict: ...
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> dict[str, str] | list[str]:
+    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[str]:
         """Returns a single row by its row number as a list or dict.
 
         - No ``headers``: Returns a plain ``list`` of string values.
-        - ``headers`` as a list: Maps values by position to the given column names; returns a ``dict``.
-        - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``dict``.
-          Use this for tables that do not start at column A.
+        - ``headers`` as a list: Maps values by position to the given column names; returns a ``DotDict``.
+        - ``headers`` as a dict ``{"Name": 2, "Age": 3}``: Uses column indices for lookup; returns a ``DotDict``.
+        Use this for tables that do not start at column A.
 
-        Returns ``[]`` if no workbook is open or the row is beyond the last row.
+        Returns ``[]`` if the row is beyond the last row.
         Any ``**kwargs`` are forwarded to the backend (e.g. ``data_only=True`` for xlsx).
 
         Arguments:
         - ``row``: Row number to read (row 1 = first row).
         - ``headers``: Optional list of column names or dict mapping column names to column numbers.
         - ``**kwargs``: Forwarded to the backend.
+
+        Returns:
+        - ``list[str]`` when ``headers`` is omitted.
+        - ``DotDict`` when ``headers`` is provided.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
@@ -193,18 +270,22 @@ class RFExcelLibrary:
         | ${row} =       | Get Row             | 2    | headers=${hmap}           |               |
         """
         resolved: HeaderSpec = headers if headers is not None else []
-        if self._active_workbook: return self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
-        return []
+        if self._active_workbook:
+            result = self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
+            return self._wrap_public_result(result)
+        else: raise WorkbookNotOpenException()
 
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
     def list_sheet_names(self) -> list[str]:
         """Returns the names of all sheets in the active workbook.
 
         Works for ``.xlsx`` and ``.xls`` formats (both edit and streaming modes).
-        Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook,
-        as CSV files do not have the concept of sheets.
 
-        Returns an empty list if no workbook is currently open.
+        Returns:
+        - ``list[str]``: Sheet names in workbook order.
+
+        Raises:
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
 
         Examples:
         | Load Workbook       | ${CURDIR}/data.xlsx  |
@@ -215,7 +296,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             return self._active_workbook.list_sheet_names()
-        return []
+        else: raise WorkbookNotOpenException()
 
     @keyword("Switch Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_sheet(self, name: str) -> None:
@@ -223,10 +304,16 @@ class RFExcelLibrary:
 
         Supported for ``.xlsx`` and ``.xls`` formats in all modes.
         Raises ``OperationNotSupportedForFormat`` when called on a CSV workbook.
-        Raises ``LibraryException`` if no workbook is currently open.
 
         Arguments:
         - ``name``: The exact name of the sheet to activate.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: If the named sheet does not exist.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |        |
@@ -237,7 +324,8 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.switch_sheet(name)
-
+        else: raise WorkbookNotOpenException()
+    
     @keyword("Add Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def add_sheet(self, name: str) -> None:
         """Adds a new sheet to the active workbook and switches to it.
@@ -248,6 +336,14 @@ class RFExcelLibrary:
         Arguments:
         - ``name``: Name of the new sheet.
 
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: For invalid/duplicate sheet operations.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |          |
         | Add Sheet      | NewSheet            |          |
@@ -256,17 +352,25 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.add_sheet(name)
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_sheet(self, name: str) -> None:
         """Deletes a sheet from the active workbook; the first remaining sheet becomes active.
 
         Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
-        Streaming mode and ``.csv`` raise ``LibraryException`` or ``OperationNotSupportedForFormat``.
-        Raises ``LibraryException`` if the sheet does not exist.
+        Streaming mode and ``.csv`` are not supported.
 
         Arguments:
         - ``name``: The exact name of the sheet to delete.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``LibraryException``: If the sheet does not exist or deletion is invalid.
 
         Examples:
         | Load Workbook      | ${CURDIR}/data.xlsx |          |
@@ -276,6 +380,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.delete_sheet(name)
+        else: raise WorkbookNotOpenException()
 
     @keyword("Save Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
     def save_workbook(self, path: str | None = None) -> None:
@@ -287,10 +392,16 @@ class RFExcelLibrary:
         Streaming / read-only mode raises ``NotSupportedInReadOnlyMode``.
         For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
         trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
-        Safe to call when no workbook is open — does nothing.
 
         Arguments:
         - ``path``: Optional destination path. Omit to save to the original path.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``OperationNotSupportedForFormat``: For unsupported save scenarios (for example untouched ``.xls``).
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
@@ -304,6 +415,7 @@ class RFExcelLibrary:
         if self._active_workbook:
             self._active_workbook.save_workbook(path=path)
             logger.info("Workbook successfully saved")
+        else: raise WorkbookNotOpenException()
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def append_row(self, row_data: dict[str, str], header_row: int = 1) -> None:
@@ -318,6 +430,12 @@ class RFExcelLibrary:
         - ``row_data``: Dict mapping column header names to cell values.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
 
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
         | Append Row    | ${{{"Product ID": "P-999", "Description": "Widget", "Price": "9.99", "Location": "Online"}}} |
@@ -328,6 +446,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.append_row(row_data=row_data, header_row=header_row)
+        else: raise WorkbookNotOpenException()
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def append_rows(self, rows: list[dict[str, str]], header_row: int = 1) -> None:
@@ -336,6 +455,12 @@ class RFExcelLibrary:
         Arguments:
         - ``rows``: List of dicts, each mapping column header names to cell values.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
@@ -346,6 +471,42 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.append_rows(rows=rows, header_row=header_row)
+        else: raise WorkbookNotOpenException()
+
+    @keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def insert_row(self, row_data: dict[str, str], row: int, header_row: int = 1) -> None:
+        """Inserts a new row at the given row index, shifting existing rows down.
+
+        ``row_data`` maps column header names to values. Keys not found in the headers
+        are silently ignored; missing columns are written as empty strings.
+        ``row`` must be greater than ``header_row``; otherwise ``RowIndexOutOfBoundsException``
+        is raised.
+        Streaming / read-only mode raises ``LibraryException``.
+        ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
+
+        Arguments:
+        - ``row_data``: Dict mapping column header names to cell values.
+        - ``row``: 1-based row index at which the new row is inserted (must be > ``header_row``).
+        - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``RowIndexOutOfBoundsException``: If ``row`` is invalid.
+        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |                                                                       |
+        | Insert Row    | ${{{"Product ID": "P-010", "Description": "New", "Price": "1.00"}}} | 2 |
+        | Save Workbook |                     |                                                                       |
+        | Load Workbook | ${CURDIR}/data.csv  |                                                                       |
+        | Insert Row    | ${{{"Product ID": "P-020", "Price": "2.00"}}}                        | 3 |
+        | Save Workbook |                     |                                                                       |
+        """
+        if self._active_workbook:
+            self._active_workbook.insert_row(row_data=row_data, row=row, header_row=header_row)
+        else: raise WorkbookNotOpenException()
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
@@ -368,6 +529,12 @@ class RFExcelLibrary:
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
         - ``first_only``: Update only the first matching row when ``True``. Defaults to ``False``.
 
+        Returns:
+        - ``int``: Number of updated rows.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
         | ${count} =     | Update Values       | ${{{'Product ID': 'P-001'}}} | ${{{'Price': '0.00', 'Location': 'Archived'}}} |
@@ -385,14 +552,14 @@ class RFExcelLibrary:
                 partial_match=partial_match,
                 first_only=first_only,
             )
-        return 0
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_rows(self,
                     search_criteria: dict[str, str] | str,
                     header_row: int = 1,
                     partial_match: bool = False,
-                    first_only: bool = False) -> int:
+                    one_row: bool = False) -> int:
         """Deletes all rows matching ``search_criteria``. Returns the count of deleted rows.
 
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
@@ -402,13 +569,19 @@ class RFExcelLibrary:
         - ``search_criteria``: Filter identifying which rows to delete — see `library description`_ for format details.
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
         - ``partial_match``: Substring matching when ``True`` — see `library description`_. Defaults to ``False``.
-        - ``first_only``: Delete only the first matching row when ``True``. Defaults to ``False``.
+        - ``one_row``: Delete only the first matching row when ``True``. Defaults to ``False``.
+
+        Returns:
+        - ``int``: Number of deleted rows.
+
+        Raises:
+        - ``LibraryException``: In read-only mode or for invalid header/search operations.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
         | ${count} =     | Delete Rows         | ${{{'Product ID': 'P-001'}}}       |                 |
         | Should Be Equal As Integers | ${count} | 1 |                            |
-        | Delete Rows    | Location=Online     | partial_match=True | first_only=True |
+        | Delete Rows    | Location=Online     | partial_match=True | one_row=True |
         | Save Workbook  |                     |                                    |                 |
         """
         if self._active_workbook:
@@ -416,22 +589,28 @@ class RFExcelLibrary:
                 search_criteria=search_criteria,
                 header_row=header_row,
                 partial_match=partial_match,
-                first_only=first_only,
+                first_only=one_row,
             )
-        return 0
+        else: raise WorkbookNotOpenException()
 
     @keyword("Delete Row")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_row(self, row_number: int) -> None:
         """Deletes the row at the given ``row_number``.
 
-        ``row_number`` row_number 1 is the first row.
+        ``row_number`` 1 is the first row.
         Raises ``RowIndexOutOfBoundsException`` if ``row_number`` is less than 1 or
         beyond the last row in the sheet.
         Streaming / read-only mode raises ``LibraryException``.
-        Safe to call when no workbook is open — does nothing.
 
         Arguments:
         - ``row_number``: 1-based row number to delete.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``RowIndexOutOfBoundsException``: If ``row_number`` is outside valid range.
+        - ``LibraryException``: In read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |   |
@@ -440,6 +619,7 @@ class RFExcelLibrary:
         """
         if self._active_workbook:
             self._active_workbook.delete_row(row_number=row_number)
+        else: raise WorkbookNotOpenException()
 
     @keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
     def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
@@ -448,12 +628,19 @@ class RFExcelLibrary:
         This is a convenience method that combines ``Close Workbook`` and
         ``Load Workbook`` into a single step. It first closes the currently
         active workbook (if any), then opens the new file specified by
-        ``source``.
+        ``path``.
 
         Arguments:
         - ``path``: Path to the new workbook to load.
         - ``read_only``: Whether to open the workbook in read-only mode. Defaults to ``False``.
         - ``**kwargs``: Additional keyword arguments passed to ``Load Workbook``.
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``FileDoesNotExistException``: If the target file does not exist.
+        - ``FileFormatNotSupportedException``: For unsupported file extension.
 
         Examples:
         | Switch Source | ${CURDIR}/data.xlsx | read_only=True |
@@ -464,12 +651,18 @@ class RFExcelLibrary:
 
     @keyword("Compare Data To")  # pyright: ignore[reportUntypedFunctionDecorator]
     def compare_data_to(self,
-                        target_path: str,
+                        target_path: str | None = None,
                         source_header_row: int = 1,
                         target_header_row: int = 1,
                         target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> list[dict[str, Any]]:
+                        headers: list[str] | None = None,
+                        fail_on_diff: bool = False) -> list[DotDict]:
         """Compares the active workbook row-by-row against a target file and returns the differences.
+
+        When ``target_path`` resolves to the same file as the active workbook, the
+        active workbook is used directly as the comparison target (in-memory state,
+        no second file load). For different files a separate read-only handle is
+        opened and closed automatically.
 
         Opens ``target_path`` in streaming (read-only) mode. The source is the currently
         active workbook. Row ``source_header_row`` / ``target_header_row`` is used as
@@ -486,11 +679,22 @@ class RFExcelLibrary:
         Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
 
         Arguments:
-        - ``target_path``: Path to the file to compare against.
+        - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparison, argument can be omitted.
         - ``source_header_row``: Header row in the source (active workbook). Defaults to ``1``.
         - ``target_header_row``: Header row in the target file. Defaults to ``1``.
         - ``target_sheet``: Sheet name in the target to compare against. Defaults to the first sheet.
         - ``headers``: List of column names to compare. Defaults to all source headers.
+        - ``fail_on_diff``: If ``True``, raises ``AssertionError`` if any differences are found. Defaults to ``False``.
+
+        Returns:
+        - ``list[DotDict]``: One item per source row with at least one compared difference.
+
+        Raises:
+        - ``FileDoesNotExistException``: If ``target_path`` is provided and file is missing.
+        - ``FileFormatNotSupportedException``: If target format is unsupported.
+        - ``HeadersNotDeterminedException``: If header rows are empty/out of range.
+        - ``NotMatchingColumns``: If required compared columns are not present in both sources.
+        - ``AssertionError``: If ``fail_on_diff=True`` and differences are found.
 
         Returns a list of dicts, one per differing source row:
         | [
@@ -509,17 +713,30 @@ class RFExcelLibrary:
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx        |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Cena", "Skladem"]} |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | target_sheet=Sheet2           |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/source.xlsx |                               |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
         """
         if self._active_workbook:
+            if target_path is None:
+                target_path_p = self._active_workbook.resource.path.resolve()
+            else:
+                target_path_p = Path(target_path).resolve()
+            same_file = (
+                target_path is None or
+                target_path_p == self._active_workbook.resource.path.resolve()
+            )
+            if same_file and not self._active_workbook.read_only:
+                target: IExcel = self._active_workbook
+            else:
+                target = self._factory.load_workbook(path=str(target_path_p), read_only=True)
 
-            target : IExcel = self._factory.load_workbook(path=target_path, read_only=True)
-
-            return self._active_workbook.compare_data_to(
+            result = self._active_workbook.compare_data_to(
                 target=target,
                 source_header_row=source_header_row,
                 target_header_row=target_header_row,
                 target_sheet=target_sheet,
                 headers=headers,
+                fail_on_diff=fail_on_diff,
             )
-        return []
+            return self._wrap_public_result(result)
+        else: raise WorkbookNotOpenException()

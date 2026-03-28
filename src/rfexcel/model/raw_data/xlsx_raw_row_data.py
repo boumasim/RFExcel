@@ -1,9 +1,9 @@
-from typing import Any, override
+from typing import Any, cast, override
 
 from openpyxl.cell.cell import Cell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import (ColumnValues, DictRowData, HeaderMap,
+from rfexcel.utils.types import (ColumnValues, DictRowData, HeaderMap,
                                  ListRowData)
 
 
@@ -21,28 +21,29 @@ class XlsxRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         if self._value_only:
-            return DictRowData({
+            return {
                 name: (
                     str(self._data[col - 1])
-                    if col - 1 < len(self._data) and self._data[col - 1] is not None
+                    if 0 < col <= len(self._data) and self._data[col - 1] is not None
                     else ""
                 )
                 for name, col in header_map.items()
-            })
+            }
         col_to_value: ColumnValues = {
             cell.column: (str(cell.value) if cell.value is not None else "")  # type: ignore[union-attr]
             for cell in self._data
             if hasattr(cell, 'column')
         }
-        return DictRowData({name: col_to_value.get(col, "") for name, col in header_map.items()})
+        return {name: col_to_value.get(col, "") for name, col in header_map.items()}
 
     @override
     def get_header_map(self) -> HeaderMap:
         if self._value_only:
+            values = cast(tuple[Any, ...], self._data)
             return {
                 str(v): i + 1
-                for i, v in enumerate(self._data)
-                if str(v).strip() != ""
+                for i, v in enumerate(values)
+                if v is not None and str(v).strip() != ""
             }
         return {
             str(cell.value): cell.column  # type: ignore[union-attr]

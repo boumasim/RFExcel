@@ -1,5 +1,9 @@
-from rfexcel.utlis.types import (DictRowData, HeaderMap, HeaderSpec,
-                                 RowInputData)
+from pathlib import Path
+
+import xlrd
+from openpyxl import Workbook
+
+from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 
 def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
@@ -44,7 +48,7 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = ';') -> DictRowData:
+def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';') -> DictRowData:
     """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
@@ -54,8 +58,8 @@ def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = '
     without ``=`` are silently ignored.
     """
     if isinstance(data, dict):
-        return DictRowData(data)
-    result: DictRowData = DictRowData()
+        return dict(data)
+    result: DictRowData = {}
     for segment in data.split(delimiter):
         segment = segment.strip()
         if '=' not in segment:
@@ -63,3 +67,28 @@ def convert_string_to_dict_row_data(data: str | RowInputData, delimiter: str = '
         key, _, value = segment.partition('=')
         result[key.strip()] = value.strip()
     return result
+
+def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
+    """
+    Converts an .xls file to a new openpyxl Workbook object.
+    """
+    xls_book = xlrd.open_workbook(str(xls_path), formatting_info=False)
+    try:
+        xlsx_book = Workbook()   
+        if xlsx_book.active:
+            xlsx_book.remove(xlsx_book.active)
+                
+        for sheet_idx in range(xls_book.nsheets):
+            xls_sheet = xls_book.sheet_by_index(sheet_idx)
+            xlsx_sheet = xlsx_book.create_sheet(title=xls_sheet.name)
+                
+            for row_idx in range(xls_sheet.nrows):
+                for col_idx in range(xls_sheet.ncols):
+                    xlsx_sheet.cell(
+                        row=row_idx + 1,
+                        column=col_idx + 1,
+                        value=xls_sheet.cell_value(row_idx, col_idx)
+                    )
+    finally:
+        xls_book.release_resources()
+    return xlsx_book

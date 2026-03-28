@@ -4,7 +4,7 @@ from typing import override
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class CsvWriter(IWriter):
@@ -13,7 +13,7 @@ class CsvWriter(IWriter):
 
     @override
     def print(self):
-        print("csv reader")
+        print("csv writer")
 
     @override
     def add_sheet(self, name: str, resource: IResource):
@@ -38,3 +38,7 @@ class CsvWriter(IWriter):
     @override
     def delete_row(self, row_index: int, resource: IResource) -> None:
         resource.delete_row(row_index)
+
+    @override
+    def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        resource.insert_row(row_index, cell_data)

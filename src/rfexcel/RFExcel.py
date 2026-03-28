@@ -1,11 +1,8 @@
 from pathlib import Path
-from typing import Any, Dict, List, Union, cast, override
+from typing import Any, List, Union, override
 
 from openpyxl import Workbook
-from robot.api import logger
-from xls2xlsx import XLS2XLSX  # pyright: ignore[reportMissingTypeStubs]
 
-from .backend.interfaces.i_library import IExcel, ISetExcel
 from rfexcel.backend.metadata.xlsx_metadata import XlsxMetadata
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
@@ -14,9 +11,12 @@ from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
     HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
-from rfexcel.utlis.utilities import (convert_string_to_dict_row_data,
+from rfexcel.utils.library_logger import logger
+from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
+                                     convert_xls_to_xlsx,
                                      headers_to_header_map, search_in_row)
 
+from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
 from .backend.metadata.null_metadata import NullMetadata
 from .backend.reader.i_reader import IReader
@@ -27,23 +27,30 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utlis.types import (ColumnValues, DictRowData, HeaderMap, HeaderSpec,
-                          ListRowData, RowInputData)
+from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
+                          HeaderMap, HeaderSpec, ListRowData, RowDifference)
 
 
 class RFExcel(IExcel, ISetExcel):
 
     def __init__(self,
+                read_only: bool,
                 writer: IWriter = NullWriter(),
                 reader: IReader = NullReader(),
                 style: IStyle = NullStyle(),
                 metadata: IMetadata = NullMetadata(),
                 resource: IResource = NullResource()):
+        self._read_only = read_only
         self._writer: IWriter = writer
         self._reader: IReader = reader
         self._style: IStyle = style
         self._metadata: IMetadata = metadata
         self._resource: IResource = resource
+
+    @property
+    @override
+    def read_only(self) -> bool:
+        return self._read_only
 
     @property
     @override
@@ -74,7 +81,7 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | RowInputData | None = None,
+                search_criteria: str | DictRowData | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -97,7 +104,7 @@ class RFExcel(IExcel, ISetExcel):
             except StopIteration:
                 break
 
-        return result if not one_row else (result[0] if result else DictRowData())
+        return result if not one_row else (result[0] if result else {})
 
     @override
     def list_sheet_names(self) -> list[str]:
@@ -121,13 +128,13 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def xls_to_xlsx(self):
         logger.info(
-            f"Converting '{self._resource.get_path.name}' from .xls to .xlsx in memory "
+            f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
-        x2x = XLS2XLSX(str(self._resource.get_path))
-        wb : Workbook = cast(Workbook, x2x.to_xlsx()) # type: ignore
+        wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
+        new_path: Path = self._resource.path.with_suffix('.xlsx')
         self._resource.close()
-        self._resource = XlsxEditResource(wb, self._resource.get_path)
+        self._resource = XlsxEditResource(wb, new_path)
         self._reader = XlsxEditReader()
         self._metadata = XlsxMetadata()
         self._writer = XlsxWriter()
@@ -146,7 +153,7 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.save(Path(path) if path else None, self._resource)
 
     @override
-    def append_row(self, row_data: RowInputData, header_row: int) -> None:
+    def append_row(self, row_data: DictRowData, header_row: int) -> None:
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
@@ -158,13 +165,29 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.append_row(cell_data, self._resource)
 
     @override
-    def append_rows(self, rows: list[RowInputData], header_row: int) -> None:
+    def append_rows(self, rows: list[DictRowData], header_row: int) -> None:
         for row_data in rows:
             self.append_row(row_data, header_row)
 
     @override
+    def insert_row(self, row_data: DictRowData, row: int, header_row: int) -> None:
+        if row <= header_row:
+            raise RowIndexOutOfBoundsException(
+                row, f"Row {row} must be greater than header_row {header_row}"
+            )
+        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
+        cell_data: ColumnValues = {
+            col: row_data[name]
+            for name, col in header_map.items()
+            if name in row_data
+        }
+        self._writer.insert_row(row, cell_data, self._resource)
+
+    @override
     def delete_rows(self,
-                    search_criteria: str | RowInputData,
+                    search_criteria: str | DictRowData,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -201,8 +224,8 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: str | RowInputData,
-                      values: str | RowInputData,
+                      search_criteria: str | DictRowData,
+                      values: str | DictRowData,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool = False) -> int:
@@ -235,10 +258,11 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def compare_data_to(self,
                         target: IExcel,
-                        source_header_row: int = 1,
-                        target_header_row: int = 1,
-                        target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+                        source_header_row: int,
+                        target_header_row: int,
+                        target_sheet: str | None,
+                        headers: list[str] | None,
+                        fail_on_diff: bool) -> list[RowDifference]:
         try:
             if target_sheet is not None:
                 target.switch_sheet(target_sheet)
@@ -258,7 +282,7 @@ class RFExcel(IExcel, ISetExcel):
                 if missing_in_source or missing_in_target:
                     raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
 
-            result: List[Dict[str, Any]] = []
+            result: list[RowDifference] = []
             source_row_index = source_header_row + 1
             target_row_index = target_header_row + 1
             target_exhausted = False
@@ -278,24 +302,28 @@ class RFExcel(IExcel, ISetExcel):
                         target_row_index += 1
                     except StopIteration:
                         target_exhausted = True
-                        target_dict = DictRowData()
+                        target_dict = {}
                 else:
-                    target_dict = DictRowData()
+                    target_dict = {}
 
-                source_values = cast(dict[str, str], source_dict)
-                target_values = cast(dict[str, str], target_dict)
-                differences: Dict[str, Any] = {
+                source_values = source_dict
+                target_values = target_dict
+                differences: ColumnDifference = {
                     h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
                     for h in compare_headers
                     if source_values.get(h, "") != target_values.get(h, "")
                 }
 
                 if differences:
+                    if fail_on_diff:
+                        raise AssertionError(
+                            f"Difference found at source_row_index {source_row_index}, target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}: {differences}"
+                        )
                     result.append({"source_row_index": source_row_index, "differences": differences})
 
                 source_row_index += 1
 
             return result
         finally:
-            target.close()
-            target.close()
+            if self is not target:
+                target.close()

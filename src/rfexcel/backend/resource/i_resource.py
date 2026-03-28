@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utlis.types import ColumnValues
+from rfexcel.utils.types import ColumnValues
 
 
 class IResource(ABC):
@@ -13,7 +13,7 @@ class IResource(ABC):
 
     @property
     @abstractmethod
-    def get_active_sheet(self) -> Any:
+    def active_sheets(self) -> Any:
         pass
 
     @property
@@ -22,7 +22,7 @@ class IResource(ABC):
         pass
 
     @property
-    def get_path(self) -> Path:
+    def path(self) -> Path:
         return self._path
 
     @abstractmethod
@@ -63,4 +63,8 @@ class IResource(ABC):
 
     @abstractmethod
     def delete_row(self, row_index: int) -> None:
+        pass
+
+    @abstractmethod
+    def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         pass

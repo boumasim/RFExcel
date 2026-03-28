@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 from rfexcel.backend.reader.i_reader import IReader
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.utlis.types import (DictRowData, HeaderSpec, ListRowData,
-                                 RowInputData)
+from rfexcel.utils.types import (DictRowData, HeaderSpec, ListRowData,
+                                 RowDifference)
 
 
 class IExcel(ABC):
+
+    @property
+    @abstractmethod
+    def read_only(self) -> bool:
+        pass
 
     @property
     @abstractmethod
@@ -34,7 +39,7 @@ class IExcel(ABC):
     @abstractmethod
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | RowInputData | None = None,
+                search_criteria: str | DictRowData | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -65,17 +70,17 @@ class IExcel(ABC):
         pass
 
     @abstractmethod
-    def append_row(self, row_data: RowInputData, header_row: int) -> None:
+    def append_row(self, row_data: DictRowData, header_row: int) -> None:
         pass
 
     @abstractmethod
-    def append_rows(self, rows: list[RowInputData], header_row: int) -> None:
+    def append_rows(self, rows: list[DictRowData], header_row: int) -> None:
         pass
 
     @abstractmethod
     def update_values(self,
-                      search_criteria: str | RowInputData,
-                      values: str | RowInputData,
+                      search_criteria: str | DictRowData,
+                      values: str | DictRowData,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool) -> int:
@@ -83,7 +88,7 @@ class IExcel(ABC):
 
     @abstractmethod
     def delete_rows(self,
-                    search_criteria: str | RowInputData,
+                    search_criteria: str | DictRowData,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool) -> int:
@@ -94,12 +99,17 @@ class IExcel(ABC):
         pass
 
     @abstractmethod
+    def insert_row(self, row_data: DictRowData, row: int, header_row: int) -> None:
+        pass
+
+    @abstractmethod
     def compare_data_to(self,
                         target: IExcel,
-                        source_header_row: int = 1,
-                        target_header_row: int = 1,
-                        target_sheet: str | None = None,
-                        headers: list[str] | None = None) -> List[Dict[str, Any]]:
+                        source_header_row: int,
+                        target_header_row: int,
+                        target_sheet: str | None,
+                        headers: list[str] | None,
+                        fail_on_diff: bool) -> list[RowDifference]:
         pass
 
 class ISetExcel(ABC):

@@ -17,6 +17,13 @@ XLS_FILE   = str(_RESOURCES / "example.xls")
 def lib() -> Generator[RFExcelLibrary, None, None]:
     library = RFExcelLibrary()
     yield library
-    if library._active_workbook:
-        library.close()
+    library.close()
+
+
+@pytest.fixture
+def loaded_xlsx() -> Generator[RFExcelLibrary, None, None]:
+    library = RFExcelLibrary()
+    library.load_workbook(XLSX_FILE)
+    yield library
+    library.close()
 
