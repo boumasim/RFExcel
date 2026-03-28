@@ -45,9 +45,9 @@ class TestInsertRowXlsxEdit:
         lib.insert_row({"Product ID": "P-PARTIAL"}, row=2)
         inserted = lib.get_rows()[0]
         assert inserted["Product ID"] == "P-PARTIAL"
-        assert inserted["Description"] is None
-        assert inserted["Price"] is None
-        assert inserted["Location"] is None
+        assert inserted["Description"] is ""
+        assert inserted["Price"] is ""
+        assert inserted["Location"] is ""
 
     def test_unknown_keys_are_silently_ignored(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))

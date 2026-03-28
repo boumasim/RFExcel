@@ -13,7 +13,7 @@ class XlsxRawRowData(IRawRowData):
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        return [cell.value for cell in self._data]
+        return [cell.value if cell.value is not None else "" for cell in self._data]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
@@ -21,7 +21,7 @@ class XlsxRawRowData(IRawRowData):
         result: DictRowData = {name: None for name in header_map}
         for cell in self._data:
             if not isinstance(cell, EmptyCell) and cell.column in wanted:
-                result[wanted[cell.column]] = cell.value
+                result[wanted[cell.column]] = cell.value if cell.value is not None else ""
         return result
 
     @override

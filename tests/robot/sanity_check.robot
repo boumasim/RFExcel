@@ -118,5 +118,6 @@ Compare xls to xslx
 
 Get Rowss    [Documentation]     Test getting rows with various header and row configurations
     Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
+    Switch Sheet    name=Sheet4
     ${rows} =   Get Rows
     Log    All rows: ${rows}
