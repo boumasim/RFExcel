@@ -209,6 +209,56 @@ class TestCompareDataToHeaderRow:
         assert lib.compare_data_to(target_path, source_header_row=2, target_header_row=2) == []
 
 
+class TestCompareDataToExtraTargetRows:
+    def test_reports_extra_rows_present_only_in_target(self, lib: RFExcelLibrary, tmp_path: Path):
+        source_path = str(tmp_path / "source.xlsx")
+        target_path = str(tmp_path / "target.xlsx")
+
+        source_wb = openpyxl.Workbook()
+        source_ws = source_wb.active
+        assert source_ws is not None
+        source_ws.append(["ID"])
+        source_ws.append(["A"])
+        source_wb.save(source_path)
+
+        target_wb = openpyxl.Workbook()
+        target_ws = target_wb.active
+        assert target_ws is not None
+        target_ws.append(["ID"])
+        target_ws.append(["A"])
+        target_ws.append(["B"])
+        target_wb.save(target_path)
+
+        lib.load_workbook(source_path)
+        result = lib.compare_data_to(target_path)
+
+        assert len(result) == 1
+        assert result[0]["differences"] == {"ID": {"source": None, "target": "B"}}
+
+    def test_fail_on_diff_raises_for_extra_target_rows(self, lib: RFExcelLibrary, tmp_path: Path):
+        source_path = str(tmp_path / "source.xlsx")
+        target_path = str(tmp_path / "target.xlsx")
+
+        source_wb = openpyxl.Workbook()
+        source_ws = source_wb.active
+        assert source_ws is not None
+        source_ws.append(["ID"])
+        source_ws.append(["A"])
+        source_wb.save(source_path)
+
+        target_wb = openpyxl.Workbook()
+        target_ws = target_wb.active
+        assert target_ws is not None
+        target_ws.append(["ID"])
+        target_ws.append(["A"])
+        target_ws.append(["B"])
+        target_wb.save(target_path)
+
+        lib.load_workbook(source_path)
+        with pytest.raises(AssertionError, match=r"target_row_index 3"):
+            lib.compare_data_to(target_path, fail_on_diff=True)
+
+
 # ---------------------------------------------------------------------------
 # negative / edge cases
 # ---------------------------------------------------------------------------

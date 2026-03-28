@@ -13,6 +13,7 @@ class XlsRawRowData(IRawRowData):
 
     @staticmethod
     def _norm(cell: Cell) -> Any:
+        """Normalize cell value, e.g. convert floats that are actually integers to int."""
         if cell.ctype == xlrd.XL_CELL_NUMBER:
             v: float = float(cell.value)
             if v.is_integer():
@@ -26,7 +27,7 @@ class XlsRawRowData(IRawRowData):
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (self._norm(self._data[col - 1]) if 0 < col <= len(self._data) else None)
+            name: (self._norm(self._data[col - 1]) if 0 < col <= len(self._data) else "")
             for name, col in header_map.items()
         }
 
@@ -35,5 +36,5 @@ class XlsRawRowData(IRawRowData):
         return {
             s: i + 1
             for i, cell in enumerate(self._data)
-            if (s := str(self._norm(cell))).strip() != ""
+            if (s := str(self._norm(cell)).strip()) != ""
         }

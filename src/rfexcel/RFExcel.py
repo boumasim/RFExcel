@@ -14,8 +14,7 @@ from rfexcel.exception.library_exceptions import (
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
-                                     headers_to_header_map,
-                                     search_in_row)
+                                     headers_to_header_map, search_in_row)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
@@ -30,6 +29,7 @@ from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
 from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
                           HeaderMap, HeaderSpec, ListRowData, RowDifference)
+
 
 class RFExcel(IExcel, ISetExcel):
 
@@ -322,6 +322,30 @@ class RFExcel(IExcel, ISetExcel):
                     result.append({"source_row_index": source_row_index, "differences": differences})
 
                 source_row_index += 1
+
+            # Report remaining target rows that do not have a matching source row.
+            while True:
+                try:
+                    target_row = target.reader.get_row(row_idx=target_row_index, resource=target.resource)
+                except StopIteration:
+                    break
+
+                target_dict = target_row.get_dict_row_data(target_header_map)
+                differences: ColumnDifference = {
+                    h: {"source": None, "target": target_dict.get(h)}
+                    for h in compare_headers
+                    if target_dict.get(h) is not None
+                }
+
+                if differences:
+                    if fail_on_diff:
+                        raise AssertionError(
+                            f"Difference found at source_row_index N/A, target_row_index {target_row_index}: {differences}"
+                        )
+                    result.append({"source_row_index": source_row_index, "differences": differences})
+
+                source_row_index += 1
+                target_row_index += 1
 
             return result
         finally:

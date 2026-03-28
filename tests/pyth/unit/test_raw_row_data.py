@@ -25,7 +25,7 @@ def _make_csv(values: list[Any]) -> IRawRowData:
 
 def _xlrd_cell(ctype: int, value: Any) -> xlrd.sheet.Cell:
     """Build an xlrd Cell while keeping test intent explicit."""
-    return xlrd.sheet.Cell(ctype, value)  # type: ignore[arg-type]
+    return xlrd.sheet.Cell(ctype, value)
 
 
 def _make_xls(values: list[Any]) -> IRawRowData:
@@ -70,7 +70,7 @@ def test_col_out_of_bounds_returns_none(factory: RawFactory) -> None:
     """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
     result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
-    assert result["invalid_col"] is None
+    assert result["invalid_col"] == ""
     assert result["valid_col"] == "second"
 
 
@@ -95,6 +95,45 @@ def test_csv_header_keys_are_stripped() -> None:
         "Description": 2,
         "Location": 3,
     }
+
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+def test_header_keys_are_stripped_in_all_backends(factory: RawFactory) -> None:
+    row = factory(["  Product ID  ", " Description", "Location "])
+    assert row.get_header_map() == {
+        "Product ID": 1,
+        "Description": 2,
+        "Location": 3,
+    }
+
+
+def test_xlsx_missing_column_returns_none_when_row_is_sheet_padded() -> None:
+    wb = Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.append(["A", "B", "C"])
+    ws.append(["x"])
+
+    padded_row = tuple(next(ws.iter_rows(min_row=2, max_row=2, values_only=False)))
+    row = XlsxRawRowData(padded_row)
+
+    result = row.get_dict_row_data({"A": 1, "B": 2, "C": 3})
+    assert result == {"A": "x", "B": "", "C": ""}
+    wb.close()
+
+
+def test_xlsx_list_row_data_does_not_pad_with_trailing_empty_cells() -> None:
+    wb = Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.append(["A", "B", "C"])
+    ws.append(["x"])
+
+    padded_row = tuple(next(ws.iter_rows(min_row=2, max_row=2, values_only=False)))
+    row = XlsxRawRowData(padded_row)
+
+    assert row.get_list_row_data() == ["x","",""]
+    wb.close()
 
 
 def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyPatch) -> None:

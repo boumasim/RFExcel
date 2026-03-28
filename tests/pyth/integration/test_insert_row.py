@@ -217,9 +217,9 @@ class TestInsertRowCsvEdit:
         lib.insert_row({"Description": "Only Desc"}, row=2)
         inserted = lib.get_rows()[0]
         assert inserted["Description"] == "Only Desc"
-        assert inserted["Product ID"] == ""   # explicitly written as "" by insert_row
-        assert inserted["Price"] is None      # column beyond written range → absent
-        assert inserted["Location"] is None   # column beyond written range → absent
+        assert inserted["Product ID"] == ""
+        assert inserted["Price"] == ""
+        assert inserted["Location"] == ""
 
     def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
@@ -233,6 +233,8 @@ class TestInsertRowCsvEdit:
         rows = lib2.get_rows()
         assert rows[0]["Product ID"] == "P-NEW"
         assert rows[0]["Description"] == "Inserted"
+        assert rows[0]["Price"] == 5.55
+        assert rows[0]["Location"] == "Depot"
         lib2.close()
 
 

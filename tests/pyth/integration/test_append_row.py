@@ -41,8 +41,8 @@ class TestAppendRowXlsxEdit:
         last = lib.get_rows()[-1]
         assert last["Product ID"] == "P-888"
         assert last["Price"] == "0.01"
-        assert last["Description"] is ""
-        assert last["Location"] is ""
+        assert last["Description"] == ""
+        assert last["Location"] == ""
 
     def test_unknown_keys_are_silently_ignored(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
@@ -181,9 +181,9 @@ class TestAppendRowCsvEdit:
         lib.append_row({"Description": "Only Desc"})
         last = lib.get_rows()[-1]
         assert last["Description"] == "Only Desc"
-        assert last["Product ID"] == ""   # explicitly written as "" by append_row
-        assert last["Price"] is None      # column beyond written range → absent
-        assert last["Location"] is None   # column beyond written range → absent
+        assert last["Product ID"] == ""
+        assert last["Price"] == ""
+        assert last["Location"] == ""
 
     def test_row_is_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
