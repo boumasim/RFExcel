@@ -128,7 +128,7 @@ def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
 @pytest.mark.parametrize(
     ("data_row", "expected"),
     [
-        (["x", None, ""], ["x"])
+        (["", "x", None, ""], ["x"])
     ],
 )
 def test_list_row_data_does_not_pad_with_trailing_empty_cells(

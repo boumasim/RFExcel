@@ -11,7 +11,11 @@ class CsvRawRowData(IRawRowData):
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        return list(map(fast_safe_number_cast, self._data))
+        return [
+            value
+            for raw in self._data
+            if (value := fast_safe_number_cast(raw)) != ""
+        ]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:

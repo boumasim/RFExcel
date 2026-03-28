@@ -1,5 +1,6 @@
-import pytest
 from typing import Any, cast
+
+import pytest
 
 from rfexcel.exception.library_exceptions import (StreamingViolationException,
                                                   WorkbookNotOpenException)
@@ -16,8 +17,8 @@ XLSX_ROW5_LIST = ["P-203", "USB Cable",                 5.99,   "OnlineP"]
 CSV_ROW2_LIST  = ["P-200", "Wireless Mouse",            25.5,     "Warehouse A, Shelf 2"]
 CSV_ROW3_LIST  = ["P-201", "Keyboard, Mechanical, RGB", 89.99,    "Store Front"]
 
-XLS_ROW2_LIST  = [1.0, "Dulce", "Abril", "Female", "United States", 32.0, "", ""]
-XLS_ROW10_LIST = [9.0, "Vincenza", "Weiland", "Female", "United States", 40.0, "", ""]
+XLS_ROW2_LIST  = [1, "Dulce", "Abril", "Female", "United States", 32]
+XLS_ROW10_LIST = [9, "Vincenza", "Weiland", "Female", "United States", 40]
 
 XLSX_ROW2_DICT = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.50,  "Location": "Warehouse A, Shelf 2"}
 XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,   "Location": "OnlineP"}
@@ -25,8 +26,8 @@ XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",            
 CSV_ROW2_DICT  = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,   "Location": "Warehouse A, Shelf 2"}
 CSV_ROW3_DICT  = {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": 89.99,  "Location": "Store Front"}
 
-XLS_ROW2_DICT  = {"Index": 1.0, "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": 32.0}
-XLS_ROW10_DICT = {"Index": 9.0, "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": 40.0}
+XLS_ROW2_DICT  = {"Index": 1, "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": 32}
+XLS_ROW10_DICT = {"Index": 9, "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": 40}
 
 # ---------------------------------------------------------------------------
 # xlsx edit mode
@@ -157,14 +158,13 @@ class TestGetRowXlsStandard:
     def test_numeric_values_are_native_floats(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         row = lib.get_row(2)
-        assert row[0] == 1.0
-        assert row[5] == 32.0
+        assert row[0] == 1
+        assert row[5] == 32
 
-    def test_trailing_empty_columns_present_in_list(self, lib: RFExcelLibrary):
+    def test_trailing_empty_columns_are_filtered_out_in_list(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         row = lib.get_row(2)
-        assert row[6] == ""
-        assert row[7] == ""
+        assert len(row) == 6
 
     def test_repeated_calls_return_same_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)

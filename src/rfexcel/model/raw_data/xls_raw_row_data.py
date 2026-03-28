@@ -22,7 +22,11 @@ class XlsRawRowData(IRawRowData):
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        return [self._norm(cell) for cell in self._data]
+        return [
+            value
+            for cell in self._data
+            if (value := self._norm(cell)) not in (None, "")
+        ]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:

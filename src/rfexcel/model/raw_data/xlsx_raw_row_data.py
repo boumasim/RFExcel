@@ -20,8 +20,10 @@ class XlsxRawRowData(IRawRowData):
     @override
     def get_list_row_data(self) -> ListRowData:
         return [
-            ("" if (value := self._raw_cell_value(self._data[index])) is None else value)
+            raw
             for index in range(len(self._data))
+            if (raw := self._raw_cell_value(self._data[index])) is not None
+            if raw != ""
         ]
 
     @override
