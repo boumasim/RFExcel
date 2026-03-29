@@ -65,7 +65,7 @@ _IDS = ["csv", "xls", "xlsx_cell_mode"]
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
-def test_col_out_of_bounds_returns_none(factory: RawFactory) -> None:
+def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
     """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
     result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})

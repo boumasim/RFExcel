@@ -18,7 +18,6 @@ class IRawRowData(ABC):
         """
         Returns the physical row as a list of natively typed values.
         
-        - Empty cells MUST be returned as `""` (never `None`).
         - Numeric strings and .0 floats MUST be safely cast to `int` or `float`.
         - Ignores empty or None values.
         """

@@ -40,9 +40,9 @@ class TestAppendRowsXlsxEdit:
         lib.append_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
         rows = lib.get_rows()
         assert rows[-2]["Product ID"] == "P-010"
-        assert rows[-2]["Description"] is ""
+        assert rows[-2]["Description"] == ""
         assert rows[-1]["Price"] == "5.00"
-        assert rows[-1]["Product ID"] is ""
+        assert rows[-1]["Product ID"] == ""
 
     def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))

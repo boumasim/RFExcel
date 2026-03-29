@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from typing import Any
 
 import xlrd
 from openpyxl import Workbook
@@ -9,20 +10,7 @@ from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 _NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
 
-# def normalize_string_cast(value: Any) -> str:
-#     """
-#     Transforms arbitrary value to string.
-#     Handles the issue where Excel returns integers as floats (100.0 -> '100').
-#     """
-#     if value is None:
-#         return ""
-    
-#     if isinstance(value, float) and value.is_integer():
-#         return str(int(value))
-        
-#     return str(value).strip()
-
-def fast_safe_number_cast(value: str) -> str | int | float:
+def safe_number_cast(value: str) -> str | int | float:
     """
     Transforms string to either float, int or keeps it as a string.
     """
@@ -34,6 +22,14 @@ def fast_safe_number_cast(value: str) -> str | int | float:
             return int(num)
         return num
     return cleaned
+
+def _normalize_for_search(value: Any) -> str:
+    """
+    Casts value to string and normalizes int type
+    """
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
 
 def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
@@ -51,9 +47,9 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
         key_str: str = str(key)
         if key_str not in source_row:
             return False
-        row_value: str = source_row[key_str]
+        row_value = source_row[key_str]
         if partial_match:
-            if criteria_value not in row_value:
+            if _normalize_for_search(criteria_value) not in _normalize_for_search(row_value):
                 return False
         else:
             if criteria_value != row_value:
@@ -93,7 +89,7 @@ def convert_string_to_dict_row_data(data: DictRowData | str, delimiter: str = ';
         if '=' not in segment:
             continue
         key, _, value = segment.partition('=')
-        value = fast_safe_number_cast(value)
+        value = safe_number_cast(value)
         result[key.strip()] = value
     return result
 

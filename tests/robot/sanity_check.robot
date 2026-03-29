@@ -48,8 +48,7 @@ Switch Source Test
 Get Rows with Search Criteria
     [Documentation]     Get rows matching search criteria and verify results
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
-    ${criteria}=    Create Dictionary    Product ID=P-201    Price=89.99
-    ${matching_rows}=    Get Rows    search_criteria=${criteria}
+    ${matching_rows}=    Get Rows    search_criteria=Product ID=P-201;Price=89.99
     Log    Matching Rows: ${matching_rows}
     Length Should Be    ${matching_rows}    1
     Should Be Equal    ${matching_rows}[0][Product ID]    P-201
@@ -116,7 +115,8 @@ Compare xls to xslx
     ${differences}=    Compare Data To    target_path=${RESOURCES}/data.xlsx  target_sheet=Sheet4  fail_on_diff=True
     Log    Differences between .xls and .xlsx: ${differences}
 
-Get Rowss    [Documentation]     Test getting rows with various header and row configurations
+Get Rowss
+    [Documentation]     Test getting rows with various header and row configurations
     Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
     Switch Sheet    name=Sheet4
     ${rows} =   Get Rows

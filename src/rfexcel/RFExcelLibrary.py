@@ -61,7 +61,7 @@ class RFExcelLibrary:
     - **Decimals/Currency:** ``float`` (e.g., ``${3.14}``)
     - **Dates/Times:** Python ``datetime`` objects
     - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
-    - **Empty Cells:** ``""`` (``${EMPTY}``)
+    - **Empty Cells:** ``""``
 
     *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
     * Search Criteria values, if provided as strings, are also casted to match the native types of the cell values for accurate matching. 
@@ -721,8 +721,8 @@ class RFExcelLibrary:
         |   {
         |     "source_row_index": 5,
         |     "differences": {
-        |       "Cena":    {"source": "100", "target": "120"},
-        |       "Skladem": {"source": "10",  "target": "8"}
+        |       "Price":    {"source": 100, "target": 120},
+        |       "In_Stock": {"source": 10,  "target": 8}
         |     }
         |   },
         |   ...
@@ -731,7 +731,7 @@ class RFExcelLibrary:
         Examples:
         | Load Workbook    | ${CURDIR}/source.xlsx |                              |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx        |
-        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Cena", "Skladem"]} |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Price", "In_Stock"]} |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | target_sheet=Sheet2           |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/source.xlsx |                               |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
