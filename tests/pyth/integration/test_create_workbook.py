@@ -14,23 +14,18 @@ from tests.pyth.conftest import CSV_FILE, XLSX_FILE
 
 class TestCreateWorkbookPositive:
 
-    def test_create_xlsx_sets_active_workbook(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "new.xlsx")
-        lib.create_workbook(path)
+    @pytest.mark.parametrize("filename", ["new.xlsx", "new.csv"], ids=["xlsx", "csv"])
+    def test_create_sets_active_workbook(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
+        lib.create_workbook(str(tmp_path / filename))
         assert lib._active_workbook is not None
 
-    def test_create_xlsx_produces_file_on_disk(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = tmp_path / "new.xlsx"
-        lib.create_workbook(str(path))
-        assert path.exists()
-
-    def test_create_csv_sets_active_workbook(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "new.csv")
-        lib.create_workbook(path)
-        assert lib._active_workbook is not None
-
-    def test_create_csv_produces_file_on_disk(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = tmp_path / "new.csv"
+    @pytest.mark.parametrize("filename", ["new.xlsx", "new.csv"], ids=["xlsx", "csv"])
+    def test_create_produces_file_on_disk(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
+        path = tmp_path / filename
         lib.create_workbook(str(path))
         assert path.exists()
 
@@ -52,34 +47,26 @@ class TestCreateWorkbookPositive:
 
 class TestCreateWorkbookNegative:
 
-    def test_create_on_existing_xlsx_raises(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "existing.xlsx")
+    @pytest.mark.parametrize("filename", ["existing.xlsx", "existing.csv"], ids=["xlsx", "csv"])
+    def test_create_on_existing_file_raises(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
+        path = str(tmp_path / filename)
         lib.create_workbook(path)
         lib.close()
         with pytest.raises(FileAlreadyExistsException):
             lib.create_workbook(path)
 
-    def test_create_on_existing_csv_raises(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "existing.csv")
-        lib.create_workbook(path)
-        lib.close()
-        with pytest.raises(FileAlreadyExistsException):
-            lib.create_workbook(path)
-
-    def test_create_xls_raises_format_not_supported(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "legacy.xls")
+    @pytest.mark.parametrize(
+        "filename",
+        ["legacy.xls", "notes.txt", "sheet.ods"],
+        ids=["xls", "txt", "ods"],
+    )
+    def test_create_unsupported_format_raises(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
         with pytest.raises(FileFormatNotSupportedException):
-            lib.create_workbook(path)
-
-    def test_create_txt_raises_format_not_supported(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "notes.txt")
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.create_workbook(path)
-
-    def test_create_ods_raises_format_not_supported(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "sheet.ods")
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.create_workbook(path)
+            lib.create_workbook(str(tmp_path / filename))
 
     def test_active_workbook_changed_after_failed_create(self, lib: RFExcelLibrary, tmp_path: Path):
         lib.load_workbook(XLSX_FILE)
@@ -99,14 +86,11 @@ class TestCreateWorkbookEdge:
         lib.create_workbook(path)
         assert Path(path).exists()
 
-    def test_created_xlsx_can_be_loaded_afterwards(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "roundtrip.xlsx")
-        lib.create_workbook(path)
-        lib.load_workbook(path)
-        assert lib._active_workbook is not None
-
-    def test_created_csv_can_be_loaded_afterwards(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "roundtrip.csv")
+    @pytest.mark.parametrize("filename", ["roundtrip.xlsx", "roundtrip.csv"], ids=["xlsx", "csv"])
+    def test_created_file_can_be_loaded_afterwards(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
+        path = str(tmp_path / filename)
         lib.create_workbook(path)
         lib.load_workbook(path)
         assert lib._active_workbook is not None

@@ -148,3 +148,25 @@ def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyP
 
     assert result == []
     assert messages == ["No row data values were returned"]
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+@pytest.mark.parametrize(
+    ("bool_value", "expected"),
+    [
+        (True,  True),
+        (False, False),
+    ],
+    ids=["bool_true", "bool_false"],
+)
+def test_boolean_get_list_row_data_returns_bool_not_int(
+    factory: RawFactory, bool_value: bool, expected: bool
+) -> None:
+    """
+    Every backend must produce a strict bool from get_list_row_data()
+    """
+    row = factory([bool_value])
+    result = row.get_list_row_data()
+    assert result == [expected]
+    assert type(result[0]) is bool, (
+        f"Expected bool, got {type(result[0]).__name__}({result[0]!r})"
+    )

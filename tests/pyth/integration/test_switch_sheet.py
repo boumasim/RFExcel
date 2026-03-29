@@ -1,5 +1,6 @@
-import pytest
 from typing import Any, cast
+
+import pytest
 
 from rfexcel.exception.library_exceptions import (
     OperationNotSupportedForFormat, SheetDoesNotExistException)
@@ -17,33 +18,40 @@ XLS_SHEET2_HEADERS = ["Index", "Date", "Id"]
 
 
 # ---------------------------------------------------------------------------
-# xlsx edit
+# xlsx – shared across edit and stream modes
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_xlsx_default_sheet_is_first_sheet(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLSX_FILE, read_only=read_only)
+    assert lib.get_rows()[0] == XLSX_SHEET1_FIRST_ROW
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_xlsx_switch_to_sheet2_changes_data(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLSX_FILE, read_only=read_only)
+    lib.switch_sheet("Sheet2")
+    assert lib.get_rows()[0] == XLSX_SHEET2_FIRST_ROW
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_xlsx_switch_to_sheet2_correct_row_count(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLSX_FILE, read_only=read_only)
+    lib.switch_sheet("Sheet2")
+    assert len(lib.get_rows()) == 4
+
+
+# ---------------------------------------------------------------------------
+# xlsx edit – unique tests
 # ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsxEdit:
-
-    def test_default_sheet_is_first_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET1_FIRST_ROW
-
-    def test_switch_to_sheet2_changes_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_sheet("Sheet2")
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET2_FIRST_ROW
-
-    def test_switch_to_sheet2_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_sheet("Sheet2")
-        assert len(lib.get_rows()) == 4
 
     def test_switch_back_to_sheet1_restores_data(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.switch_sheet("Sheet2")
         lib.switch_sheet("List 1")
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET1_FIRST_ROW
+        assert lib.get_rows()[0] == XLSX_SHEET1_FIRST_ROW
 
     def test_switch_does_not_affect_sheet_list(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -52,76 +60,67 @@ class TestSwitchSheetXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# xlsx stream
+# xlsx stream – unique tests
 # ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsxStream:
-
-    def test_default_sheet_is_first_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET1_FIRST_ROW
-
-    def test_switch_to_sheet2_changes_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.switch_sheet("Sheet2")
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET2_FIRST_ROW
-
-    def test_switch_to_sheet2_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.switch_sheet("Sheet2")
-        assert len(lib.get_rows()) == 4
 
     def test_switch_resets_stream_position(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         lib.get_rows()
         lib.switch_sheet("Sheet2")
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET2_FIRST_ROW
+        assert lib.get_rows()[0] == XLSX_SHEET2_FIRST_ROW
 
     def test_switch_back_to_sheet1_resets_stream(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         lib.switch_sheet("Sheet2")
         lib.switch_sheet("List 1")
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_SHEET1_FIRST_ROW
+        assert lib.get_rows()[0] == XLSX_SHEET1_FIRST_ROW
 
 
 # ---------------------------------------------------------------------------
-# xls edit
+# xls – shared across edit and on-demand modes
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xls_edit", "xls_on_demand"])
+def test_xls_default_sheet_is_first_sheet(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLS_FILE, read_only=read_only)
+    assert lib.get_rows()[0] == XLS_SHEET1_FIRST_ROW
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xls_edit", "xls_on_demand"])
+def test_xls_switch_to_second_changes_data(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLS_FILE, read_only=read_only)
+    lib.switch_sheet("Second")
+    assert lib.get_rows()[0] == XLS_SHEET2_FIRST_ROW
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xls_edit", "xls_on_demand"])
+def test_xls_switch_to_second_correct_row_count(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLS_FILE, read_only=read_only)
+    lib.switch_sheet("Second")
+    assert len(lib.get_rows()) == 9
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xls_edit", "xls_on_demand"])
+def test_xls_switch_back_to_first_restores_data(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(XLS_FILE, read_only=read_only)
+    lib.switch_sheet("Second")
+    lib.switch_sheet("First")
+    assert lib.get_rows()[0] == XLS_SHEET1_FIRST_ROW
+
+
+# ---------------------------------------------------------------------------
+# xls edit – unique tests
 # ---------------------------------------------------------------------------
 
 class TestSwitchSheetXlsEdit:
-
-    def test_default_sheet_is_first_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET1_FIRST_ROW
-
-    def test_switch_to_second_changes_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.switch_sheet("Second")
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET2_FIRST_ROW
-
-    def test_switch_to_second_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.switch_sheet("Second")
-        assert len(lib.get_rows()) == 9
 
     def test_switch_to_second_correct_headers(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         lib.switch_sheet("Second")
         rows = lib.get_rows()
         assert list(cast(dict[str, Any], rows[0]).keys()) == XLS_SHEET2_HEADERS
-
-    def test_switch_back_to_first_restores_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.switch_sheet("Second")
-        lib.switch_sheet("First")
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET1_FIRST_ROW
 
     def test_default_sheet_headers(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -130,37 +129,7 @@ class TestSwitchSheetXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# xls on demand
-# ---------------------------------------------------------------------------
-
-class TestSwitchSheetXlsOnDemand:
-
-    def test_default_sheet_is_first_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET1_FIRST_ROW
-
-    def test_switch_to_second_changes_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        lib.switch_sheet("Second")
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET2_FIRST_ROW
-
-    def test_switch_to_second_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        lib.switch_sheet("Second")
-        assert len(lib.get_rows()) == 9
-
-    def test_switch_back_to_first_restores_data(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        lib.switch_sheet("Second")
-        lib.switch_sheet("First")
-        rows = lib.get_rows()
-        assert rows[0] == XLS_SHEET1_FIRST_ROW
-
-
-# ---------------------------------------------------------------------------
-# csv edit
+# csv
 # ---------------------------------------------------------------------------
 
 class TestSwitchSheetCsv:
@@ -187,43 +156,20 @@ class TestSwitchSheetCsv:
 
 class TestSwitchSheetNegative:
 
-    def test_switch_to_nonexistent_sheet_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(SheetDoesNotExistException):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xlsx_message(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xlsx_stream_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(SheetDoesNotExistException):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xlsx_stream_message(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xls_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        with pytest.raises(SheetDoesNotExistException):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xls_message(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xls_on_demand_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(SheetDoesNotExistException):
-            lib.switch_sheet("DoesNotExist")
-
-    def test_switch_to_nonexistent_sheet_xls_on_demand_message(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
+    @pytest.mark.parametrize(
+        ("path", "read_only"),
+        [
+            (XLSX_FILE, False),
+            (XLSX_FILE, True),
+            (XLS_FILE,  False),
+            (XLS_FILE,  True),
+        ],
+        ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand"],
+    )
+    def test_switch_to_nonexistent_sheet_raises(
+        self, lib: RFExcelLibrary, path: str, read_only: bool
+    ):
+        lib.load_workbook(path, read_only=read_only)
         with pytest.raises(SheetDoesNotExistException, match="DoesNotExist"):
             lib.switch_sheet("DoesNotExist")
 

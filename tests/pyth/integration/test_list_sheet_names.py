@@ -10,87 +10,54 @@ XLS_SHEET_NAMES  = ["First", "Second"]
 
 
 # ---------------------------------------------------------------------------
-# XLSX edit
+# XLSX and XLS – all modes
 # ---------------------------------------------------------------------------
 
-class TestListSheetNamesXlsxEdit:
-
-    def test_returns_correct_sheet_names(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.list_sheet_names() == XLSX_SHEET_NAMES
-
-    def test_returns_list_type(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert isinstance(lib.list_sheet_names(), list)
-
-
-# ---------------------------------------------------------------------------
-# XLSX stream
-# ---------------------------------------------------------------------------
-
-class TestListSheetNamesXlsxStream:
-
-    def test_returns_correct_sheet_names(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert lib.list_sheet_names() == XLSX_SHEET_NAMES
-
-    def test_returns_list_type(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert isinstance(lib.list_sheet_names(), list)
+@pytest.mark.parametrize(
+    ("path", "read_only", "expected"),
+    [
+        (XLSX_FILE, False, XLSX_SHEET_NAMES),
+        (XLSX_FILE, True,  XLSX_SHEET_NAMES),
+        (XLS_FILE,  False, XLS_SHEET_NAMES),
+        (XLS_FILE,  True,  XLS_SHEET_NAMES),
+    ],
+    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand"],
+)
+def test_returns_correct_sheet_names(
+    lib: RFExcelLibrary, path: str, read_only: bool, expected: list[str]
+):
+    lib.load_workbook(path, read_only=read_only)
+    assert lib.list_sheet_names() == expected
 
 
-# ---------------------------------------------------------------------------
-# XLS edit
-# ---------------------------------------------------------------------------
-
-class TestListSheetNamesXlsEdit:
-
-    def test_returns_correct_sheet_names(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.list_sheet_names() == XLS_SHEET_NAMES
-
-    def test_returns_list_type(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert isinstance(lib.list_sheet_names(), list)
+@pytest.mark.parametrize(
+    ("path", "read_only"),
+    [
+        (XLSX_FILE, False),
+        (XLSX_FILE, True),
+        (XLS_FILE,  False),
+        (XLS_FILE,  True),
+    ],
+    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand"],
+)
+def test_returns_list_type(lib: RFExcelLibrary, path: str, read_only: bool):
+    lib.load_workbook(path, read_only=read_only)
+    assert isinstance(lib.list_sheet_names(), list)
 
 
 # ---------------------------------------------------------------------------
-# XLS stream / on demand
+# CSV – raises for both modes
 # ---------------------------------------------------------------------------
 
-class TestListSheetNamesXlsOnDemand:
-
-    def test_returns_correct_sheet_names(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert lib.list_sheet_names() == XLS_SHEET_NAMES
-
-    def test_returns_list_type(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert isinstance(lib.list_sheet_names(), list)
-
-
-# ---------------------------------------------------------------------------
-# CSV – edit
-# ---------------------------------------------------------------------------
-
-class TestListSheetNamesCsvEdit:
-
-    def test_raises_operation_not_supported(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        with pytest.raises(OperationNotSupportedForFormat):
-            lib.list_sheet_names()
-
-
-# ---------------------------------------------------------------------------
-# CSV – stream
-# ---------------------------------------------------------------------------
-
-class TestListSheetNamesCsvStream:
-
-    def test_raises_operation_not_supported(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(OperationNotSupportedForFormat):
-            lib.list_sheet_names()
+@pytest.mark.parametrize(
+    "read_only",
+    [False, True],
+    ids=["csv_edit", "csv_stream"],
+)
+def test_csv_raises_operation_not_supported(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(CSV_FILE, read_only=read_only)
+    with pytest.raises(OperationNotSupportedForFormat):
+        lib.list_sheet_names()
 
 
 # ---------------------------------------------------------------------------

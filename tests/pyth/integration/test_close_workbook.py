@@ -1,4 +1,5 @@
 from pathlib import Path
+
 import pytest
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
@@ -11,38 +12,34 @@ from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 class TestCloseWorkbookPositive:
 
-    def test_close_after_load_xlsx_makes_workbook_inaccessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
+    @pytest.mark.parametrize(
+        ("path", "read_only"),
+        [
+            (XLSX_FILE, False),
+            (XLSX_FILE, True),
+            (XLS_FILE,  False),
+            (CSV_FILE,  False),
+            (CSV_FILE,  True),
+        ],
+        ids=["xlsx_edit", "xlsx_stream", "xls_edit", "csv_edit", "csv_stream"],
+    )
+    def test_close_after_load_makes_workbook_inaccessible(
+        self, lib: RFExcelLibrary, path: str, read_only: bool
+    ):
+        lib.load_workbook(path, read_only=read_only)
         lib.close()
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows()
 
-    def test_close_after_load_xlsx_stream_makes_workbook_inaccessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
-
-    def test_close_after_load_xls_makes_workbook_inaccessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
-
-    def test_close_after_load_csv_makes_workbook_inaccessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
-
-    def test_close_after_create_xlsx_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path: Path):
-        lib.create_workbook(str(tmp_path / "new.xlsx"))
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
-
-    def test_close_after_create_csv_makes_workbook_inaccessible(self, lib: RFExcelLibrary, tmp_path: Path):
-        lib.create_workbook(str(tmp_path / "new.csv"))
+    @pytest.mark.parametrize(
+        "filename",
+        ["new.xlsx", "new.csv"],
+        ids=["xlsx", "csv"],
+    )
+    def test_close_after_create_makes_workbook_inaccessible(
+        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
+    ):
+        lib.create_workbook(str(tmp_path / filename))
         lib.close()
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows()
@@ -77,12 +74,6 @@ class TestCloseWorkbookEdge:
     def test_listener_closes_workbook_automatically(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         lib.end_test("some test", {})
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
-
-    def test_close_csv_stream_makes_workbook_inaccessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.close()
         with pytest.raises(WorkbookNotOpenException):
             lib.get_rows()
 

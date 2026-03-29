@@ -1,5 +1,5 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -68,15 +68,22 @@ class TestDeleteRowXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestDeleteRowXlsxStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_row(2)
+@pytest.mark.parametrize(
+    ("path", "read_only"),
+    [
+        (XLSX_FILE, True),
+        (XLS_FILE,  True),
+        (CSV_FILE,  True),
+    ],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_raises_in_read_only_mode(lib: RFExcelLibrary, path: str, read_only: bool):
+    lib.load_workbook(path, read_only=read_only)
+    with pytest.raises(NullComponentException):
+        lib.delete_row(2)
 
 
 # ---------------------------------------------------------------------------
@@ -91,18 +98,6 @@ class TestDeleteRowXlsEdit:
         lib.delete_row(2)
         rows = lib.get_rows()
         assert len(rows) == before - 1
-
-
-# ---------------------------------------------------------------------------
-# XLS – On-demand (streaming) mode
-# ---------------------------------------------------------------------------
-
-class TestDeleteRowXlsOnDemand:
-
-    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_row(2)
 
 
 # ---------------------------------------------------------------------------
@@ -129,18 +124,6 @@ class TestDeleteRowCsvEdit:
         lib.load_workbook(path)
         with pytest.raises(RowIndexOutOfBoundsException):
             lib.delete_row(9999)
-
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestDeleteRowCsvStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_row(2)
 
 
 # ---------------------------------------------------------------------------
