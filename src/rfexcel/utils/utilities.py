@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Any
 
 import xlrd
 from openpyxl import Workbook
@@ -23,14 +22,6 @@ def safe_number_cast(value: str) -> str | int | float:
         return num
     return cleaned
 
-def _normalize_for_search(value: Any) -> str:
-    """
-    Casts value to string and normalizes int type
-    """
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value)
-
 def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
 
@@ -46,7 +37,7 @@ def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], part
     for key, criteria_value in search_criteria.items():
         if key not in source_row:
             return False
-        row_value_str = _normalize_for_search(source_row[key])
+        row_value_str = str(source_row[key])
         if partial_match:
             if criteria_value not in row_value_str:
                 return False
@@ -72,7 +63,7 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
 
 
 def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str = ';') -> dict[str, str]:
-    """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
+    """Converts a string like ``animal=cat;person=Ted`` into a dict[str, str].
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
     before the first ``=`` is the key; everything after is the value. This
