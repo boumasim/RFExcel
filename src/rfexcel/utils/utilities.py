@@ -31,7 +31,7 @@ def _normalize_for_search(value: Any) -> str:
         return str(int(value))
     return str(value)
 
-def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
+def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
 
     Each key-value pair in search_criteria is one rule. A rule matches when:
@@ -44,15 +44,14 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
     An empty search_criteria always returns True.
     """
     for key, criteria_value in search_criteria.items():
-        key_str: str = str(key)
-        if key_str not in source_row:
+        if key not in source_row:
             return False
-        row_value = source_row[key_str]
+        row_value_str = _normalize_for_search(source_row[key])
         if partial_match:
-            if _normalize_for_search(criteria_value) not in _normalize_for_search(row_value):
+            if criteria_value not in row_value_str:
                 return False
         else:
-            if criteria_value != row_value:
+            if criteria_value != row_value_str:
                 return False
     return True
 
@@ -72,7 +71,7 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: DictRowData | str, delimiter: str = ';') -> DictRowData:
+def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str = ';') -> dict[str, str]:
     """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
@@ -83,13 +82,13 @@ def convert_string_to_dict_row_data(data: DictRowData | str, delimiter: str = ';
     """
     if isinstance(data, dict):
         return dict(data)
-    result: DictRowData = {}
+    result: dict[str, str] = {}
     for segment in data.split(delimiter):
         segment = segment.strip()
         if '=' not in segment:
             continue
         key, _, value = segment.partition('=')
-        value = safe_number_cast(value)
+        value = value
         result[key.strip()] = value
     return result
 

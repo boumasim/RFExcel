@@ -34,6 +34,8 @@ class RFExcelLibrary:
 
     = Search Criteria & Partial Matching =
 
+    Search Criteria in both modes compares by string, even though library returns implicit types. More on that in Data Types section bellow.
+
     Keywords that filter or target rows accept a ``search_criteria`` argument.
     It can be supplied as:
     - A ``dict``: ``{"Product ID": "P-200", "Price": "25.50"}``
@@ -64,10 +66,7 @@ class RFExcelLibrary:
     - **Empty Cells:** ``""``
 
     *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
-    * Search Criteria values, if provided as strings, are also casted to match the native types of the cell values for accurate matching. 
-      For example, a search criterion of ``Price=25.50`` will match a cell containing the float value 25.5
-      If provided as dict, values are compared with the types they are provided from the library user.
-
+    *Search Criteria - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings.
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -180,7 +179,7 @@ class RFExcelLibrary:
     @overload
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, Any] | str | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 one_row: Literal[False] = False,
                 **kwargs: Any) -> list[DotDict]:
@@ -189,7 +188,7 @@ class RFExcelLibrary:
     @overload
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, Any] | str | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 *,
                 one_row: Literal[True],
@@ -199,7 +198,7 @@ class RFExcelLibrary:
     @keyword("Get Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def get_rows(self,
                 header_row: int = 1,
-                search_criteria: dict[str, Any] | str | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> list[DotDict] | DotDict:
@@ -438,7 +437,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_row(self, row_data: dict[str, str], header_row: int = 1) -> None:
+    def append_row(self, row_data: dict[str, Any], header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
@@ -469,7 +468,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_rows(self, rows: list[dict[str, str]], header_row: int = 1) -> None:
+    def append_rows(self, rows: list[dict[str, Any]], header_row: int = 1) -> None:
         """Appends multiple rows to the end of the active sheet. Same rules as ``Append Row``.
 
         Arguments:
@@ -530,8 +529,8 @@ class RFExcelLibrary:
 
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
-                      search_criteria: dict[str, Any] | str,
-                      values: dict[str, str] | str,
+                      search_criteria: dict[str, str] | str,
+                      values: dict[str, Any],
                       header_row: int = 1,
                       partial_match: bool = False,
                       first_only: bool = False) -> int:
@@ -576,7 +575,7 @@ class RFExcelLibrary:
 
     @keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
     def delete_rows(self,
-                    search_criteria: dict[str, Any] | str,
+                    search_criteria: dict[str, str] | str,
                     header_row: int = 1,
                     partial_match: bool = False,
                     one_row: bool = False) -> int:

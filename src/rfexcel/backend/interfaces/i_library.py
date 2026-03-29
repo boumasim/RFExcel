@@ -39,7 +39,7 @@ class IExcel(ABC):
     @abstractmethod
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | DictRowData | None = None,
+                search_criteria: str | dict[str, str] | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -79,8 +79,8 @@ class IExcel(ABC):
 
     @abstractmethod
     def update_values(self,
-                      search_criteria: str | DictRowData,
-                      values: str | DictRowData,
+                      search_criteria: str | dict[str, str],
+                      values: DictRowData,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool) -> int:
@@ -88,7 +88,7 @@ class IExcel(ABC):
 
     @abstractmethod
     def delete_rows(self,
-                    search_criteria: str | DictRowData,
+                    search_criteria: str | dict[str, str],
                     header_row: int,
                     partial_match: bool,
                     first_only: bool) -> int:

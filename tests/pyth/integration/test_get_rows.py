@@ -307,20 +307,20 @@ class TestGetRowsSearchCriteria:
 
     def test_and_logic_two_criteria_narrows_result_to_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": 150})
+        rows = lib.get_rows(search_criteria={"Product ID": "P-202", "Price": "150"})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-202"
 
     def test_exact_match_accepts_non_string_value_in_dict_criteria(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Price": 150})
+        rows = lib.get_rows(search_criteria={"Price": "150"})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-202"
 
     def test_dict_search_criteria_float_matches_native_xlsx_type(self, lib: RFExcelLibrary):
         """Search with float 25.5 matches XLSX native float type."""
         lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Price": 25.5})
+        rows = lib.get_rows(search_criteria={"Price": "25.5"})
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
 

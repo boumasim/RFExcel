@@ -81,7 +81,7 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: DictRowData | str | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -187,7 +187,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_rows(self,
-                    search_criteria: DictRowData | str,
+                    search_criteria: dict[str, str] | str,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -224,8 +224,8 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: DictRowData | str,
-                      values: str | DictRowData,
+                      search_criteria: dict[str, str] | str,
+                      values: DictRowData,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool = False) -> int:

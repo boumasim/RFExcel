@@ -69,7 +69,7 @@ class TestDeleteRowsXlsxEdit:
     def test_dict_search_criteria_numeric_value_matches_native_type(self, lib: RFExcelLibrary):
         """Delete with numeric value matches XLSX native int type."""
         lib.load_workbook(XLSX_FILE)
-        count = lib.delete_rows(search_criteria={"Price": 150})
+        count = lib.delete_rows(search_criteria={"Price": "150"})
         assert count == 1
         rows = cast(list[dict[str, Any]], lib.get_rows())
         assert all(r["Product ID"] != "P-202" for r in rows)

@@ -117,7 +117,7 @@ class TestUpdateValuesXlsxEdit:
         """Search with numeric value matches XLSX native int type."""
         lib.load_workbook(XLSX_FILE)
         count = lib.update_values(
-            search_criteria={"Price": 150},
+            search_criteria={"Price": "150"},
             values={"Location": "Updated"},
             header_row=_XLSX_HEADER_ROW,
         )
