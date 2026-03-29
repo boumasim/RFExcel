@@ -5,10 +5,11 @@ import pytest
 
 from rfexcel.exception.library_exceptions import NullComponentException
 from rfexcel.RFExcelLibrary import RFExcelLibrary
+from rfexcel.utils.types import InsertDictType
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
-_ROW_A = {"Product ID": "P-001", "Description": "Alpha", "Price": "1.00", "Location": "Shelf-A"}
-_ROW_B = {"Product ID": "P-002", "Description": "Beta",  "Price": "2.00", "Location": "Shelf-B"}
+_ROW_A = {"Product ID": "P-001", "Description": "Alpha", "Price": 1.00, "Location": "Shelf-A"}
+_ROW_B = {"Product ID": "P-002", "Description": "Beta",  "Price": 2.00, "Location": "Shelf-B"}
 
 
 # ---------------------------------------------------------------------------
@@ -37,11 +38,11 @@ class TestAppendRowsXlsxEdit:
     def test_partial_rows_fill_missing_with_empty_string(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
         lib.load_workbook(path)
-        lib.append_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
+        lib.append_rows([{"Product ID": "P-010"}, {"Price": 5.00}])
         rows = lib.get_rows()
         assert rows[-2]["Product ID"] == "P-010"
         assert rows[-2]["Description"] == ""
-        assert rows[-1]["Price"] == "5.00"
+        assert rows[-1]["Price"] == 5.00
         assert rows[-1]["Product ID"] == ""
 
     def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
@@ -77,10 +78,10 @@ class TestAppendRowsXlsxStream:
 
 class TestAppendRowsXlsEdit:
 
-    _XLS_ROW_A = {"Index": "99", "First Name": "Alice", "Last Name": "Smith",
-                  "Gender": "Female", "Country": "Czech Republic", "Age": "30"}
-    _XLS_ROW_B = {"Index": "100", "First Name": "Bob", "Last Name": "Jones",
-                  "Gender": "Male", "Country": "Slovakia", "Age": "25"}
+    _XLS_ROW_A : InsertDictType = {"Index": 99, "First Name": "Alice", "Last Name": "Smith",
+                  "Gender": "Female", "Country": "Czech Republic", "Age": 30}
+    _XLS_ROW_B : InsertDictType = {"Index": 100, "First Name": "Bob", "Last Name": "Jones",
+                  "Gender": "Male", "Country": "Slovakia", "Age": 25}
 
     def test_rows_appended_after_lazy_conversion(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
@@ -89,8 +90,8 @@ class TestAppendRowsXlsEdit:
         lib.append_rows([self._XLS_ROW_A, self._XLS_ROW_B])
         rows = lib.get_rows()
         assert len(rows) == before + 2
-        assert rows[-2]["Index"] == "99"
-        assert rows[-1]["Index"] == "100"
+        assert rows[-2]["Index"] == 99
+        assert rows[-1]["Index"] == 100
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +103,7 @@ class TestAppendRowsXlsOnDemand:
     def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         with pytest.raises(NullComponentException):
-            lib.append_rows([{"Index": "99", "First Name": "Alice"}])
+            lib.append_rows([{"Index": 99, "First Name": "Alice"}])
 
 
 # ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ from robot.utils import DotDict  # type: ignore
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.utils.library_logger import logger as library_logger
-from rfexcel.utils.types import HeaderSpec
+from rfexcel.utils.types import HeaderSpec, InsertNativeType
 
 from .backend.interfaces.i_library import IExcel
 
@@ -34,7 +34,7 @@ class RFExcelLibrary:
 
     = Search Criteria & Partial Matching =
 
-    Search Criteria in both modes compares by string, even though library returns implicit types. More on that in Data Types section bellow.
+    Search Criteria in both modes compares by string, even though library returns implicit types. READ MORE on that in Data Types section bellow.
 
     Keywords that filter or target rows accept a ``search_criteria`` argument.
     It can be supplied as:
@@ -55,7 +55,7 @@ class RFExcelLibrary:
     = Data Types =
 
     To provide the most accurate test data possible, this library does not force all cell values into strings. It preserves the native data types exactly as they are parsed by the underlying engines (``openpyxl``, ``xlrd``, ``csv``).
-    * For xls, floats like 5.00 are implicitly cast to int.
+    * For xls, xlrd library returns ints as floats, so floats like 5.00 are implicitly cast to int by this library
 
     When reading rows, cell values will be returned as native Python objects. Depending on the cell format in your Excel file, expect the following Robot Framework equivalents:
     - **Text/General:** ``string``
@@ -66,7 +66,11 @@ class RFExcelLibrary:
     - **Empty Cells:** ``""``
 
     *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
-    *Search Criteria - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings.
+    *Search Criteria - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings. Normalization does not happen for python types
+                       Returned rows have native python types.
+
+    Library types used in public api:
+    - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool, datetime, timedelta, None).
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -437,7 +441,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_row(self, row_data: dict[str, Any], header_row: int = 1) -> None:
+    def append_row(self, row_data: dict[str, InsertNativeType], header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
@@ -468,7 +472,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_rows(self, rows: list[dict[str, Any]], header_row: int = 1) -> None:
+    def append_rows(self, rows: list[dict[str, InsertNativeType]], header_row: int = 1) -> None:
         """Appends multiple rows to the end of the active sheet. Same rules as ``Append Row``.
 
         Arguments:
@@ -493,7 +497,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def insert_row(self, row_data: dict[str, str], row: int, header_row: int = 1) -> None:
+    def insert_row(self, row_data: dict[str, InsertNativeType], row: int, header_row: int = 1) -> None:
         """Inserts a new row at the given row index, shifting existing rows down.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
@@ -530,7 +534,7 @@ class RFExcelLibrary:
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
                       search_criteria: dict[str, str] | str,
-                      values: dict[str, Any],
+                      values: dict[str, InsertNativeType],
                       header_row: int = 1,
                       partial_match: bool = False,
                       first_only: bool = False) -> int:
@@ -676,7 +680,7 @@ class RFExcelLibrary:
                         target_sheet: str | None = None,
                         headers: list[str] | None = None,
                         fail_on_diff: bool = False) -> list[DotDict]:
-        """Compares the active workbook row-by-row against a target file and returns the differences.
+        """Compares the active workbook row-by-row against a target file on native-type and returns the differences.
 
         When ``target_path`` resolves to the same file as the active workbook, the
         active workbook is used directly as the comparison target (in-memory state,

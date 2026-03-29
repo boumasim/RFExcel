@@ -18,6 +18,8 @@ class XlsRawRowData(IRawRowData):
             v: float = float(cell.value)
             if v.is_integer():
                 return int(v)
+        elif cell.ctype == xlrd.XL_CELL_BOOLEAN:
+            return bool(cell.value)
         return cell.value
 
     @override

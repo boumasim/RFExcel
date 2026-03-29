@@ -92,7 +92,7 @@ def test_safe_number_cast_type(value: str, expected_type: type) -> None:
 
         ({"count": 42}, {"count": "42"}, False, True),
         # source_row treated as string, not normalized
-        ({"count": 42}, {"count": "2"}, True, False),
+        ({"count": 42}, {"count": "2"}, True, True),
         # source_row treated as string, not normalized
         ({"count": 1.0}, {"count": "1.0"}, False, True),
     ],

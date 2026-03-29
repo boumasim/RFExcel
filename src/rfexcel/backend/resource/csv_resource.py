@@ -77,7 +77,7 @@ class CsvEditResource(IResource):
             return
         max_col = max(cell_data.keys())
         row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
-        self._all_rows.append(row)
+        self._all_rows.append([str(cell) for cell in row])
 
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
@@ -89,7 +89,7 @@ class CsvEditResource(IResource):
             col_index = col - 1
             while len(row) <= col_index:
                 row.append("")
-            row[col_index] = value
+            row[col_index] = str(value)
 
     @override
     def delete_row(self, row_index: int) -> None:
@@ -104,7 +104,7 @@ class CsvEditResource(IResource):
             row: list[str] = []
         else:
             max_col = max(cell_data.keys())
-            row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
+            row = [str(cell_data.get(i, "")) for i in range(1, max_col + 1)]
         self._all_rows.insert(list_index, row)
 
     @override

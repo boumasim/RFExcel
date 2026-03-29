@@ -12,7 +12,7 @@ from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
 
 _HEADERS = ["Product ID", "Description", "Price", "Location"]
-_NEW_ROW = {"Product ID": "P-NEW", "Description": "Inserted", "Price": "5.55", "Location": "Depot"}
+_NEW_ROW = {"Product ID": "P-NEW", "Description": "Inserted", "Price": 5.55, "Location": "Depot"}
 
 
 # ---------------------------------------------------------------------------
@@ -33,7 +33,7 @@ class TestInsertRowXlsxEdit:
         assert len(rows_after) == len(rows_before) + 1
         assert rows_after[0]["Product ID"] == "P-NEW"
         assert rows_after[0]["Description"] == "Inserted"
-        assert rows_after[0]["Price"] == "5.55"
+        assert rows_after[0]["Price"] == 5.55
         assert rows_after[0]["Location"] == "Depot"
         assert rows_after[1]["Product ID"] == first_row_before
 
@@ -90,16 +90,16 @@ class TestInsertRowXlsxEdit:
         assert ws is not None
         ws.append(["filler"])
         ws.append(["Name", "Score"])
-        ws.append(["Alice", "90"])
-        ws.append(["Bob", "80"])
+        ws.append(["Alice", 90])
+        ws.append(["Bob", 80])
         out = str(tmp_path / "custom.xlsx")
         wb.save(out)
 
         lib.load_workbook(out)
-        lib.insert_row({"Name": "Charlie", "Score": "95"}, row=3, header_row=2)
+        lib.insert_row({"Name": "Charlie", "Score": 95}, row=3, header_row=2)
         rows = lib.get_rows(header_row=2)
         assert rows[0]["Name"] == "Charlie"
-        assert rows[0]["Score"] == "95"
+        assert rows[0]["Score"] == 95
         assert rows[1]["Name"] == "Alice"
 
     def test_row_equal_to_header_row_raises(self, lib: RFExcelLibrary, tmp_path: Path):
@@ -280,11 +280,11 @@ class TestInsertRowXlsxShifted:
         ws["E1"] = "Location"
         ws["B2"] = "P-001"
         ws["C2"] = "Alpha"
-        ws["D2"] = "1.00"
+        ws["D2"] = 1.00
         ws["E2"] = "Store"
         ws["B3"] = "P-002"
         ws["C3"] = "Beta"
-        ws["D3"] = "2.00"
+        ws["D3"] = 2.00
         ws["E3"] = "Warehouse"
         path = str(tmp_path / "shifted.xlsx")
         wb.save(path)
@@ -294,7 +294,7 @@ class TestInsertRowXlsxShifted:
         path = self._make_shifted_xlsx(tmp_path)
         lib.load_workbook(path)
         lib.insert_row(
-            {"Product ID": "P-NEW", "Description": "Widget", "Price": "9.99", "Location": "Online"},
+            {"Product ID": "P-NEW", "Description": "Widget", "Price": 9.99, "Location": "Online"},
             row=2,
         )
         lib.save_workbook()
@@ -305,6 +305,6 @@ class TestInsertRowXlsxShifted:
         assert ws.cell(2, 1).value is None,    "Column A must stay empty"
         assert ws.cell(2, 2).value == "P-NEW",  "Product ID must land in col B"
         assert ws.cell(2, 3).value == "Widget", "Description must land in col C"
-        assert ws.cell(2, 4).value == "9.99",   "Price must land in col D"
+        assert ws.cell(2, 4).value == 9.99,   "Price must land in col D"
         assert ws.cell(2, 5).value == "Online", "Location must land in col E"
         assert ws.cell(3, 2).value == "P-001"
