@@ -8,10 +8,12 @@ from openpyxl.utils import coordinate_to_tuple
 from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 _NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
+_TRUE_VALUES = frozenset({"true", "True", "TRUE"})
+_FALSE_VALUES = frozenset({"false", "False", "FALSE"})
 
-def safe_number_cast(value: str) -> str | int | float:
+def safe_str_to_type_cast(value: str) -> str | int | float | bool:
     """
-    Transforms string to either float, int or keeps it as a string.
+    Transforms string to either float, int, bool or keeps it as a string.
     """
     cleaned = value.strip()
     
@@ -20,6 +22,10 @@ def safe_number_cast(value: str) -> str | int | float:
         if num.is_integer():
             return int(num)
         return num
+    if cleaned in _TRUE_VALUES:
+        return True
+    if cleaned in _FALSE_VALUES:
+        return False
     return cleaned
 
 def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool) -> bool:

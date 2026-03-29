@@ -13,13 +13,15 @@ class XlsRawRowData(IRawRowData):
 
     @staticmethod
     def _norm(cell: Cell) -> Any:
-        """Normalize cell value, e.g. convert floats that are actually integers to int."""
+        """Converts value to library friendly type"""
         if cell.ctype == xlrd.XL_CELL_NUMBER:
             v: float = float(cell.value)
             if v.is_integer():
                 return int(v)
         elif cell.ctype == xlrd.XL_CELL_BOOLEAN:
             return bool(cell.value)
+        elif cell.ctype == xlrd.XL_CELL_EMPTY or cell.ctype == xlrd.XL_CELL_BLANK or cell.ctype == xlrd.XL_CELL_ERROR:
+            return ""
         return cell.value
 
     @override

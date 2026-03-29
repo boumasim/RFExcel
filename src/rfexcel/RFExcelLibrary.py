@@ -8,7 +8,7 @@ from robot.utils import DotDict  # type: ignore
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.utils.library_logger import logger as library_logger
-from rfexcel.utils.types import HeaderSpec, InsertNativeType
+from rfexcel.utils.types import HeaderSpec, InsertNativeType, NativeType
 
 from .backend.interfaces.i_library import IExcel
 
@@ -68,11 +68,13 @@ class RFExcelLibrary:
     - *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
     - *Search Criteria* - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings. Normalization does not happen for python types
                           Returned rows have native python types.
-    - *Insertions* - All insertions that require dict[str, InsertNativeType] will indeed insert the exact type that you specify out of InsertNativeType
+    - *Insertions* - All insertion keywords that require dict[str, InsertNativeType] will indeed insert the exact type that you specify out of InsertNativeType
                      That means that value as string will try to inserted as string, int as int, respecting allowed underlying libraries used for different formats.
+    - *Booleans* - 
 
     Library types used in public api:
     - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool).
+    - ``NativeType``: The types returned by the library when reading cells (str, int, float, bool, datetime, timedelta). Note that for xls, xlrd returns ints as floats, so floats like 5.00 are implicitly cast to int by this library.
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
@@ -258,13 +260,13 @@ class RFExcelLibrary:
             raise WorkbookNotOpenException()
 
     @overload
-    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[str]: ...
+    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[NativeType]: ...
 
     @overload
     def get_row(self, row: int, headers: dict[str, int] | list[str], **kwargs: Any) -> DotDict: ...
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[str]:
+    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[NativeType]:
         """Returns a single row by its row number as a list or dict.
 
         - No ``headers``: Returns a plain ``list`` of string values.

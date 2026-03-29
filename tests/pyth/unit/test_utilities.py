@@ -8,12 +8,12 @@ from openpyxl import Workbook
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
                                      headers_to_header_map,
-                                     parse_cell_coordinate, safe_number_cast,
+                                     parse_cell_coordinate, safe_str_to_type_cast,
                                      search_in_row)
 from tests.pyth.conftest import XLS_FILE
 
 # ---------------------------------------------------------------------------
-# safe_number_cast
+# safe_str_to_type_cast
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
@@ -34,10 +34,14 @@ from tests.pyth.conftest import XLS_FILE
         ("1e5", "1e5"),
         ("3.0.0", "3.0.0"),
         ("123abc", "123abc"),
+        ("true", True),
+        ("True", True),
+        ("False", False),
+        ("FaLse", "FaLse")
     ],
 )
-def test_safe_number_cast_value(value: str, expected: str | int | float) -> None:
-    assert safe_number_cast(value) == expected
+def test_safe_str_to_type_cast_value(value: str, expected: str | int | float | bool) -> None:
+    assert safe_str_to_type_cast(value) == expected
 
 
 @pytest.mark.parametrize(
@@ -53,10 +57,13 @@ def test_safe_number_cast_value(value: str, expected: str | int | float) -> None
         ("hello", str),
 
         ("", str),
+        ("True", bool),
+        ("FALSE", bool),
+        ("FaLse", str)
     ],
 )
-def test_safe_number_cast_type(value: str, expected_type: type) -> None:
-    assert type(safe_number_cast(value)) is expected_type
+def test_safe_str_to_type_cast_type(value: str, expected_type: type) -> None:
+    assert type(safe_str_to_type_cast(value)) is expected_type
 
 # ---------------------------------------------------------------------------
 # search_in_row

@@ -132,8 +132,8 @@ class CsvStreamResource(IResource):
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         while self._last_read_row_index < row_index - 1:
-            self._last_read_row_index += 1
             next(self._reader)
+            self._last_read_row_index += 1
         raw_row = next(self._reader)
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)
@@ -167,7 +167,7 @@ class CsvStreamResource(IResource):
         raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming (read-only) mode")
     @override
     def delete_row(self, row_index: int) -> None:
-        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming (read-only) mode")
 
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
