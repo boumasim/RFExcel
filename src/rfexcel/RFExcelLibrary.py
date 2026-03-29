@@ -65,12 +65,13 @@ class RFExcelLibrary:
     - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
     - **Empty Cells:** ``""``
 
-    - *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
-    - *Search Criteria* - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings. Normalization does not happen for python types
-                          Returned rows have native python types.
-    - *Insertions* - All insertion keywords that require dict[str, InsertNativeType] will indeed insert the exact type that you specify out of InsertNativeType
-                     That means that value as string will try to inserted as string, int as int, respecting allowed underlying libraries used for different formats.
-    - *Booleans* - 
+    - *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string value will fail.
+    - *Search Criteria* - Although the library returns native Python types, when applying search criteria both the criteria and the compared values are treated as strings. Type normalization is not applied to Python types.
+                          Returned rows still contain native Python types.
+    - *Insertions* - All insertion keywords that require ``dict[str, InsertNativeType]`` will insert the exact type that you specify from ``InsertNativeType``.
+                     This means that a value provided as a string is inserted as a string, an integer as an integer, and so on, subject to the capabilities of the underlying libraries used for different formats.
+    - *Booleans* - Boolean values passed as ``bool`` are written as boolean cells where supported, and cells formatted as booleans are returned as ``bool`` values when reading.
+                   For csv files, string conversions to {"True", "TRUE", "true"} -> bool and {"False", "FALSE", "false"} -> bool
 
     Library types used in public api:
     - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool).
@@ -717,6 +718,7 @@ class RFExcelLibrary:
         | [
         |   {
         |     "source_row_index": 5,
+        |     "target_row_index": 5,
         |     "differences": {
         |       "Price":    {"source": 100, "target": 120},
         |       "In_Stock": {"source": 10,  "target": 8}

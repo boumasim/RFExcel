@@ -81,15 +81,114 @@ def test_all_rows_match_expected(
 
 
 # ---------------------------------------------------------------------------
-# xlsx edit
+# Stream mode parity – all three backends
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("path", [XLSX_FILE, XLS_FILE, CSV_FILE], ids=["xlsx", "xls", "csv"])
+def test_stream_produces_same_as_edit_mode(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    stream_rows = lib.get_rows()
+    lib.close()
+    lib.load_workbook(path)
+    assert lib.get_rows() == stream_rows
+
+
+@pytest.mark.parametrize("path", [XLSX_FILE, CSV_FILE], ids=["xlsx", "csv"])
+def test_calling_get_rows_twice_raises_streaming_violation(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    lib.get_rows()
+    with pytest.raises(StreamingViolationException):
+        lib.get_rows()
+
+
+# ---------------------------------------------------------------------------
+# Shared header behaviour – xlsx and csv
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("path", [XLSX_FILE, CSV_FILE], ids=["xlsx", "csv"])
+def test_all_rows_have_correct_header_keys(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path)
+    for row in cast(list[dict[str, Any]], lib.get_rows()):
+        assert list(row.keys()) == XLSX_HEADERS
+
+
+@pytest.mark.parametrize("path", [XLSX_FILE, CSV_FILE], ids=["xlsx", "csv"])
+def test_header_row_out_of_range_raises(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path)
+    with pytest.raises(HeadersNotDeterminedException):
+        lib.get_rows(header_row=9999)
+
+
+# ---------------------------------------------------------------------------
+# Search criteria – cross-backend exact and partial match
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("path", "criteria", "check_key", "expected_val"),
+    [
+        (XLSX_FILE, {"Product ID": "P-200"}, "Product ID", "P-200"),
+        (CSV_FILE,  {"Product ID": "P-202"}, "Location",   "Paris, France"),
+        (XLS_FILE,  {"First Name": "Dulce"}, "Last Name",  "Abril"),
+    ],
+    ids=["xlsx", "csv", "xls"],
+)
+def test_exact_match_returns_one_matching_row(
+    lib: RFExcelLibrary, path: str, criteria: dict[str, str], check_key: str, expected_val: str
+):
+    lib.load_workbook(path)
+    rows = lib.get_rows(search_criteria=criteria)
+    assert len(rows) == 1
+    assert rows[0][check_key] == expected_val
+
+
+@pytest.mark.parametrize(
+    ("path", "criteria", "check_key", "expected_val"),
+    [
+        (XLSX_FILE, {"Description": "Keyboard"}, "Product ID",  "P-201"),
+        (CSV_FILE,  {"Description": "Keyboard"}, "Description", "Keyboard, Mechanical, RGB"),
+    ],
+    ids=["xlsx", "csv"],
+)
+def test_partial_match_returns_one_row(
+    lib: RFExcelLibrary, path: str, criteria: dict[str, str], check_key: str, expected_val: str
+):
+    lib.load_workbook(path)
+    rows = lib.get_rows(search_criteria=criteria, partial_match=True)
+    assert len(rows) == 1
+    assert rows[0][check_key] == expected_val
+
+
+# ---------------------------------------------------------------------------
+# one_row=True – cross-backend
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("path", "criteria", "check_key", "expected_val"),
+    [
+        (XLSX_FILE, None,                    "Product ID",  "P-200"),
+        (CSV_FILE,  {"Product ID": "P-203"}, "Description", "USB Cable, 3ft"),
+        (XLS_FILE,  {"First Name": "Dulce"}, "Last Name",   "Abril"),
+    ],
+    ids=["xlsx", "csv", "xls"],
+)
+def test_one_row_returns_dict_with_correct_data(
+    lib: RFExcelLibrary,
+    path: str,
+    criteria: dict[str, str] | None,
+    check_key: str,
+    expected_val: str,
+):
+    lib.load_workbook(path)
+    result = lib.get_rows(search_criteria=criteria, one_row=True)
+    assert isinstance(result, dict)
+    assert result[check_key] == expected_val
+
+
+# ---------------------------------------------------------------------------
+# xlsx edit – format-specific behaviour
 # ---------------------------------------------------------------------------
 
 class TestGetRowsXlsxEdit:
-
-    def test_each_row_has_all_four_keys(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        for row in cast(list[dict[str, Any]], lib.get_rows()):
-            assert list(row.keys()) == XLSX_HEADERS
 
     def test_cell_containing_comma_is_not_split(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -111,34 +210,20 @@ class TestGetRowsXlsxEdit:
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(header_row=5) == []
 
-    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(HeadersNotDeterminedException):
-            lib.get_rows(header_row=9999)
+
+# ---------------------------------------------------------------------------
+# csv edit – format-specific behaviour
+# ---------------------------------------------------------------------------
+
+def test_csv_quoted_field_with_comma_is_single_value(lib: RFExcelLibrary):
+    lib.load_workbook(CSV_FILE)
+    rows = lib.get_rows()
+    assert rows[1]["Description"] == "Keyboard, Mechanical, RGB"
+    assert rows[0]["Location"] == "Warehouse A, Shelf 2"
 
 
 # ---------------------------------------------------------------------------
-# xlsx stream
-# ---------------------------------------------------------------------------
-
-class TestGetRowsXlsxStream:
-
-    def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        stream_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_rows() == stream_rows
-
-    def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_rows()
-        with pytest.raises(StreamingViolationException):
-            lib.get_rows()
-
-
-# ---------------------------------------------------------------------------
-# xls standard
+# xls standard – format-specific behaviour
 # ---------------------------------------------------------------------------
 
 class TestGetRowsXlsStandard:
@@ -169,63 +254,6 @@ class TestGetRowsXlsStandard:
             assert "First Name" in row
             assert "Last Name" in row
             assert "Country" in row
-
-
-# ---------------------------------------------------------------------------
-# xls on demand
-# ---------------------------------------------------------------------------
-
-class TestGetRowsXlsOnDemand:
-
-    def test_produces_identical_result_to_standard_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        on_demand_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_rows() == on_demand_rows
-
-
-# ---------------------------------------------------------------------------
-# csv edit
-# ---------------------------------------------------------------------------
-
-class TestGetRowsCsvEdit:
-
-    def test_quoted_field_with_comma_is_single_value(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        rows = lib.get_rows()
-        assert rows[1]["Description"] == "Keyboard, Mechanical, RGB"
-        assert rows[0]["Location"] == "Warehouse A, Shelf 2"
-
-    def test_all_rows_have_all_four_header_keys(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        for row in cast(list[dict[str, Any]], lib.get_rows()):
-            assert list(row.keys()) == ["Product ID", "Description", "Price", "Location"]
-
-    def test_header_row_out_of_range_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        with pytest.raises(HeadersNotDeterminedException):
-            lib.get_rows(header_row=9999)
-
-
-# ---------------------------------------------------------------------------
-# csv stream
-# ---------------------------------------------------------------------------
-
-class TestGetRowsCsvStream:
-
-    def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        stream_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_rows() == stream_rows
-
-    def test_calling_get_rows_twice_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_rows()
-        with pytest.raises(StreamingViolationException):
-            lib.get_rows()
 
 
 # ---------------------------------------------------------------------------
@@ -270,12 +298,6 @@ class TestGetRowsNegative:
 # ---------------------------------------------------------------------------
 
 class TestGetRowsSearchCriteria:
-
-    def test_exact_match_dict_single_criteria_returns_one_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Product ID": "P-200"})
-        assert len(rows) == 1
-        assert rows[0]["Product ID"] == "P-200"
 
     def test_exact_match_dict_returns_correct_full_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -330,12 +352,6 @@ class TestGetRowsSearchCriteria:
         rows = lib.get_rows(search_criteria={"Product ID": "P-200", "Price": "150.00"})
         assert rows == []
 
-    def test_partial_match_true_substring_matches(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows(search_criteria={"Description": "Keyboard"}, partial_match=True)
-        assert len(rows) == 1
-        assert rows[0]["Product ID"] == "P-201"
-
     def test_partial_match_true_location_substring(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Location": "France"}, partial_match=True)
@@ -352,24 +368,6 @@ class TestGetRowsSearchCriteria:
         rows = lib.get_rows(search_criteria={"Description": "Mouse", "Location": "Warehouse"}, partial_match=True)
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
-
-    def test_exact_match_on_csv(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        rows = lib.get_rows(search_criteria={"Product ID": "P-202"})
-        assert len(rows) == 1
-        assert rows[0]["Location"] == "Paris, France"
-
-    def test_partial_match_on_csv_comma_in_value(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        rows = lib.get_rows(search_criteria={"Description": "Keyboard"}, partial_match=True)
-        assert len(rows) == 1
-        assert rows[0]["Description"] == "Keyboard, Mechanical, RGB"
-
-    def test_exact_match_on_xls(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        rows = lib.get_rows(search_criteria={"First Name": "Dulce"})
-        assert len(rows) == 1
-        assert rows[0]["Last Name"] == "Abril"
 
     def test_partial_match_on_xls_multiple_rows(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -394,12 +392,6 @@ class TestGetRowsSearchCriteria:
 
 class TestGetRowsOneRow:
 
-    def test_one_row_returns_dict_not_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        result = lib.get_rows(one_row=True)
-        assert isinstance(result, dict)
-        assert not isinstance(result, list)
-
     def test_one_row_returns_first_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         result = lib.get_rows(one_row=True)
@@ -415,11 +407,6 @@ class TestGetRowsOneRow:
         result = lib.get_rows(search_criteria={"Product ID": "NOPE"}, one_row=True)
         assert result == {}
 
-    def test_one_row_stops_after_first_match(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        result = lib.get_rows(one_row=True)
-        assert result["Product ID"] == "P-200"
-
     def test_one_row_with_partial_match(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         result = lib.get_rows(search_criteria={"Description": "Keyboard"}, partial_match=True, one_row=True)
@@ -431,18 +418,6 @@ class TestGetRowsOneRow:
         result = lib.get_rows(one_row=False)
         assert isinstance(result, list)
         assert len(result) == 4
-
-    def test_one_row_on_csv(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        result = lib.get_rows(search_criteria={"Product ID": "P-203"}, one_row=True)
-        assert isinstance(result, dict)
-        assert result["Description"] == "USB Cable, 3ft"
-
-    def test_one_row_on_xls(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        result = lib.get_rows(search_criteria={"First Name": "Dulce"}, one_row=True)
-        assert isinstance(result, dict)
-        assert result["Last Name"] == "Abril"
 
     def test_one_row_no_workbook_raises(self, lib: RFExcelLibrary):
         with pytest.raises(WorkbookNotOpenException):
