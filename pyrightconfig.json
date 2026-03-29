@@ -8,7 +8,12 @@
   ],
   "exclude": [
     "**/node_modules",
-    "**/__pycache__"
+    "**/__pycache__",
+    "**/.venv",
+    "**/__pycache__",
+    "**/data",
+    "**/node_modules",
+    "**/.*"
   ],
   "typeCheckingMode": "strict"
 }

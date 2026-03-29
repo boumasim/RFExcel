@@ -79,8 +79,7 @@ def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str =
         if '=' not in segment:
             continue
         key, _, value = segment.partition('=')
-        value = value
-        result[key.strip()] = value
+        result[key.strip()] = value.strip()
     return result
 
 def convert_xls_to_xlsx(xls_path: Path) -> Workbook:

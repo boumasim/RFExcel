@@ -34,7 +34,7 @@ class RFExcelLibrary:
 
     = Search Criteria & Partial Matching =
 
-    Search Criteria in both modes compares by string, even though library returns implicit types. READ MORE on that in Data Types section bellow.
+    Search Criteria in both modes compares by string, even though library returns implicit types. READ MORE on that in Data Types section below.
 
     Keywords that filter or target rows accept a ``search_criteria`` argument.
     It can be supplied as:
@@ -684,11 +684,6 @@ class RFExcelLibrary:
                         fail_on_diff: bool = False) -> list[DotDict]:
         """Compares the active workbook row-by-row against a target file on native-type and returns the differences.
 
-        When ``target_path`` resolves to the same file as the active workbook, the
-        active workbook is used directly as the comparison target (in-memory state,
-        no second file load). For different files a separate read-only handle is
-        opened and closed automatically.
-
         Opens ``target_path`` in streaming (read-only) mode. The source is the currently
         active workbook. Row ``source_header_row`` / ``target_header_row`` is used as
         the header row in each file respectively.
@@ -696,12 +691,6 @@ class RFExcelLibrary:
         Only rows that differ in at least one compared column are included in the result.
         Column shift is handled automatically — tables that start at a column other than A
         (or have missing columns) are compared by header name, not by position.
-
-        Raises ``NotMatchingColumns`` if:
-        - ``headers=None`` and any source header is absent from the target.
-        - ``headers`` is provided and any listed header is absent from either file.
-
-        Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
 
         Arguments:
         - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparison, argument can be omitted.
@@ -713,6 +702,7 @@ class RFExcelLibrary:
 
         Returns:
         - ``list[DotDict]``: One item per source row with at least one compared difference.
+        - If source and target has different number of rows, library logs error and returns differences found up until that point.
 
         Raises:
         - ``FileDoesNotExistException``: If ``target_path`` is provided and file is missing.

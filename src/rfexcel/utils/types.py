@@ -19,4 +19,5 @@ class ValueDifference(TypedDict):
 ColumnDifference: TypeAlias = dict[str, ValueDifference]
 class RowDifference(TypedDict):
     source_row_index: int
+    target_row_index: int
     differences: ColumnDifference

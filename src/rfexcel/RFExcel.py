@@ -1,5 +1,7 @@
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any, List, Union, override
+from collections.abc import Iterator
 
 from openpyxl import Workbook
 
@@ -282,70 +284,45 @@ class RFExcel(IExcel, ISetExcel):
                 if missing_in_source or missing_in_target:
                     raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
 
-            result: list[RowDifference] = []
-            source_row_index = source_header_row + 1
-            target_row_index = target_header_row + 1
-            target_exhausted = False
-
-            while True:
-                try:
-                    source_row = self._reader.get_row(row_idx=source_row_index, resource=self._resource)
-                except StopIteration:
-                    break
-
-                source_dict = source_row.get_dict_row_data(source_header_map)
-
-                if not target_exhausted:
+            def iter_rows(reader: IReader, resource: IResource, header_map: HeaderMap, start_idx: int) -> Iterator[tuple[int, DictRowData]]:
+                idx = start_idx
+                while True:
                     try:
-                        target_row = target.reader.get_row(row_idx=target_row_index, resource=target.resource)
-                        target_dict: DictRowData = target_row.get_dict_row_data(target_header_map)
-                        target_row_index += 1
+                        row = reader.get_row(row_idx=idx, resource=resource)
+                        yield idx, row.get_dict_row_data(header_map)
+                        idx += 1
                     except StopIteration:
-                        target_exhausted = True
-                        target_dict = {}
-                else:
-                    target_dict = {}
+                        break
 
-                source_values = source_dict
-                target_values = target_dict
-                differences: ColumnDifference = {
-                    h: {"source": source_values.get(h), "target": target_values.get(h)}
-                    for h in compare_headers
-                    if source_values.get(h) != target_values.get(h)
-                }
+            result: list[RowDifference] = []
+            src_gen = iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
+            tgt_gen = iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
 
-                if differences:
-                    if fail_on_diff:
-                        raise AssertionError(
-                            f"Difference found at source_row_index {source_row_index}, target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}: {differences}"
-                        )
-                    result.append({"source_row_index": source_row_index, "differences": differences})
+            _fill: tuple[None, DictRowData] = (None, {})
+            for src_data, tgt_data in zip_longest(src_gen, tgt_gen, fillvalue=_fill):
+                src_idx, src_dict = src_data
+                tgt_idx, tgt_dict = tgt_data
 
-                source_row_index += 1
-
-            # Report remaining target rows that do not have a matching source row.
-            while True:
-                try:
-                    target_row = target.reader.get_row(row_idx=target_row_index, resource=target.resource)
-                except StopIteration:
+                if src_idx is None or tgt_idx is None:
+                    logger.error(f"Row count mismatch: source and target has different number of rows")
                     break
 
-                target_dict = target_row.get_dict_row_data(target_header_map)
-                differences: ColumnDifference = {
-                    h: {"source": None, "target": target_dict.get(h)}
-                    for h in compare_headers
-                    if target_dict.get(h) is not None
-                }
+                differences: ColumnDifference = {}
+                
+                for h in compare_headers:
+                    s_val = src_dict.get(h)
+                    t_val = tgt_dict.get(h)
+                    
+                    if s_val != t_val:
+                        differences[h] = {"source": s_val, "target": t_val}
 
                 if differences:
                     if fail_on_diff:
                         raise AssertionError(
-                            f"Difference found at source_row_index N/A, target_row_index {target_row_index}: {differences}"
+                            f"Difference at source_row_index {src_idx}, "
+                            f"target_row_index {tgt_idx}: {differences}"
                         )
-                    result.append({"source_row_index": source_row_index, "differences": differences})
-
-                source_row_index += 1
-                target_row_index += 1
+                    result.append({"source_row_index": src_idx, "target_row_index": tgt_idx, "differences": differences})
 
             return result
         finally:
