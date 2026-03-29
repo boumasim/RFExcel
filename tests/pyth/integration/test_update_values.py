@@ -148,19 +148,24 @@ class TestUpdateValuesXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestUpdateValuesXlsxStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.update_values(
-                search_criteria={"Product ID": "P-200"},
-                values={"Price": "0.00"},
-                header_row=_XLSX_HEADER_ROW,
-            )
+@pytest.mark.parametrize(
+    ("path", "criteria", "vals"),
+    [
+        (XLSX_FILE, {"Product ID": "P-200"}, {"Price": "0.00"}),
+        (XLS_FILE,  {"First Name": "Dulce"},  {"Country": "Updated"}),
+        (CSV_FILE,  {"Product ID": "P-200"}, {"Price": "0.00"}),
+    ],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_raises_in_read_only_mode(
+    lib: RFExcelLibrary, path: str, criteria: dict, vals: dict
+):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.update_values(search_criteria=criteria, values=vals)
 
 
 # ---------------------------------------------------------------------------
@@ -178,21 +183,6 @@ class TestUpdateValuesXlsEdit:
         assert count == 1
         row = next(r for r in lib.get_rows() if r["First Name"] == "Dulce")
         assert row["Country"] == "Updated"
-
-
-# ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestUpdateValuesXlsOnDemand:
-
-    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.update_values(
-                search_criteria={"First Name": "Dulce"},
-                values={"Country": "Updated"},
-            )
 
 
 # ---------------------------------------------------------------------------
@@ -239,21 +229,6 @@ class TestUpdateValuesCsvEdit:
         assert all(
             r["Price"] == "FREE" for r in rows if "Online" in r["Location"]
         )
-
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestUpdateValuesCsvStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.update_values(
-                search_criteria={"Product ID": "P-200"},
-                values={"Price": "0.00"},
-            )
 
 
 # ---------------------------------------------------------------------------

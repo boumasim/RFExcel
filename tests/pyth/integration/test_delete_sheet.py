@@ -48,15 +48,18 @@ class TestDeleteSheetXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for xlsx and xls
 # ---------------------------------------------------------------------------
 
-class TestDeleteSheetXlsxStream:
-
-    def test_delete_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_sheet("Sheet1")
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, XLS_FILE],
+    ids=["xlsx_stream", "xls_on_demand"],
+)
+def test_delete_sheet_raises_in_read_only_mode(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.delete_sheet("Sheet1")
 
 
 # ---------------------------------------------------------------------------
@@ -84,18 +87,6 @@ class TestDeleteSheetXlsEdit:
         lib.add_sheet("Anchor")
         with pytest.raises(LibraryException):
             lib.delete_sheet("DoesNotExist")
-
-
-# ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestDeleteSheetXlsOnDemand:
-
-    def test_delete_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_sheet("Sheet1")
 
 
 # ---------------------------------------------------------------------------

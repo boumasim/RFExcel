@@ -61,15 +61,22 @@ class TestAppendRowsXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestAppendRowsXlsxStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([_ROW_A])
+@pytest.mark.parametrize(
+    ("path", "row"),
+    [
+        (XLSX_FILE, [_ROW_A]),
+        (XLS_FILE,  [{"Index": 99, "First Name": "Alice"}]),
+        (CSV_FILE,  [_ROW_A]),
+    ],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_raises_in_read_only_mode(lib: RFExcelLibrary, path: str, row: list[InsertDictType]):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.append_rows(row)
 
 
 # ---------------------------------------------------------------------------
@@ -95,18 +102,6 @@ class TestAppendRowsXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestAppendRowsXlsOnDemand:
-
-    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([{"Index": 99, "First Name": "Alice"}])
-
-
-# ---------------------------------------------------------------------------
 # CSV – Edit mode
 # ---------------------------------------------------------------------------
 
@@ -127,12 +122,3 @@ class TestAppendRowsCsvEdit:
         assert rows[-2]["Product ID"] == "P-001"
         assert rows[-1]["Product ID"] == "P-002"
         lib2.close()
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([_ROW_A])

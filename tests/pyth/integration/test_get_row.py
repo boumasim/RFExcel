@@ -29,15 +29,90 @@ CSV_ROW3_DICT  = {"Product ID": "P-201", "Description": "Keyboard, Mechanical, R
 XLS_ROW2_DICT  = {"Index": 1, "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": 32}
 XLS_ROW10_DICT = {"Index": 9, "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": 40}
 
+
+# ---------------------------------------------------------------------------
+# Shared behaviour across formats: no-headers → list
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("path", "read_only", "row_num"),
+    [
+        (XLSX_FILE, False, 2),
+        (XLSX_FILE, True,  1),
+        (XLS_FILE,  False, 2),
+        (CSV_FILE,  False, 2),
+    ],
+    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "csv_edit"],
+)
+def test_row_without_headers_returns_list(
+    lib: RFExcelLibrary, path: str, read_only: bool, row_num: int
+):
+    lib.load_workbook(path, read_only=read_only)
+    assert isinstance(lib.get_row(row_num), list)
+
+
+# ---------------------------------------------------------------------------
+# Shared behaviour: out-of-bounds row → empty list (edit modes only)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, XLS_FILE, CSV_FILE],
+    ids=["xlsx_edit", "xls_edit", "csv_edit"],
+)
+def test_out_of_bounds_row_returns_empty_list(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path)
+    assert lib.get_row(99) == []
+
+
+# ---------------------------------------------------------------------------
+# Shared behaviour: repeated calls return same row (edit modes only)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, XLS_FILE, CSV_FILE],
+    ids=["xlsx_edit", "xls_edit", "csv_edit"],
+)
+def test_repeated_calls_return_same_row(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path)
+    assert lib.get_row(2) == lib.get_row(2)
+
+
+# ---------------------------------------------------------------------------
+# Shared behaviour: streaming violation (stream modes only)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, CSV_FILE],
+    ids=["xlsx_stream", "csv_stream"],
+)
+def test_re_reading_same_row_raises_streaming_violation(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    lib.get_row(1)
+    with pytest.raises(StreamingViolationException):
+        lib.get_row(1)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, CSV_FILE],
+    ids=["xlsx_stream", "csv_stream"],
+)
+def test_reading_earlier_row_raises_streaming_violation(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    lib.get_row(1)
+    lib.get_row(2)
+    with pytest.raises(StreamingViolationException):
+        lib.get_row(1)
+
+
 # ---------------------------------------------------------------------------
 # xlsx edit mode
 # ---------------------------------------------------------------------------
 
 class TestGetRowXlsxEdit:
-
-    def test_row_without_headers_returns_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert isinstance(lib.get_row(2), list)
 
     def test_row_with_headers_returns_dict(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -71,29 +146,18 @@ class TestGetRowXlsxEdit:
         lib.load_workbook(XLSX_FILE)
         assert lib.get_row(1) == XLSX_HEADERS
 
-    def test_out_of_bounds_row_returns_empty_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(99) == []
-
-    def test_repeated_calls_return_same_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(2) == lib.get_row(2)
-
     def test_dict_keys_match_supplied_headers(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         row = lib.get_row(2, headers=XLSX_HEADERS)
         assert isinstance(row, dict)
         assert list(cast(dict[str, Any], row).keys()) == XLSX_HEADERS
 
+
 # ---------------------------------------------------------------------------
 # xlsx stream mode
 # ---------------------------------------------------------------------------
 
 class TestGetRowXlsxStream:
-
-    def test_row_without_headers_returns_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert isinstance(lib.get_row(1), list)
 
     def test_first_row_is_header_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
@@ -116,28 +180,12 @@ class TestGetRowXlsxStream:
         lib.get_row(1)
         assert lib.get_row(2, headers=XLSX_HEADERS) == XLSX_ROW2_DICT
 
-    def test_re_reading_same_row_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_row(1)
-        with pytest.raises(StreamingViolationException):
-            lib.get_row(1)
-
-    def test_reading_earlier_row_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_row(1)
-        lib.get_row(2)
-        with pytest.raises(StreamingViolationException):
-            lib.get_row(1)
 
 # ---------------------------------------------------------------------------
 # xls edit mode
 # ---------------------------------------------------------------------------
 
 class TestGetRowXlsStandard:
-
-    def test_row_without_headers_returns_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert isinstance(lib.get_row(2), list)
 
     def test_row2_list_values(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -166,13 +214,6 @@ class TestGetRowXlsStandard:
         row = lib.get_row(2)
         assert len(row) == 6
 
-    def test_repeated_calls_return_same_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(2) == lib.get_row(2)
-
-    def test_out_of_bounds_row_returns_empty_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(99) == []
 
 # ---------------------------------------------------------------------------
 # xls on_demand / streaming mode
@@ -198,15 +239,12 @@ class TestGetRowXlsOnDemand:
         assert row10 == XLS_ROW10_LIST
         assert row2  == XLS_ROW2_LIST
 
+
 # ---------------------------------------------------------------------------
 # csv edit mode
 # ---------------------------------------------------------------------------
 
 class TestGetRowCsvEdit:
-
-    def test_row_without_headers_returns_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert isinstance(lib.get_row(2), list)
 
     def test_row2_list_values(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
@@ -233,13 +271,6 @@ class TestGetRowCsvEdit:
         lib.load_workbook(CSV_FILE)
         assert lib.get_row(1) == XLSX_HEADERS
 
-    def test_repeated_calls_return_same_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(2) == lib.get_row(2)
-
-    def test_out_of_bounds_row_returns_empty_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(99) == []
 
 # ---------------------------------------------------------------------------
 # csv streaming mode
@@ -268,18 +299,6 @@ class TestGetRowCsvStream:
         lib.get_row(1)
         assert lib.get_row(2, headers=XLSX_HEADERS) == CSV_ROW2_DICT
 
-    def test_re_reading_same_row_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)
-        with pytest.raises(StreamingViolationException):
-            lib.get_row(1)
-
-    def test_reading_earlier_row_raises_streaming_violation(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)
-        lib.get_row(2)
-        with pytest.raises(StreamingViolationException):
-            lib.get_row(1)
 
 # ---------------------------------------------------------------------------
 # negative / edge cases

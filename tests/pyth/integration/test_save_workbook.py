@@ -1,5 +1,5 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -75,16 +75,25 @@ class TestSaveWorkbookXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestSaveWorkbookXlsxStream:
-
-    def test_save_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.save_workbook()
+@pytest.mark.parametrize(
+    ("source", "filename"),
+    [
+        (XLSX_FILE, "data.xlsx"),
+        (XLS_FILE,  "example.xls"),
+        (CSV_FILE,  "data.csv"),
+    ],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_save_raises_in_read_only_mode(
+    lib: RFExcelLibrary, tmp_path: Path, source: str, filename: str
+):
+    path = str(shutil.copy(source, tmp_path / filename))
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.save_workbook()
 
 
 # ---------------------------------------------------------------------------
@@ -145,19 +154,6 @@ class TestSaveWorkbookXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLS – Streaming / on-demand mode
-# ---------------------------------------------------------------------------
-
-class TestSaveWorkbookXlsStream:
-
-    def test_save_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.save_workbook()
-
-
-# ---------------------------------------------------------------------------
 # CSV – Edit mode
 # ---------------------------------------------------------------------------
 
@@ -196,19 +192,6 @@ class TestSaveWorkbookCsvEdit:
 
 
 # ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestSaveWorkbookCsvStream:
-
-    def test_save_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.save_workbook()
-
-
-# ---------------------------------------------------------------------------
 # No workbook open
 # ---------------------------------------------------------------------------
 
@@ -223,20 +206,18 @@ class TestSaveWorkbookNoWorkbook:
 # FileSaveException – bad path
 # ---------------------------------------------------------------------------
 
-class TestSaveWorkbookBadPath:
-
-    def test_xlsx_save_to_nonexistent_dir_raises_file_save_exception(
-        self, lib: RFExcelLibrary, tmp_path: Path
-    ):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        with pytest.raises(FileSaveException):
-            lib.save_workbook(str(tmp_path / "no_such_dir" / "out.xlsx"))
-
-    def test_csv_save_to_nonexistent_dir_raises_file_save_exception(
-        self, lib: RFExcelLibrary, tmp_path: Path
-    ):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path)
-        with pytest.raises(FileSaveException):
-            lib.save_workbook(str(tmp_path / "no_such_dir" / "out.csv"))
+@pytest.mark.parametrize(
+    ("source", "out_filename"),
+    [
+        (XLSX_FILE, "out.xlsx"),
+        (CSV_FILE,  "out.csv"),
+    ],
+    ids=["xlsx", "csv"],
+)
+def test_save_to_nonexistent_dir_raises(
+    lib: RFExcelLibrary, tmp_path: Path, source: str, out_filename: str
+):
+    path = str(shutil.copy(source, tmp_path / Path(source).name))
+    lib.load_workbook(path)
+    with pytest.raises(FileSaveException):
+        lib.save_workbook(str(tmp_path / "no_such_dir" / out_filename))

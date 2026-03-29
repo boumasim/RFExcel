@@ -122,16 +122,18 @@ class TestInsertRowXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestInsertRowXlsxStream:
-
-    def test_insert_row_raises_in_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.insert_row(_NEW_ROW, row=2)
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, XLS_FILE, CSV_FILE],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_insert_row_raises_in_read_only_mode(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.insert_row(_NEW_ROW, row=2)
 
 
 # ---------------------------------------------------------------------------
@@ -175,19 +177,6 @@ class TestInsertRowXlsEdit:
         lib2.load_workbook(path)
         assert len(lib2.get_rows()) == before
         lib2.close()
-
-
-# ---------------------------------------------------------------------------
-# XLS – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestInsertRowXlsStream:
-
-    def test_insert_row_raises_in_xls_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.insert_row(_NEW_ROW, row=2)
 
 
 # ---------------------------------------------------------------------------
@@ -236,19 +225,6 @@ class TestInsertRowCsvEdit:
         assert rows[0]["Price"] == 5.55
         assert rows[0]["Location"] == "Depot"
         lib2.close()
-
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestInsertRowCsvStream:
-
-    def test_insert_row_raises_in_csv_stream_mode(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.insert_row(_NEW_ROW, row=2)
 
 
 # ---------------------------------------------------------------------------

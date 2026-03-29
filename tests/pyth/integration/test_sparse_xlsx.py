@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from openpyxl import Workbook
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
@@ -34,16 +35,36 @@ def _make_gap_xlsx(path: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# xlsx edit
+# Offset table – shared edit/stream behaviour
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_offset_table_correct_row_count(lib: RFExcelLibrary, tmp_path: Path, read_only: bool):
+    path = str(tmp_path / "offset.xlsx")
+    _make_offset_xlsx(path)
+    lib.load_workbook(path, read_only=read_only)
+    assert len(lib.get_rows()) == 2
+
+
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_offset_table_values_mapped_to_correct_columns(
+    lib: RFExcelLibrary, tmp_path: Path, read_only: bool
+):
+    path = str(tmp_path / "offset.xlsx")
+    _make_offset_xlsx(path)
+    lib.load_workbook(path, read_only=read_only)
+    rows = lib.get_rows()
+    assert rows[0]["Name"] == "Alice"
+    assert rows[0]["Score"] == 90
+    assert rows[1]["Name"] == "Bob"
+    assert rows[1]["Score"] == 75
+
+
+# ---------------------------------------------------------------------------
+# Offset table – edit-only tests
 # ---------------------------------------------------------------------------
 
 class TestOffsetTableXlsxEdit:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "offset.xlsx")
-        _make_offset_xlsx(path)
-        lib.load_workbook(path)
-        assert len(lib.get_rows()) == 2
 
     def test_header_keys_are_correct(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset.xlsx")
@@ -51,16 +72,6 @@ class TestOffsetTableXlsxEdit:
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert list(rows[0]) == ["Name", "Score"]
-
-    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "offset.xlsx")
-        _make_offset_xlsx(path)
-        lib.load_workbook(path)
-        rows = lib.get_rows()
-        assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == 90
-        assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == 75
 
     def test_column_c_start(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "offset_c.xlsx")
@@ -72,39 +83,36 @@ class TestOffsetTableXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# xlsx stream
+# Gap column – shared edit/stream behaviour
 # ---------------------------------------------------------------------------
 
-class TestOffsetTableXlsxStream:
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_gap_column_correct_row_count(lib: RFExcelLibrary, tmp_path: Path, read_only: bool):
+    path = str(tmp_path / "gap.xlsx")
+    _make_gap_xlsx(path)
+    lib.load_workbook(path, read_only=read_only)
+    assert len(lib.get_rows()) == 2
 
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "offset.xlsx")
-        _make_offset_xlsx(path)
-        lib.load_workbook(path, read_only=True)
-        assert len(lib.get_rows()) == 2
 
-    def test_values_are_mapped_to_correct_columns(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "offset.xlsx")
-        _make_offset_xlsx(path)
-        lib.load_workbook(path, read_only=True)
-        rows = lib.get_rows()
-        assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == 90
-        assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == 75
+@pytest.mark.parametrize("read_only", [False, True], ids=["xlsx_edit", "xlsx_stream"])
+def test_gap_column_values_skip_gap_correctly(
+    lib: RFExcelLibrary, tmp_path: Path, read_only: bool
+):
+    path = str(tmp_path / "gap.xlsx")
+    _make_gap_xlsx(path)
+    lib.load_workbook(path, read_only=read_only)
+    rows = lib.get_rows()
+    assert rows[0]["Name"] == "Alice"
+    assert rows[0]["Score"] == 90
+    assert rows[1]["Name"] == "Bob"
+    assert rows[1]["Score"] == 75
 
 
 # ---------------------------------------------------------------------------
-# xlsx edit
+# Gap column – edit-only tests
 # ---------------------------------------------------------------------------
 
 class TestGapColumnXlsxEdit:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "gap.xlsx")
-        _make_gap_xlsx(path)
-        lib.load_workbook(path)
-        assert len(lib.get_rows()) == 2
 
     def test_header_keys_exclude_empty_column(self, lib: RFExcelLibrary, tmp_path: Path):
         path = str(tmp_path / "gap.xlsx")
@@ -112,36 +120,3 @@ class TestGapColumnXlsxEdit:
         lib.load_workbook(path)
         rows = lib.get_rows()
         assert list(rows[0]) == ["Name", "Score"]
-
-    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "gap.xlsx")
-        _make_gap_xlsx(path)
-        lib.load_workbook(path)
-        rows = lib.get_rows()
-        assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == 90
-        assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == 75
-
-
-# ---------------------------------------------------------------------------
-# xlsx stream
-# ---------------------------------------------------------------------------
-
-class TestGapColumnXlsxStream:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "gap.xlsx")
-        _make_gap_xlsx(path)
-        lib.load_workbook(path, read_only=True)
-        assert len(lib.get_rows()) == 2
-
-    def test_values_skip_gap_column_correctly(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "gap.xlsx")
-        _make_gap_xlsx(path)
-        lib.load_workbook(path, read_only=True)
-        rows = lib.get_rows()
-        assert rows[0]["Name"] == "Alice"
-        assert rows[0]["Score"] == 90
-        assert rows[1]["Name"] == "Bob"
-        assert rows[1]["Score"] == 75

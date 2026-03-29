@@ -90,15 +90,22 @@ class TestDeleteRowsXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for all formats
 # ---------------------------------------------------------------------------
 
-class TestDeleteRowsXlsxStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_rows(search_criteria={"Product ID": "P-200"})
+@pytest.mark.parametrize(
+    ("path", "criteria"),
+    [
+        (XLSX_FILE, {"Product ID": "P-200"}),
+        (XLS_FILE,  {"First Name": "Dulce"}),
+        (CSV_FILE,  {"Product ID": "P-200"}),
+    ],
+    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
+)
+def test_raises_in_read_only_mode(lib: RFExcelLibrary, path: str, criteria: dict):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.delete_rows(search_criteria=criteria)
 
 
 # ---------------------------------------------------------------------------
@@ -115,18 +122,6 @@ class TestDeleteRowsXlsEdit:
         assert len(lib.get_rows()) == before - 1
         rows = cast(list[dict[str, Any]], lib.get_rows())
         assert all(r["First Name"] != "Dulce" for r in rows)
-
-
-# ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestDeleteRowsXlsOnDemand:
-
-    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_rows(search_criteria={"First Name": "Dulce"})
 
 
 # ---------------------------------------------------------------------------
@@ -159,18 +154,6 @@ class TestDeleteRowsCsvEdit:
         assert count == 1
         rows = lib.get_rows()
         assert sum(1 for r in rows if r["Location"] == "DUPLICATE_LOC") == 1
-
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestDeleteRowsCsvStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.delete_rows(search_criteria={"Product ID": "P-200"})
 
 
 # ---------------------------------------------------------------------------

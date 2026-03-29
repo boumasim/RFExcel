@@ -37,18 +37,54 @@ XLS_LAST_ROW = {
 
 
 # ---------------------------------------------------------------------------
+# Row count – all formats and modes
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("path", "read_only", "expected_count"),
+    [
+        (XLSX_FILE, False, 4),
+        (XLSX_FILE, True,  4),
+        (XLS_FILE,  False, 9),
+        (XLS_FILE,  True,  9),
+        (CSV_FILE,  False, 4),
+        (CSV_FILE,  True,  4),
+    ],
+    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand", "csv_edit", "csv_stream"],
+)
+def test_correct_row_count(
+    lib: RFExcelLibrary, path: str, read_only: bool, expected_count: int
+):
+    lib.load_workbook(path, read_only=read_only)
+    assert len(lib.get_rows()) == expected_count
+
+
+# ---------------------------------------------------------------------------
+# Row content – formats with identical expected data across modes
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ("path", "read_only", "expected"),
+    [
+        (XLSX_FILE, False, XLSX_ROWS),
+        (XLSX_FILE, True,  XLSX_ROWS),
+        (CSV_FILE,  False, CSV_ROWS),
+        (CSV_FILE,  True,  CSV_ROWS),
+    ],
+    ids=["xlsx_edit", "xlsx_stream", "csv_edit", "csv_stream"],
+)
+def test_all_rows_match_expected(
+    lib: RFExcelLibrary, path: str, read_only: bool, expected: list[Any]
+):
+    lib.load_workbook(path, read_only=read_only)
+    assert lib.get_rows() == expected
+
+
+# ---------------------------------------------------------------------------
 # xlsx edit
 # ---------------------------------------------------------------------------
 
 class TestGetRowsXlsxEdit:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert len(lib.get_rows()) == 4
-
-    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_rows() == XLSX_ROWS
 
     def test_each_row_has_all_four_keys(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -87,14 +123,6 @@ class TestGetRowsXlsxEdit:
 
 class TestGetRowsXlsxStream:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert len(lib.get_rows()) == 4
-
-    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert lib.get_rows() == XLSX_ROWS
-
     def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         stream_rows = lib.get_rows()
@@ -114,10 +142,6 @@ class TestGetRowsXlsxStream:
 # ---------------------------------------------------------------------------
 
 class TestGetRowsXlsStandard:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert len(lib.get_rows()) == 9
 
     def test_first_row_content(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
@@ -153,10 +177,6 @@ class TestGetRowsXlsStandard:
 
 class TestGetRowsXlsOnDemand:
 
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert len(lib.get_rows()) == 9
-
     def test_produces_identical_result_to_standard_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         on_demand_rows = lib.get_rows()
@@ -170,14 +190,6 @@ class TestGetRowsXlsOnDemand:
 # ---------------------------------------------------------------------------
 
 class TestGetRowsCsvEdit:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert len(lib.get_rows()) == 4
-
-    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_rows() == CSV_ROWS
 
     def test_quoted_field_with_comma_is_single_value(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
@@ -201,14 +213,6 @@ class TestGetRowsCsvEdit:
 # ---------------------------------------------------------------------------
 
 class TestGetRowsCsvStream:
-
-    def test_correct_row_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        assert len(lib.get_rows()) == 4
-
-    def test_all_rows_match_expected(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        assert lib.get_rows() == CSV_ROWS
 
     def test_produces_identical_result_to_edit_mode(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE, read_only=True)
@@ -267,7 +271,6 @@ class TestGetRowsNegative:
 
 class TestGetRowsSearchCriteria:
 
-
     def test_exact_match_dict_single_criteria_returns_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Product ID": "P-200"})
@@ -287,7 +290,6 @@ class TestGetRowsSearchCriteria:
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows(search_criteria={"Description": "Keyboard"}) == []
 
-
     def test_string_criteria_returns_same_as_dict(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         dict_rows = lib.get_rows(search_criteria={"Product ID": "P-200"})
@@ -303,7 +305,6 @@ class TestGetRowsSearchCriteria:
     def test_string_criteria_no_criteria_returns_all(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         assert lib.get_rows() == lib.get_rows(search_criteria=None)
-
 
     def test_and_logic_two_criteria_narrows_result_to_one_row(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
@@ -329,7 +330,6 @@ class TestGetRowsSearchCriteria:
         rows = lib.get_rows(search_criteria={"Product ID": "P-200", "Price": "150.00"})
         assert rows == []
 
-
     def test_partial_match_true_substring_matches(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)
         rows = lib.get_rows(search_criteria={"Description": "Keyboard"}, partial_match=True)
@@ -353,7 +353,6 @@ class TestGetRowsSearchCriteria:
         assert len(rows) == 1
         assert rows[0]["Product ID"] == "P-200"
 
-
     def test_exact_match_on_csv(self, lib: RFExcelLibrary):
         lib.load_workbook(CSV_FILE)
         rows = lib.get_rows(search_criteria={"Product ID": "P-202"})
@@ -366,7 +365,6 @@ class TestGetRowsSearchCriteria:
         assert len(rows) == 1
         assert rows[0]["Description"] == "Keyboard, Mechanical, RGB"
 
-
     def test_exact_match_on_xls(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE)
         rows = lib.get_rows(search_criteria={"First Name": "Dulce"})
@@ -378,7 +376,6 @@ class TestGetRowsSearchCriteria:
         rows = lib.get_rows(search_criteria={"Country": "United"}, partial_match=True)
         assert len(rows) == 6
         assert all("United" in r["Country"] for r in rows)
-
 
     def test_criteria_key_not_in_headers_returns_empty(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE)

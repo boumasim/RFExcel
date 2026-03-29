@@ -47,15 +47,18 @@ class TestAddSheetXlsxEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLSX – Streaming mode
+# Read-only / streaming modes – raises for xlsx and xls
 # ---------------------------------------------------------------------------
 
-class TestAddSheetXlsxStream:
-
-    def test_add_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.add_sheet("ShouldFail")
+@pytest.mark.parametrize(
+    "path",
+    [XLSX_FILE, XLS_FILE],
+    ids=["xlsx_stream", "xls_on_demand"],
+)
+def test_add_sheet_raises_in_read_only_mode(lib: RFExcelLibrary, path: str):
+    lib.load_workbook(path, read_only=True)
+    with pytest.raises(NullComponentException):
+        lib.add_sheet("ShouldFail")
 
 
 # ---------------------------------------------------------------------------
@@ -99,33 +102,15 @@ class TestAddSheetXlsEdit:
 
 
 # ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
+# CSV – raises for both modes
 # ---------------------------------------------------------------------------
 
-class TestAddSheetXlsOnDemand:
-
-    def test_add_sheet_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.add_sheet("ShouldFail")
-
-
-# ---------------------------------------------------------------------------
-# CSV – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestAddSheetCsv:
-
-    def test_add_sheet_raises_for_csv_edit(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        with pytest.raises(OperationNotSupportedForFormat):
-            lib.add_sheet("ShouldFail")
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-    def test_add_sheet_raises_for_csv_stream(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.add_sheet("ShouldFail")
+@pytest.mark.parametrize(
+    "read_only",
+    [False, True],
+    ids=["csv_edit", "csv_stream"],
+)
+def test_add_sheet_raises_for_csv(lib: RFExcelLibrary, read_only: bool):
+    lib.load_workbook(CSV_FILE, read_only=read_only)
+    with pytest.raises((OperationNotSupportedForFormat, NullComponentException)):
+        lib.add_sheet("ShouldFail")

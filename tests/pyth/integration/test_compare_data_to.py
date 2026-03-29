@@ -271,9 +271,24 @@ class TestCompareDataToNegative:
 # ---------------------------------------------------------------------------
 
 class TestCompareDataToSameWorkbook:
-    def test_xlsx_same_path_returns_no_differences(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.compare_data_to(XLSX_FILE) == []
+
+    @pytest.mark.parametrize(
+        ("path", "read_only"),
+        [
+            (XLSX_FILE, False),
+            (XLSX_FILE, True),
+            (CSV_FILE,  False),
+            (CSV_FILE,  True),
+            (XLS_FILE,  False),
+            (XLS_FILE,  True),
+        ],
+        ids=["xlsx_edit", "xlsx_stream", "csv_edit", "csv_stream", "xls_edit", "xls_on_demand"],
+    )
+    def test_same_path_returns_no_differences(
+        self, lib: RFExcelLibrary, path: str, read_only: bool
+    ):
+        lib.load_workbook(path, read_only=read_only)
+        assert lib.compare_data_to(path) == []
 
     def test_workbook_remains_open_and_usable_after_same_path_compare(
         self, lib: RFExcelLibrary
@@ -283,45 +298,20 @@ class TestCompareDataToSameWorkbook:
         rows = lib.get_rows()
         assert len(rows) > 0
 
-    def test_csv_same_path_returns_no_differences(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.compare_data_to(CSV_FILE) == []
-
-    def test_xls_same_path_returns_no_differences(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.compare_data_to(XLS_FILE) == []
-
     def test_subset_headers_same_path_returns_no_differences(
         self, lib: RFExcelLibrary
     ):
         lib.load_workbook(XLSX_FILE)
         assert lib.compare_data_to(XLSX_FILE, headers=["Product ID", "Price"]) == []
 
-    def test_same_path_does_not_report_identical_rows(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        result = lib.compare_data_to(XLSX_FILE)
-        assert result == []
-
-    def test_same_workbook_with_stream_mode_xlsx_same_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert lib.compare_data_to(XLSX_FILE) == []
-
     def test_same_workbook_with_stream_mode_xlsx_different_sheet(self, lib: RFExcelLibrary):
         lib.load_workbook(XLSX_FILE, read_only=True)
         assert lib.compare_data_to(XLSX_FILE, target_sheet="Sheet2") != []
-
-    def test_same_workbook_with_stream_mode_xls_same_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert lib.compare_data_to(XLS_FILE) == []
 
     def test_same_workbook_with_stream_mode_xls_different_sheet(self, lib: RFExcelLibrary):
         lib.load_workbook(XLS_FILE, read_only=True)
         with pytest.raises(NotMatchingColumns):
             lib.compare_data_to(XLS_FILE, target_sheet="Second")
-
-    def test_same_workbook_with_stream_mode_csv(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        assert lib.compare_data_to(CSV_FILE) == []
 
 
 # ---------------------------------------------------------------------------
