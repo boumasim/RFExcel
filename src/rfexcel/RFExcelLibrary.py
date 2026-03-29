@@ -65,12 +65,14 @@ class RFExcelLibrary:
     - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
     - **Empty Cells:** ``""``
 
-    *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
-    *Search Criteria - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings. Normalization does not happen for python types
-                       Returned rows have native python types.
+    - *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string text will fail.
+    - *Search Criteria* - Although library returns implicit types, when applying search criteria, both criterias and compared values are threated as strings. Normalization does not happen for python types
+                          Returned rows have native python types.
+    - *Insertions* - All insertions that require dict[str, InsertNativeType] will indeed insert the exact type that you specify out of InsertNativeType
+                     That means that value as string will try to inserted as string, int as int, respecting allowed underlying libraries used for different formats.
 
     Library types used in public api:
-    - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool, datetime, timedelta, None).
+    - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool).
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
