@@ -4,143 +4,112 @@ from rfexcel.exception.library_exceptions import (
     FileDoesNotExistException, FileFormatNotSupportedException,
     WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT,
+                                  SHEET1_EXPECTED_ROW_COUNT, SHEET1_ROWS, XLS_EDIT, XLSX_EDIT)
 
-XLSX_FIRST_DATA_ROW = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": 25.5, "Location": "Warehouse A, Shelf 2"}
-XLS_FIRST_DATA_ROW  = {"Index": 1.0, "First Name": "Dulce", "Last Name": "Abril", "Gender": "Female", "Country": "United States", "Age": 32.0}
-CSV_FIRST_DATA_ROW  = {"Product ID": "P-200", "Description": "Wireless Mouse", "Price": 25.50, "Location": "Warehouse A, Shelf 2"}
-
-
-# ---------------------------------------------------------------------------
-# switch source from open
-# ---------------------------------------------------------------------------
-
-class TestSwitchSourceFromOpen:
-
-    def test_switch_xlsx_to_csv_sets_new_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_source(CSV_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-        assert rows[0] == CSV_FIRST_DATA_ROW
-
-    def test_switch_xlsx_to_xls_data_is_from_new_file(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_source(XLS_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 9
-        assert rows[0] == XLS_FIRST_DATA_ROW
-
-    def test_switch_xls_to_xlsx_data_is_from_new_file(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.switch_source(XLSX_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-        assert rows[0] == XLSX_FIRST_DATA_ROW
-
-    def test_switch_xlsx_to_csv_data_is_from_new_file(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_source(CSV_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-        assert rows[0] == CSV_FIRST_DATA_ROW
-
-    def test_switch_csv_to_xlsx_data_is_from_new_file(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        lib.switch_source(XLSX_FILE)
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_FIRST_DATA_ROW
-
-    def test_switch_to_same_file_reopens_it(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_source(XLSX_FILE)
-        assert lib.get_rows()[0] == XLSX_FIRST_DATA_ROW
-
-    def test_switch_releases_previous_workbook_and_opens_new(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.switch_source(XLSX_FILE)
-        rows = lib.get_rows()
-        assert rows[0] == XLSX_FIRST_DATA_ROW
-
-    def test_switch_with_read_only_opens_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.switch_source(XLSX_FILE, read_only=True)
-        assert len(lib.get_rows()) == 4
-
-    def test_switch_xlsx_stream_to_csv_edit(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.switch_source(CSV_FILE)
-        assert lib.get_rows() == lib.get_rows()
+CHAINED_TARGETS = [XLSX_EDIT, XLS_EDIT, CSV_EDIT]
 
 
-# ---------------------------------------------------------------------------
-# switch source from closed
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("source_backend", BACKEND_NAMES, ids=BACKEND_NAMES)
+@pytest.mark.parametrize("target_backend", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_source_replaces_active_workbook_for_all_backend_pairs(
+    lib: RFExcelLibrary,
+    source_backend: str,
+    target_backend: str,
+) -> None:
+    source_path, source_read_only = BACKENDS[source_backend]
+    lib.load_workbook(source_path, read_only=source_read_only)
 
-class TestSwitchSourceFromClosed:
+    target_path, target_read_only = BACKENDS[target_backend]
+    lib.switch_source(target_path, read_only=target_read_only)
 
-    def test_switch_with_no_prior_workbook_opens_file(self, lib: RFExcelLibrary):
-        lib.switch_source(XLSX_FILE)
-        assert len(lib.get_rows()) > 0
-
-    def test_switch_with_no_prior_workbook_data_correct(self, lib: RFExcelLibrary):
-        lib.switch_source(XLSX_FILE)
-        assert lib.get_rows()[0] == XLSX_FIRST_DATA_ROW
-
-    def test_switch_after_explicit_close(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.close()
-        lib.switch_source(CSV_FILE)
-        assert lib.get_rows()[0] == CSV_FIRST_DATA_ROW
+    assert lib.get_rows() == SHEET1_ROWS
 
 
-# ---------------------------------------------------------------------------
-# switch source chained
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_to_same_source_keeps_data_accessible_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+    lib.switch_source(path, read_only=read_only)
 
-class TestSwitchSourceChained:
-
-    def test_three_successive_switches_last_one_wins(self, lib: RFExcelLibrary):
-        lib.switch_source(XLSX_FILE)
-        lib.switch_source(XLS_FILE)
-        lib.switch_source(CSV_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-        assert rows[0] == CSV_FIRST_DATA_ROW
-
-    def test_switch_back_and_forth_produces_correct_data(self, lib: RFExcelLibrary):
-        lib.switch_source(XLSX_FILE)
-        xlsx_rows = lib.get_rows()
-        lib.switch_source(CSV_FILE)
-        csv_rows = lib.get_rows()
-        lib.switch_source(XLSX_FILE)
-        assert lib.get_rows() == xlsx_rows
-        assert csv_rows[0] == CSV_FIRST_DATA_ROW
+    assert lib.get_rows() == SHEET1_ROWS
 
 
-# ---------------------------------------------------------------------------
-# switch source negative
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("source_backend", BACKEND_NAMES, ids=BACKEND_NAMES)
+@pytest.mark.parametrize("target_backend", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_after_explicit_close_opens_new_source_for_all_backend_pairs(
+    lib: RFExcelLibrary,
+    source_backend: str,
+    target_backend: str,
+) -> None:
+    source_path, source_read_only = BACKENDS[source_backend]
+    lib.load_workbook(source_path, read_only=source_read_only)
+    lib.close()
 
-class TestSwitchSourceNegative:
+    target_path, target_read_only = BACKENDS[target_backend]
+    lib.switch_source(target_path, read_only=target_read_only)
 
-    def test_switch_to_nonexistent_file_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(FileDoesNotExistException):
-            lib.switch_source("/nonexistent/missing.xlsx")
+    assert len(lib.get_rows()) == SHEET1_EXPECTED_ROW_COUNT
 
-    def test_active_workbook_is_not_usable_after_failed_switch(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(FileDoesNotExistException):
-            lib.switch_source("/nonexistent/missing.xlsx")
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_rows()
 
-    def test_switch_to_unsupported_extension_raises(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.switch_source("/some/file.ods")
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_with_no_prior_workbook_opens_requested_backend(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.switch_source(path, read_only=read_only)
 
-    def test_switch_with_no_prior_workbook_and_bad_path_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileDoesNotExistException):
-            lib.switch_source("/nonexistent/missing.csv")
+    assert lib.get_rows() == SHEET1_ROWS
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_to_nonexistent_file_raises_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+
+    with pytest.raises(FileDoesNotExistException):
+        lib.switch_source("/nonexistent/missing.xlsx")
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_failed_switch_leaves_no_active_workbook_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+
+    with pytest.raises(FileDoesNotExistException):
+        lib.switch_source("/nonexistent/missing.xlsx")
+
+    with pytest.raises(WorkbookNotOpenException):
+        lib.get_rows()
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_to_unsupported_extension_raises_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+
+    with pytest.raises(FileFormatNotSupportedException):
+        lib.switch_source("/some/file.ods")
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_switch_with_no_prior_workbook_and_bad_path_raises_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    _ = backend_name
+    with pytest.raises(FileDoesNotExistException):
+        lib.switch_source("/nonexistent/missing.csv")
