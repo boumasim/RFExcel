@@ -93,6 +93,11 @@ class RFExcelLibrary:
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
 
+    @property
+    def active_workbook(self) -> IExcel | None:
+        """The currently active workbook instance, or ``None`` if no workbook is open."""
+        return self._active_workbook
+
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def _wrap_public_result(self, value: Any) -> Any:
         """Recursively converts dictionaries to Robot Framework DotDicts."""

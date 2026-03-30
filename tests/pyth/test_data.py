@@ -20,6 +20,25 @@ FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT]
 EDITABLE_FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT]
 
 # ---------------------------------------------------------------------------
+# Mappings
+# ---------------------------------------------------------------------------
+
+SUFFIX_BY_BACKEND: dict[str, str] = {
+    XLSX_EDIT: XLSX_FORMAT,
+    XLSX_STREAM: XLSX_FORMAT,
+    CSV_EDIT: CSV_FORMAT,
+    CSV_STREAM: CSV_FORMAT,
+    XLS_EDIT: XLS_FORMAT,
+    XLS_ON_DEMAND: XLS_FORMAT,
+}
+
+FORMAT_FILE: dict[str, str] = {
+    XLSX_FORMAT: XLSX_FILE,
+    CSV_FORMAT:  CSV_FILE,
+    XLS_FORMAT:  XLS_FILE,
+}
+
+# ---------------------------------------------------------------------------
 # Backend registry
 # ---------------------------------------------------------------------------
 
@@ -32,13 +51,6 @@ BACKENDS: dict[str, tuple[str, bool]] = {
     XLS_EDIT:      (XLS_FILE,  False),
     XLS_ON_DEMAND: (XLS_FILE,  True),
 }
-
-FORMAT_FILE: dict[str, str] = {
-    XLSX_FORMAT: XLSX_FILE,
-    CSV_FORMAT:  CSV_FILE,
-    XLS_FORMAT:  XLS_FILE,
-}
-
 
 def open_backend(lib: RFExcelLibrary, backend_name: str) -> None:
     path, read_only = BACKENDS[backend_name]

@@ -6,99 +6,108 @@ from rfexcel.exception.library_exceptions import (
     FileAlreadyExistsException, FileFormatNotSupportedException,
     HeadersNotDeterminedException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLSX_FILE
+from tests.pyth.test_data import (CSV_FORMAT, FORMAT_FILE, FORMAT_LIST,
+                                  XLS_FORMAT, XLSX_FORMAT)
 
-# ---------------------------------------------------------------------------
-# positive
-# ---------------------------------------------------------------------------
+BACKEND_CREATABLE_BY_FORMAT: dict[str, bool] = {
+    XLSX_FORMAT: True,
+    XLS_FORMAT:  False,
+    CSV_FORMAT:  True,
+}
 
-class TestCreateWorkbookPositive:
+CREATABLE_FORMATS     = [fmt for fmt in FORMAT_LIST if BACKEND_CREATABLE_BY_FORMAT[fmt]]
+NON_CREATABLE_FORMATS = [fmt for fmt in FORMAT_LIST if not BACKEND_CREATABLE_BY_FORMAT[fmt]]
 
-    @pytest.mark.parametrize("filename", ["new.xlsx", "new.csv"], ids=["xlsx", "csv"])
-    def test_create_sets_active_workbook(
-        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
-    ):
-        lib.create_workbook(str(tmp_path / filename))
-        assert lib._active_workbook is not None
 
-    @pytest.mark.parametrize("filename", ["new.xlsx", "new.csv"], ids=["xlsx", "csv"])
-    def test_create_produces_file_on_disk(
-        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
-    ):
-        path = tmp_path / filename
-        lib.create_workbook(str(path))
-        assert path.exists()
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_create_sets_active_workbook(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    lib.create_workbook(str(tmp_path / f"new.{fmt}"))
+    assert lib.active_workbook is not None
 
-    def test_created_xlsx_is_immediately_readable(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "empty.xlsx")
+
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_create_produces_file_on_disk(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    path = tmp_path / f"created.{fmt}"
+    lib.create_workbook(str(path))
+    assert path.exists()
+
+
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_created_empty_file_raises_on_get_rows(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    lib.create_workbook(str(tmp_path / f"empty.{fmt}"))
+    with pytest.raises(HeadersNotDeterminedException):
+        lib.get_rows()
+
+
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_create_on_existing_file_raises(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    path = str(tmp_path / f"existing.{fmt}")
+    lib.create_workbook(path)
+    lib.close()
+    with pytest.raises(FileAlreadyExistsException):
         lib.create_workbook(path)
-        rows = lib.get_rows()
-        assert rows == []
 
-    def test_created_csv_get_rows_raises_on_empty_file(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "empty.csv")
-        lib.create_workbook(path)
-        with pytest.raises(HeadersNotDeterminedException):
-            lib.get_rows()
 
-# ---------------------------------------------------------------------------
-# negative
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("fmt", NON_CREATABLE_FORMATS, ids=NON_CREATABLE_FORMATS)
+def test_create_non_creatable_format_raises(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    with pytest.raises(FileFormatNotSupportedException):
+        lib.create_workbook(str(tmp_path / f"file.{fmt}"))
 
-class TestCreateWorkbookNegative:
 
-    @pytest.mark.parametrize("filename", ["existing.xlsx", "existing.csv"], ids=["xlsx", "csv"])
-    def test_create_on_existing_file_raises(
-        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
-    ):
-        path = str(tmp_path / filename)
-        lib.create_workbook(path)
-        lib.close()
-        with pytest.raises(FileAlreadyExistsException):
-            lib.create_workbook(path)
+@pytest.mark.parametrize("fmt", ["txt", "ods"], ids=["txt", "ods"])
+def test_create_unsupported_format_raises(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    with pytest.raises(FileFormatNotSupportedException):
+        lib.create_workbook(str(tmp_path / f"file.{fmt}"))
 
-    @pytest.mark.parametrize(
-        "filename",
-        ["legacy.xls", "notes.txt", "sheet.ods"],
-        ids=["xls", "txt", "ods"],
-    )
-    def test_create_unsupported_format_raises(
-        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
-    ):
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.create_workbook(str(tmp_path / filename))
 
-    def test_active_workbook_changed_after_failed_create(self, lib: RFExcelLibrary, tmp_path: Path):
-        lib.load_workbook(XLSX_FILE)
-        active_before = lib._active_workbook
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.create_workbook(str(tmp_path / "bad.txt"))
-        assert lib._active_workbook is not active_before
+@pytest.mark.parametrize("fmt", FORMAT_LIST, ids=FORMAT_LIST)
+def test_failed_create_clears_previously_active_workbook(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    lib.load_workbook(FORMAT_FILE[fmt])
+    with pytest.raises(FileFormatNotSupportedException):
+        lib.create_workbook(str(tmp_path / "bad.ods"))
+    assert lib.active_workbook is None
 
-# ---------------------------------------------------------------------------
-# edge cases
-# ---------------------------------------------------------------------------
 
-class TestCreateWorkbookEdge:
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_create_with_nested_new_directories(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    path = tmp_path / "a" / "b" / "c" / f"deep.{fmt}"
+    lib.create_workbook(str(path))
+    assert path.exists()
 
-    def test_create_xlsx_with_nested_new_directories(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(tmp_path / "a" / "b" / "c" / "deep.xlsx")
-        lib.create_workbook(path)
-        assert Path(path).exists()
 
-    @pytest.mark.parametrize("filename", ["roundtrip.xlsx", "roundtrip.csv"], ids=["xlsx", "csv"])
-    def test_created_file_can_be_loaded_afterwards(
-        self, lib: RFExcelLibrary, tmp_path: Path, filename: str
-    ):
-        path = str(tmp_path / filename)
-        lib.create_workbook(path)
-        lib.load_workbook(path)
-        assert lib._active_workbook is not None
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_created_file_can_be_loaded_afterwards(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    path = str(tmp_path / f"roundtrip.{fmt}")
+    lib.create_workbook(path)
+    lib.load_workbook(path)
+    assert lib.active_workbook is not None
 
-    def test_two_different_workbooks_created_independently(self, lib: RFExcelLibrary, tmp_path: Path):
-        path_a = str(tmp_path / "a.xlsx")
-        path_b = str(tmp_path / "b.xlsx")
-        lib.create_workbook(path_a)
-        lib.create_workbook(path_b)
-        assert Path(path_a).exists()
-        assert Path(path_b).exists()
+
+@pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
+def test_two_workbooks_created_independently(
+    lib: RFExcelLibrary, tmp_path: Path, fmt: str
+) -> None:
+    path_a = tmp_path / f"a.{fmt}"
+    path_b = tmp_path / f"b.{fmt}"
+    lib.create_workbook(str(path_a))
+    lib.create_workbook(str(path_b))
+    assert path_a.exists()
+    assert path_b.exists()
