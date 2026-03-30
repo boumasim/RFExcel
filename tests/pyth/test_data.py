@@ -1,5 +1,7 @@
+import shutil
+
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE, Path
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -22,6 +24,7 @@ EDITABLE_FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT]
 # ---------------------------------------------------------------------------
 
 BACKENDS: dict[str, tuple[str, bool]] = {
+    # Backend name: (file path, read-only)
     XLSX_EDIT:     (XLSX_FILE, False),
     XLSX_STREAM:   (XLSX_FILE, True),
     CSV_EDIT:      (CSV_FILE,  False),
@@ -41,7 +44,21 @@ def open_backend(lib: RFExcelLibrary, backend_name: str) -> None:
     path, read_only = BACKENDS[backend_name]
     lib.load_workbook(path, read_only=read_only)
 
+def copy_backend_file(backend_name: str, tmp_path: Path) -> str:
+    source_path, _ = BACKENDS[backend_name]
+    source = Path(source_path)
+    copied_path = tmp_path / source.name
+    shutil.copy(source, copied_path)
+    return str(copied_path)
+
+def load_backend_copy(lib: RFExcelLibrary, backend_name: str, tmp_path: Path) -> str:
+    copied_path = copy_backend_file(backend_name, tmp_path)
+    _, read_only = BACKENDS[backend_name]
+    lib.load_workbook(copied_path, read_only=read_only)
+    return copied_path
+
 BACKEND_NAMES = list(BACKENDS)
+STREAMING_BACKENDS = [XLSX_STREAM, CSV_STREAM, XLS_ON_DEMAND]
 
 # ---------------------------------------------------------------------------
 # Common data
@@ -75,3 +92,5 @@ XLS_ROWS = [
     {"Index": 8, "First Name": "Earlean",  "Last Name": "Melgar",    "Gender": "Female", "Country": "United States", "Age": 27},
     {"Index": 9, "First Name": "Vincenza", "Last Name": "Weiland",   "Gender": "Female", "Country": "United States", "Age": 40},
 ]
+
+

@@ -10,7 +10,7 @@ from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_HEADERS, CSV_ROWS, CSV_STREAM, EDITABLE_FORMAT_LIST,
                                   XLS_EDIT, XLS_HEADERS, XLS_ON_DEMAND,
                                   XLS_ROWS, XLSX_EDIT, XLSX_HEADERS, XLSX_ROWS,
-                                  XLSX_STREAM, open_backend, FORMAT_LIST)
+                                  XLSX_STREAM, open_backend)
 
 STREAMING_VIOLATION_BACKENDS = [XLSX_STREAM, CSV_STREAM]
 
