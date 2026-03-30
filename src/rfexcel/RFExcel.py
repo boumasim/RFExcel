@@ -92,6 +92,9 @@ class RFExcel(IExcel, ISetExcel):
 
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
 
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
+
         result: List[DictRowData] = []
         row_index = header_row + 1
 

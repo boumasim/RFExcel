@@ -14,13 +14,15 @@ XLS_ON_DEMAND = "xls_on_demand"
 XLSX_FORMAT = "xlsx"
 CSV_FORMAT = "csv"
 XLS_FORMAT = "xls"
+FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT]
+EDITABLE_FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT]
 
 # ---------------------------------------------------------------------------
 # Backend registry
 # ---------------------------------------------------------------------------
 
 BACKENDS: dict[str, tuple[str, bool]] = {
-    XLS_EDIT:     (XLSX_FILE, False),
+    XLSX_EDIT:     (XLSX_FILE, False),
     XLSX_STREAM:   (XLSX_FILE, True),
     CSV_EDIT:      (CSV_FILE,  False),
     CSV_STREAM:    (CSV_FILE,  True),
@@ -39,11 +41,13 @@ def open_backend(lib: RFExcelLibrary, backend_name: str) -> None:
     path, read_only = BACKENDS[backend_name]
     lib.load_workbook(path, read_only=read_only)
 
+BACKEND_NAMES = list(BACKENDS)
+
 # ---------------------------------------------------------------------------
 # Common data
 # ---------------------------------------------------------------------------
 XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
-XLS_HEADERS_SHEET_1  = ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
+XLS_HEADERS  = ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
 CSV_HEADERS = ["Product ID", "Description", "Price", "Location"]
 
 XLSX_ROWS = [
