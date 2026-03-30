@@ -38,6 +38,15 @@ FORMAT_FILE: dict[str, str] = {
     XLS_FORMAT:  XLS_FILE,
 }
 
+EXPECTED_ROW_COUNT_BY_BACKEND: dict[str, int] = {
+    XLSX_EDIT: 4,
+    XLSX_STREAM: 4,
+    CSV_EDIT: 4,
+    CSV_STREAM: 4,
+    XLS_EDIT: 9,
+    XLS_ON_DEMAND: 9,
+}
+
 # ---------------------------------------------------------------------------
 # Backend registry
 # ---------------------------------------------------------------------------
