@@ -3,16 +3,8 @@ import pytest
 from rfexcel.exception.library_exceptions import (
     OperationNotSupportedForFormat, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
-                                  XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
-                                  XLSX_STREAM, open_backend)
-
-EXPECTED_SHEET_NAMES_BY_BACKEND: dict[str, list[str]] = {
-    XLSX_EDIT: ["List 1", "Sheet2", "Sheet3", "Sheet4"],
-    XLSX_STREAM: ["List 1", "Sheet2", "Sheet3", "Sheet4"],
-    XLS_EDIT: ["First", "Second"],
-    XLS_ON_DEMAND: ["First", "Second"],
-}
+from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM, SHEET_LIST,
+                                  XLSX_EDIT, open_backend)
 
 CSV_BACKENDS = [CSV_EDIT, CSV_STREAM]
 
@@ -27,7 +19,7 @@ def test_returns_correct_sheet_names(
         with pytest.raises(OperationNotSupportedForFormat):
             lib.list_sheet_names()
         return
-    assert lib.list_sheet_names() == EXPECTED_SHEET_NAMES_BY_BACKEND[backend_name]
+    assert lib.list_sheet_names() == SHEET_LIST
 
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)

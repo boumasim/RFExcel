@@ -19,6 +19,11 @@ XLS_FORMAT = "xls"
 FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT]
 EDITABLE_FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT]
 
+SHEET1_NAME = "Sheet1"
+SHEET2_NAME = "Sheet2"
+SHEET3_NAME = "Sheet3"
+SHEET_LIST = [SHEET1_NAME, SHEET2_NAME, SHEET3_NAME]
+
 # ---------------------------------------------------------------------------
 # Mappings
 # ---------------------------------------------------------------------------
@@ -36,15 +41,6 @@ FORMAT_FILE: dict[str, str] = {
     XLSX_FORMAT: XLSX_FILE,
     CSV_FORMAT:  CSV_FILE,
     XLS_FORMAT:  XLS_FILE,
-}
-
-EXPECTED_ROW_COUNT_BY_BACKEND: dict[str, int] = {
-    XLSX_EDIT: 4,
-    XLSX_STREAM: 4,
-    CSV_EDIT: 4,
-    CSV_STREAM: 4,
-    XLS_EDIT: 9,
-    XLS_ON_DEMAND: 9,
 }
 
 # ---------------------------------------------------------------------------
@@ -84,34 +80,27 @@ def load_backend_copy(lib: RFExcelLibrary, backend_name: str, tmp_path: Path) ->
 # ---------------------------------------------------------------------------
 # Common data
 # ---------------------------------------------------------------------------
-XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
-XLS_HEADERS  = ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
-CSV_HEADERS = ["Product ID", "Description", "Price", "Location"]
-
-XLSX_ROWS = [
+SHEET1_HEADERS = ["Product ID", "Description", "Price", "Location"]
+SHEET1_ROWS = [
     {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,  "Location": "Warehouse A, Shelf 2"},
     {"Product ID": "P-201", "Description": "Keyboard, Mechanical",      "Price": 89.99, "Location": "Store Front"},
     {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": 150,   "Location": "Paris, France"},
     {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,  "Location": "OnlineP"},
 ]
+SHEET1_EXPECTED_ROW_COUNT = 4
 
-CSV_ROWS = [
-    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,  "Location": "Warehouse A, Shelf 2"},
-    {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": 89.99, "Location": "Store Front"},
-    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": 150,   "Location": "Paris, France"},
-    {"Product ID": "P-203", "Description": "USB Cable, 3ft",            "Price": 5.99,  "Location": "Online"},
+SHEET2_HEADERS: list[str] = ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
+SHEET2_ROWS = [
+    {"Index": 1, "First Name": "Dulce",     "Last Name": "Abril",       "Gender": "Female",     "Country": "United States", "Age": 32},
+    {"Index": 2, "First Name": "Mara",      "Last Name": "Hashimoto",   "Gender": "Female",     "Country": "Great Britain", "Age": 25},
+    {"Index": 3, "First Name": "Philip",    "Last Name": "Gent",        "Gender": "Male",       "Country": "France",        "Age": 36},
+    {"Index": 4, "First Name": "Kathleen",  "Last Name": "Hanner",      "Gender": "Female",     "Country": "United States", "Age": 25},
+    {"Index": 5, "First Name": "Nereida",   "Last Name": "Magwood",     "Gender": "Female",     "Country": "United States", "Age": 58},
+    {"Index": 6, "First Name": "Gaston",    "Last Name": "Brumm",       "Gender": "Male",       "Country": "United States", "Age": 24},
+    {"Index": 7, "First Name": "Etta",      "Last Name": "Hurn",        "Gender": "Female",     "Country": "Great Britain", "Age": 56},
+    {"Index": 8, "First Name": "Earlean",   "Last Name": "Melgar",      "Gender": "Female",     "Country": "United States", "Age": 27},
+    {"Index": 9, "First Name": "Vincenza",  "Last Name": "Weiland",      "Gender": "Female",    "Country": "United States", "Age": 40},
 ]
-
-XLS_ROWS = [
-    {"Index": 1, "First Name": "Dulce",    "Last Name": "Abril",     "Gender": "Female", "Country": "United States", "Age": 32},
-    {"Index": 2, "First Name": "Mara",     "Last Name": "Hashimoto", "Gender": "Female", "Country": "Great Britain", "Age": 25},
-    {"Index": 3, "First Name": "Philip",   "Last Name": "Gent",      "Gender": "Male",   "Country": "France",        "Age": 36},
-    {"Index": 4, "First Name": "Kathleen", "Last Name": "Hanner",    "Gender": "Female", "Country": "United States", "Age": 25},
-    {"Index": 5, "First Name": "Nereida",  "Last Name": "Magwood",   "Gender": "Female", "Country": "United States", "Age": 58},
-    {"Index": 6, "First Name": "Gaston",   "Last Name": "Brumm",     "Gender": "Male",   "Country": "United States", "Age": 24},
-    {"Index": 7, "First Name": "Etta",     "Last Name": "Hurn",      "Gender": "Female", "Country": "Great Britain", "Age": 56},
-    {"Index": 8, "First Name": "Earlean",  "Last Name": "Melgar",    "Gender": "Female", "Country": "United States", "Age": 27},
-    {"Index": 9, "First Name": "Vincenza", "Last Name": "Weiland",   "Gender": "Female", "Country": "United States", "Age": 40},
-]
+SHEET2_EXPECTED_ROW_COUNT = 9
 
 

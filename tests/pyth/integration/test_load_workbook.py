@@ -5,8 +5,8 @@ from rfexcel.exception.library_exceptions import (
     WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT,
-                                  CSV_STREAM, XLS_EDIT, XLS_ON_DEMAND,
-                                  XLSX_EDIT, XLSX_STREAM, EXPECTED_ROW_COUNT_BY_BACKEND,
+                                  CSV_STREAM, SHEET1_EXPECTED_ROW_COUNT, XLS_EDIT, XLS_ON_DEMAND,
+                                  XLSX_EDIT, XLSX_STREAM,
                                   XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT)
 
 EDIT_AND_READONLY_PAIRS: list[tuple[str, str]] = [
@@ -22,7 +22,7 @@ def test_load_workbook_is_immediately_readable_for_all_backends(
 ) -> None:
     path, read_only = BACKENDS[backend_name]
     lib.load_workbook(path, read_only=read_only)
-    assert len(lib.get_rows()) == EXPECTED_ROW_COUNT_BY_BACKEND[backend_name]
+    assert len(lib.get_rows()) == SHEET1_EXPECTED_ROW_COUNT
 
 
 @pytest.mark.parametrize("path", [
@@ -70,7 +70,7 @@ def test_loading_after_close_works_for_all_backends(
     lib.close()
     lib.load_workbook(path, read_only=read_only)
 
-    assert len(lib.get_rows()) == EXPECTED_ROW_COUNT_BY_BACKEND[backend_name]
+    assert len(lib.get_rows()) == SHEET1_EXPECTED_ROW_COUNT
 
 
 @pytest.mark.parametrize(
