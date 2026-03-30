@@ -1,223 +1,177 @@
-import shutil
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  NullComponentException,
+                                                  NotSupportedInReadOnlyMode,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT, XLS_EDIT,
+                                  load_backend_copy, EDITABLE_BACKENDS, XLSX_FORMAT)
 
-# ---------------------------------------------------------------------------
-# XLSX – Edit mode
-# ---------------------------------------------------------------------------
+SAVE_AS_SUFFIX_BY_BACKEND: dict[str, str] = {
+    backend_name: (XLSX_FORMAT if backend_name == XLS_EDIT else Path(BACKENDS[backend_name][0]).suffix.lstrip("."))
+    for backend_name in BACKEND_NAMES
+}
 
-class TestSaveWorkbookXlsxEdit:
-
-    def test_save_in_place_persists_changes(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        lib.add_sheet("Persisted")
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        assert "Persisted" in lib2.list_sheet_names()
-        lib2.close()
-
-    def test_save_as_creates_new_file(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        new_path = tmp_path / "copy.xlsx"
-        lib.load_workbook(path)
-        lib.save_workbook(str(new_path))
-        assert new_path.exists()
-
-    def test_save_as_does_not_modify_original(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        new_path = str(tmp_path / "copy.xlsx")
-        lib.load_workbook(path)
-        lib.add_sheet("OnlyInCopy")
-        lib.save_workbook(new_path)
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        assert "OnlyInCopy" not in lib2.list_sheet_names()
-        lib2.close()
-
-    def test_save_as_updates_active_path(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        new_path = str(tmp_path / "moved.xlsx")
-        lib.load_workbook(path)
-        lib.save_workbook(new_path)
-        lib.add_sheet("SecondSave")
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(new_path)
-        assert "SecondSave" in lib2.list_sheet_names()
-        lib2.close()
-
-    def test_save_preserves_all_existing_sheets(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        names_before = lib.list_sheet_names()
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        assert lib2.list_sheet_names() == names_before
-        lib2.close()
+COPY_ONLY_MARKER = "OnlyInCopy"
+SECOND_SAVE_MARKER = "SecondSave"
 
 
-# ---------------------------------------------------------------------------
-# Read-only / streaming modes – raises for all formats
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    ("source", "filename"),
-    [
-        (XLSX_FILE, "data.xlsx"),
-        (XLS_FILE,  "example.xls"),
-        (CSV_FILE,  "data.csv"),
-    ],
-    ids=["xlsx_stream", "xls_on_demand", "csv_stream"],
-)
-def test_save_raises_in_read_only_mode(
-    lib: RFExcelLibrary, tmp_path: Path, source: str, filename: str
-):
-    path = str(shutil.copy(source, tmp_path / filename))
-    lib.load_workbook(path, read_only=True)
-    with pytest.raises(NullComponentException):
-        lib.save_workbook()
+def build_csv_marker_row(marker: str) -> dict[str, Any]:
+    return {
+        "Product ID": f"P-{marker}",
+        "Description": marker,
+        "Price": 1.23,
+        "Location": marker,
+    }
 
 
-# ---------------------------------------------------------------------------
-# XLS – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestSaveWorkbookXlsEdit:
-
-    def test_save_triggers_implicit_conversion_and_produces_file(
-        self, lib: RFExcelLibrary, tmp_path: Path
-    ):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        new_path = str(tmp_path / "result.xlsx")
-        lib.load_workbook(path)
-        lib.save_workbook(new_path)
-        lib.close()
-        assert (tmp_path / "result.xlsx").exists()
-
-    def test_save_as_xlsx_succeeds_without_prior_write_op(
-        self, lib: RFExcelLibrary, tmp_path: Path
-    ):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        new_path = tmp_path / "converted.xlsx"
-        lib.load_workbook(path)
-        lib.save_workbook(str(new_path))
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(str(new_path))
-        assert isinstance(lib2.list_sheet_names(), list)
-        lib2.close()
-
-    def test_save_preserves_added_sheet(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        new_path = str(tmp_path / "out.xlsx")
-        lib.load_workbook(path)
-        lib.add_sheet("NewSheet")
-        lib.save_workbook(new_path)
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(new_path)
-        assert "NewSheet" in lib2.list_sheet_names()
-        lib2.close()
-
-    def test_original_xls_untouched_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        new_path = str(tmp_path / "out.xlsx")
-        lib.load_workbook(path)
-        lib.add_sheet("NewSheet")
-        lib.save_workbook(new_path)
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        assert "NewSheet" not in lib2.list_sheet_names()
-        lib2.close()
+def read_rows(path: str) -> list[dict[str, Any]]:
+    reloaded_library = RFExcelLibrary()
+    reloaded_library.load_workbook(path)
+    try:
+        return cast(list[dict[str, Any]], reloaded_library.get_rows())
+    finally:
+        reloaded_library.close()
 
 
-# ---------------------------------------------------------------------------
-# CSV – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestSaveWorkbookCsvEdit:
-
-    def test_save_in_place_produces_readable_file(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path)
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        assert isinstance(lib2.get_rows(), list)
-        lib2.close()
-
-    def test_save_as_creates_new_csv_file(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        new_path = tmp_path / "output.csv"
-        lib.load_workbook(path)
-        lib.save_workbook(str(new_path))
-        assert new_path.exists()
-
-    def test_save_as_preserves_content(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        new_path = str(tmp_path / "output.csv")
-        lib.load_workbook(path)
-        rows_original = lib.get_rows()
-        lib.save_workbook(new_path)
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(new_path)
-        assert lib2.get_rows() == rows_original
-        lib2.close()
+def read_sheet_names(path: str) -> list[str]:
+    reloaded_library = RFExcelLibrary()
+    reloaded_library.load_workbook(path)
+    try:
+        return reloaded_library.list_sheet_names()
+    finally:
+        reloaded_library.close()
 
 
-# ---------------------------------------------------------------------------
-# No workbook open
-# ---------------------------------------------------------------------------
+def apply_marker_mutation(lib: RFExcelLibrary, backend_name: str, marker: str) -> None:
+    if backend_name == CSV_EDIT:
+        lib.append_row(build_csv_marker_row(marker))
+        return
 
-class TestSaveWorkbookNoWorkbook:
+    lib.add_sheet(marker)
 
-    def test_save_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
-        with pytest.raises(WorkbookNotOpenException):
+
+def assert_marker_persisted(path: str, backend_name: str, marker: str) -> None:
+    if backend_name == CSV_EDIT:
+        assert read_rows(path)[-1] == build_csv_marker_row(marker)
+        return
+
+    assert marker in read_sheet_names(path)
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_save_workbook_matches_backend_capabilities_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    loaded_path = load_backend_copy(lib, backend_name, tmp_path)
+
+    if BACKENDS[backend_name][1]:
+        with pytest.raises(NotSupportedInReadOnlyMode):
             lib.save_workbook()
+        return
+
+    reload_path = loaded_path
+
+    if backend_name == CSV_EDIT:
+        expected_rows = cast(list[dict[str, Any]], lib.get_rows())
+        lib.save_workbook()
+        lib.close()
+        assert read_rows(reload_path) == expected_rows
+        return
+
+    apply_marker_mutation(lib, backend_name, COPY_ONLY_MARKER)
+
+    if backend_name == XLS_EDIT:
+        reload_path = str(tmp_path / "persisted.xlsx")
+        lib.save_workbook(reload_path)
+    else:
+        lib.save_workbook()
+
+    lib.close()
+    assert COPY_ONLY_MARKER in read_sheet_names(reload_path)
 
 
-# ---------------------------------------------------------------------------
-# FileSaveException – bad path
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_save_as_matches_backend_capabilities_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    new_path = tmp_path / f"copy.{SAVE_AS_SUFFIX_BY_BACKEND[backend_name]}"
 
-@pytest.mark.parametrize(
-    ("source", "out_filename"),
-    [
-        (XLSX_FILE, "out.xlsx"),
-        (CSV_FILE,  "out.csv"),
-    ],
-    ids=["xlsx", "csv"],
-)
-def test_save_to_nonexistent_dir_raises(
-    lib: RFExcelLibrary, tmp_path: Path, source: str, out_filename: str
-):
-    path = str(shutil.copy(source, tmp_path / Path(source).name))
-    lib.load_workbook(path)
+    if BACKENDS[backend_name][1]:
+        with pytest.raises(NotSupportedInReadOnlyMode):
+            lib.save_workbook(str(new_path))
+        return
+
+    lib.save_workbook(str(new_path))
+    assert new_path.exists()
+
+
+@pytest.mark.parametrize("backend_name", EDITABLE_BACKENDS, ids=EDITABLE_BACKENDS)
+def test_save_as_keeps_original_copy_unchanged_for_editable_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    loaded_path = load_backend_copy(lib, backend_name, tmp_path)
+    new_path = tmp_path / f"isolated.{SAVE_AS_SUFFIX_BY_BACKEND[backend_name]}"
+
+    if backend_name == CSV_EDIT:
+        rows_before = cast(list[dict[str, Any]], lib.get_rows())
+        apply_marker_mutation(lib, backend_name, COPY_ONLY_MARKER)
+        lib.save_workbook(str(new_path))
+        lib.close()
+
+        assert read_rows(loaded_path) == rows_before
+        assert_marker_persisted(str(new_path), backend_name, COPY_ONLY_MARKER)
+        return
+
+    sheet_names_before = lib.list_sheet_names()
+    apply_marker_mutation(lib, backend_name, COPY_ONLY_MARKER)
+    lib.save_workbook(str(new_path))
+    lib.close()
+
+    assert read_sheet_names(loaded_path) == sheet_names_before
+    assert_marker_persisted(str(new_path), backend_name, COPY_ONLY_MARKER)
+
+
+@pytest.mark.parametrize("backend_name", EDITABLE_BACKENDS, ids=EDITABLE_BACKENDS)
+def test_save_as_updates_active_path_for_subsequent_saves(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    new_path = tmp_path / f"moved.{SAVE_AS_SUFFIX_BY_BACKEND[backend_name]}"
+
+    lib.save_workbook(str(new_path))
+    apply_marker_mutation(lib, backend_name, SECOND_SAVE_MARKER)
+    lib.save_workbook()
+    lib.close()
+
+    assert_marker_persisted(str(new_path), backend_name, SECOND_SAVE_MARKER)
+
+
+@pytest.mark.parametrize("backend_name", EDITABLE_BACKENDS, ids=EDITABLE_BACKENDS)
+def test_save_to_nonexistent_dir_raises_for_editable_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    bad_path = tmp_path / "no_such_dir" / f"out.{SAVE_AS_SUFFIX_BY_BACKEND[backend_name]}"
+
     with pytest.raises(FileSaveException):
-        lib.save_workbook(str(tmp_path / "no_such_dir" / out_filename))
+        lib.save_workbook(str(bad_path))
+
+
+def test_save_raises_when_no_workbook_is_loaded(lib: RFExcelLibrary) -> None:
+    with pytest.raises(WorkbookNotOpenException):
+        lib.save_workbook()

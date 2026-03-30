@@ -159,7 +159,10 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def save_workbook(self, path: str | None = None) -> None:
-        self._writer.save(Path(path) if path else None, self._resource)
+        try:
+            self._writer.save(Path(path) if path else None, self._resource)
+        except NullComponentException:
+            raise NotSupportedInReadOnlyMode()
 
     @override
     def append_row(self, row_data: InsertDictType, header_row: int) -> None:

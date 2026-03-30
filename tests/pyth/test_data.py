@@ -60,6 +60,9 @@ BACKENDS: dict[str, tuple[str, bool]] = {
     XLS_EDIT:      (XLS_FILE,  False),
     XLS_ON_DEMAND: (XLS_FILE,  True),
 }
+BACKEND_NAMES = list(BACKENDS)
+STREAMING_BACKENDS = [XLSX_STREAM, CSV_STREAM, XLS_ON_DEMAND]
+EDITABLE_BACKENDS = [backend_name for backend_name in BACKEND_NAMES if not BACKENDS[backend_name][1]]
 
 def open_backend(lib: RFExcelLibrary, backend_name: str) -> None:
     path, read_only = BACKENDS[backend_name]
@@ -77,9 +80,6 @@ def load_backend_copy(lib: RFExcelLibrary, backend_name: str, tmp_path: Path) ->
     _, read_only = BACKENDS[backend_name]
     lib.load_workbook(copied_path, read_only=read_only)
     return copied_path
-
-BACKEND_NAMES = list(BACKENDS)
-STREAMING_BACKENDS = [XLSX_STREAM, CSV_STREAM, XLS_ON_DEMAND]
 
 # ---------------------------------------------------------------------------
 # Common data

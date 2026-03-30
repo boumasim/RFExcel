@@ -6,7 +6,7 @@ from xlrd import Book
 
 from rfexcel.exception.library_exceptions import (
     LibraryException, OperationNotSupportedForFormat,
-    SheetDoesNotExistException)
+    SheetDoesNotExistException, StreamingViolationException)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
 from rfexcel.utils.types import ColumnValues
@@ -109,6 +109,11 @@ class XlsStreamResource(IResource):
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
+        
+        if row_index > self._last_read_row_index:
+            self._last_read_row_index = row_index
+        else:
+            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
 
         target_xlrd_index = row_index - 1
 
