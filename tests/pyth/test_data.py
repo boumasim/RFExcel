@@ -83,6 +83,12 @@ def load_backend_copy(lib: RFExcelLibrary, backend_name: str, tmp_path: Path) ->
 # Common data
 # ---------------------------------------------------------------------------
 SHEET1_HEADERS = ["Product ID", "Description", "Price", "Location"]
+SHEET1_HEADER_MAP_DICT = {
+    "Location": 4,
+    "Description": 2,
+    "Price": 3,
+    "Product ID": 1,
+}
 SHEET1_ROWS = [
     {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,  "Location": "Warehouse A, Shelf 2"},
     {"Product ID": "P-201", "Description": "Keyboard, Mechanical",      "Price": 89.99, "Location": "Store Front"},

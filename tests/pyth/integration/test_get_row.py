@@ -5,329 +5,138 @@ import pytest
 from rfexcel.exception.library_exceptions import (StreamingViolationException,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
-
-XLSX_HEADERS = ["Product ID", "Description", "Price", "Location"]
-XLS_HEADERS  = ["Index", "First Name", "Last Name", "Gender", "Country", "Age", "", ""]
-
-XLSX_ROW2_LIST = ["P-200", "Wireless Mouse",            25.50,  "Warehouse A, Shelf 2"]
-XLSX_ROW3_LIST = ["P-201", "Keyboard, Mechanical",      89.99,  "Store Front"]
-XLSX_ROW5_LIST = ["P-203", "USB Cable",                 5.99,   "OnlineP"]
-
-CSV_ROW2_LIST  = ["P-200", "Wireless Mouse",            25.5,     "Warehouse A, Shelf 2"]
-CSV_ROW3_LIST  = ["P-201", "Keyboard, Mechanical, RGB", 89.99,    "Store Front"]
-
-XLS_ROW2_LIST  = [1, "Dulce", "Abril", "Female", "United States", 32]
-XLS_ROW10_LIST = [9, "Vincenza", "Weiland", "Female", "United States", 40]
-
-XLSX_ROW2_DICT = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.50,  "Location": "Warehouse A, Shelf 2"}
-XLSX_ROW5_DICT = {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,   "Location": "OnlineP"}
-
-CSV_ROW2_DICT  = {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,   "Location": "Warehouse A, Shelf 2"}
-CSV_ROW3_DICT  = {"Product ID": "P-201", "Description": "Keyboard, Mechanical, RGB", "Price": 89.99,  "Location": "Store Front"}
-
-XLS_ROW2_DICT  = {"Index": 1, "First Name": "Dulce",    "Last Name": "Abril",   "Gender": "Female", "Country": "United States", "Age": 32}
-XLS_ROW10_DICT = {"Index": 9, "First Name": "Vincenza", "Last Name": "Weiland", "Gender": "Female", "Country": "United States", "Age": 40}
-
-
-# ---------------------------------------------------------------------------
-# Shared behaviour across formats: no-headers → list
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    ("path", "read_only", "row_num"),
-    [
-        (XLSX_FILE, False, 2),
-        (XLSX_FILE, True,  1),
-        (XLS_FILE,  False, 2),
-        (CSV_FILE,  False, 2),
-    ],
-    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "csv_edit"],
-)
-def test_row_without_headers_returns_list(
-    lib: RFExcelLibrary, path: str, read_only: bool, row_num: int
-):
-    lib.load_workbook(path, read_only=read_only)
-    assert isinstance(lib.get_row(row_num), list)
-
-
-# ---------------------------------------------------------------------------
-# Shared behaviour: out-of-bounds row → empty list (edit modes only)
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "path",
-    [XLSX_FILE, XLS_FILE, CSV_FILE],
-    ids=["xlsx_edit", "xls_edit", "csv_edit"],
-)
-def test_out_of_bounds_row_returns_empty_list(lib: RFExcelLibrary, path: str):
-    lib.load_workbook(path)
-    assert lib.get_row(99) == []
-
-
-# ---------------------------------------------------------------------------
-# Shared behaviour: repeated calls return same row (edit modes only)
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "path",
-    [XLSX_FILE, XLS_FILE, CSV_FILE],
-    ids=["xlsx_edit", "xls_edit", "csv_edit"],
-)
-def test_repeated_calls_return_same_row(lib: RFExcelLibrary, path: str):
-    lib.load_workbook(path)
-    assert lib.get_row(2) == lib.get_row(2)
-
-
-# ---------------------------------------------------------------------------
-# Shared behaviour: streaming violation (stream modes only)
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "path",
-    [XLSX_FILE, CSV_FILE],
-    ids=["xlsx_stream", "csv_stream"],
-)
-def test_re_reading_same_row_raises_streaming_violation(lib: RFExcelLibrary, path: str):
-    lib.load_workbook(path, read_only=True)
-    lib.get_row(1)
-    with pytest.raises(StreamingViolationException):
-        lib.get_row(1)
-
-
-@pytest.mark.parametrize(
-    "path",
-    [XLSX_FILE, CSV_FILE],
-    ids=["xlsx_stream", "csv_stream"],
-)
-def test_reading_earlier_row_raises_streaming_violation(lib: RFExcelLibrary, path: str):
-    lib.load_workbook(path, read_only=True)
-    lib.get_row(1)
-    lib.get_row(2)
-    with pytest.raises(StreamingViolationException):
-        lib.get_row(1)
-
-
-# ---------------------------------------------------------------------------
-# xlsx edit mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowXlsxEdit:
-
-    def test_row_with_headers_returns_dict(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert isinstance(lib.get_row(2, headers=XLSX_HEADERS), dict)
-
-    def test_row2_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(2) == XLSX_ROW2_LIST
-
-    def test_row3_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(3) == XLSX_ROW3_LIST
-
-    def test_row5_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(5) == XLSX_ROW5_LIST
-
-    def test_row2_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(2, headers=XLSX_HEADERS) == XLSX_ROW2_DICT
-
-    def test_row5_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(5, headers=XLSX_HEADERS) == XLSX_ROW5_DICT
-
-    def test_list_length_equals_column_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert len(lib.get_row(2)) == 4
-
-    def test_header_row_itself_accessible(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(1) == XLSX_HEADERS
-
-    def test_dict_keys_match_supplied_headers(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        row = lib.get_row(2, headers=XLSX_HEADERS)
-        assert isinstance(row, dict)
-        assert list(cast(dict[str, Any], row).keys()) == XLSX_HEADERS
-
-
-# ---------------------------------------------------------------------------
-# xlsx stream mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowXlsxStream:
-
-    def test_first_row_is_header_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert lib.get_row(1) == XLSX_HEADERS
-
-    def test_sequential_rows_are_consistent(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        row1 = lib.get_row(1)
-        row2 = lib.get_row(2)
-        assert row1 == XLSX_HEADERS
-        assert row2 == XLSX_ROW2_LIST
-
-    def test_row_with_headers_returns_dict(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_row(1)
-        assert isinstance(lib.get_row(2, headers=XLSX_HEADERS), dict)
-
-    def test_stream_row2_dict_matches_edit_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        lib.get_row(1)
-        assert lib.get_row(2, headers=XLSX_HEADERS) == XLSX_ROW2_DICT
-
-
-# ---------------------------------------------------------------------------
-# xls edit mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowXlsStandard:
-
-    def test_row2_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(2) == XLS_ROW2_LIST
-
-    def test_row10_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(10) == XLS_ROW10_LIST
-
-    def test_row2_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(2, headers=XLS_HEADERS) == XLS_ROW2_DICT
-
-    def test_row10_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(10, headers=XLS_HEADERS) == XLS_ROW10_DICT
-
-    def test_numeric_values_are_native_floats(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        row = lib.get_row(2)
-        assert row[0] == 1
-        assert row[5] == 32
-
-    def test_trailing_empty_columns_are_filtered_out_in_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        row = lib.get_row(2)
-        assert len(row) == 6
-
-
-# ---------------------------------------------------------------------------
-# xls on_demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowXlsOnDemand:
-
-    def test_row2_list_matches_standard_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        on_demand = lib.get_row(2)
-        lib.close()
-        lib.load_workbook(XLS_FILE)
-        assert lib.get_row(2) == on_demand
-
-    def test_row2_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert lib.get_row(2, headers=XLS_HEADERS) == XLS_ROW2_DICT
-
-    def test_random_access_row10_then_row2(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        row10 = lib.get_row(10)
-        row2  = lib.get_row(2)
-        assert row10 == XLS_ROW10_LIST
-        assert row2  == XLS_ROW2_LIST
-
-
-# ---------------------------------------------------------------------------
-# csv edit mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowCsvEdit:
-
-    def test_row2_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(2) == CSV_ROW2_LIST
-
-    def test_row3_list_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(3) == CSV_ROW3_LIST
-
-    def test_row2_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(2, headers=XLSX_HEADERS) == CSV_ROW2_DICT
-
-    def test_row3_dict_values(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(3, headers=XLSX_HEADERS) == CSV_ROW3_DICT
-
-    def test_quoted_field_with_comma_is_single_value(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        row = lib.get_row(3)
-        assert row[1] == "Keyboard, Mechanical, RGB"
-
-    def test_header_row_readable_as_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib.get_row(1) == XLSX_HEADERS
-
-
-# ---------------------------------------------------------------------------
-# csv streaming mode
-# ---------------------------------------------------------------------------
-
-class TestGetRowCsvStream:
-
-    def test_first_row_is_header_row(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        assert lib.get_row(1) == XLSX_HEADERS
-
-    def test_sequential_rows_are_consistent(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        row1 = lib.get_row(1)
-        row2 = lib.get_row(2)
-        assert row1 == XLSX_HEADERS
-        assert row2 == CSV_ROW2_LIST
-
-    def test_row_with_headers_returns_dict(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)
-        assert isinstance(lib.get_row(2, headers=XLSX_HEADERS), dict)
-
-    def test_stream_row2_dict_matches_edit_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        lib.get_row(1)
-        assert lib.get_row(2, headers=XLSX_HEADERS) == CSV_ROW2_DICT
-
-
-# ---------------------------------------------------------------------------
-# negative / edge cases
-# ---------------------------------------------------------------------------
-
-class TestGetRowNegative:
-
-    def test_raises_when_no_workbook_loaded(self, lib: RFExcelLibrary):
-        with pytest.raises(WorkbookNotOpenException):
-            lib.get_row(1)
-
-    def test_raises_after_close(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
+from tests.pyth.test_data import (BACKEND_NAMES, SHEET1_ROWS, STREAMING_BACKENDS,
+                                  XLSX_EDIT, SHEET1_HEADERS, SHEET1_HEADER_MAP_DICT,
+                                  open_backend)
+
+SHEET1_ROWS_AS_LISTS = [
+    ["P-200", "Wireless Mouse", 25.5, "Warehouse A, Shelf 2"],
+    ["P-201", "Keyboard, Mechanical", 89.99, "Store Front"],
+    ["P-202", "Monitor 24-inch", 150, "Paris, France"],
+    ["P-203", "USB Cable", 5.99, "OnlineP"]
+]
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_without_headers_returns_expected_list_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    result = lib.get_row(2)
+    assert isinstance(result, list)
+    assert result == SHEET1_ROWS_AS_LISTS[0]
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_with_headers_returns_expected_dict_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    headers = SHEET1_HEADERS
+    result = lib.get_row(2, headers=headers)
+    assert isinstance(result, dict)
+    assert result == SHEET1_ROWS[0]
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_out_of_bounds_returns_empty_list_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    assert lib.get_row(9999) == []
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_repeated_get_row_call_matches_backend_mode_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    first_result = lib.get_row(2)
+
+    if backend_name in STREAMING_BACKENDS:
+        with pytest.raises(StreamingViolationException):
             lib.get_row(2)
+        return
 
-    def test_partial_headers_list_maps_as_many_as_provided(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        row = lib.get_row(2, headers=["Product ID", "Description"])
-        assert isinstance(row, dict)
-        assert row["Product ID"] == "P-200"
-        assert row["Description"] == "Wireless Mouse"
+    assert lib.get_row(2) == first_result
 
-    def test_empty_headers_list_returns_list_not_dict(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        result = lib.get_row(2, headers=[])
-        assert isinstance(result, list)
 
-    def test_row_zero_returns_empty_list(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib.get_row(0) == []
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_reading_earlier_row_after_forward_reads_matches_backend_mode_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    first_row = lib.get_row(1)
+    second_row = lib.get_row(2)
+
+    if backend_name in STREAMING_BACKENDS:
+        with pytest.raises(StreamingViolationException):
+            lib.get_row(1)
+        return
+
+    assert lib.get_row(1) == first_row
+    assert lib.get_row(2) == second_row
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_with_partial_headers_maps_only_requested_columns_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    requested_headers = SHEET1_HEADERS[:2]
+
+    result = lib.get_row(2, headers=requested_headers)
+    typed_row = cast(dict[str, Any], result)
+
+    assert isinstance(result, dict)
+    assert list(typed_row.keys()) == requested_headers
+    assert len(typed_row) == 2
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_with_empty_headers_returns_list_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    result = lib.get_row(2, headers=[])
+    assert isinstance(result, list)
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_row_zero_returns_empty_list_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    assert lib.get_row(0) == []
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_get_row_with_headers_uses_expected_header_order_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    headers = SHEET1_HEADER_MAP_DICT
+
+    result = lib.get_row(2, headers=headers)
+
+    assert result == SHEET1_ROWS[0]
+
+
+def test_get_row_raises_when_no_workbook_is_loaded(lib: RFExcelLibrary) -> None:
+    with pytest.raises(WorkbookNotOpenException):
+        lib.get_row(1)
+
+
+def test_get_row_raises_after_close(lib: RFExcelLibrary) -> None:
+    open_backend(lib, XLSX_EDIT)
+    lib.close()
+    with pytest.raises(WorkbookNotOpenException):
+        lib.get_row(1)
