@@ -20,6 +20,11 @@ class NullResource(IResource):
     @override
     def active_sheets(self) -> Worksheet | Chartsheet | None:
         raise NullComponentException()
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        raise NullComponentException()
 
     @property
     @override

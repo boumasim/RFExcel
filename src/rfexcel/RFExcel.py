@@ -137,6 +137,7 @@ class RFExcel(IExcel, ISetExcel):
             f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
+        prev_sheet = self._resource.current_sheet
         wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
         new_path: Path = self._resource.path.with_suffix('.xlsx')
         self._resource.close()
@@ -145,6 +146,7 @@ class RFExcel(IExcel, ISetExcel):
         self._metadata = XlsxMetadata()
         self._writer = XlsxWriter()
         self._style = XlsxStyle()
+        self._resource.switch_sheet(prev_sheet)
 
     @override
     def add_sheet(self, name: str) -> None:

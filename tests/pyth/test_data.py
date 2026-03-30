@@ -24,6 +24,8 @@ SHEET2_NAME = "Sheet2"
 SHEET3_NAME = "Sheet3"
 SHEET_LIST = [SHEET1_NAME, SHEET2_NAME, SHEET3_NAME]
 
+SHIFTED_ROW_START_IDX = 3
+
 # ---------------------------------------------------------------------------
 # Mappings
 # ---------------------------------------------------------------------------

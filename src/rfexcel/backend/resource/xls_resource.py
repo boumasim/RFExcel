@@ -24,6 +24,13 @@ class XlsEditResource(IResource):
     @override
     def active_sheets(self) -> xlrd.sheet.Sheet | None:
         return self._active_sheet
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.name
 
     @property
     @override
@@ -99,6 +106,13 @@ class XlsStreamResource(IResource):
     @override
     def active_sheets(self) -> xlrd.sheet.Sheet | None:
         return self._active_sheet
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.name
 
     @property
     @override
