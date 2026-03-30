@@ -3,75 +3,53 @@ import pytest
 from rfexcel.exception.library_exceptions import (
     OperationNotSupportedForFormat, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
+                                  XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
+                                  XLSX_STREAM, open_backend)
 
-XLSX_SHEET_NAMES = ["List 1", "Sheet2", "Sheet3", "Sheet4"]
-XLS_SHEET_NAMES  = ["First", "Second"]
+EXPECTED_SHEET_NAMES_BY_BACKEND: dict[str, list[str]] = {
+    XLSX_EDIT: ["List 1", "Sheet2", "Sheet3", "Sheet4"],
+    XLSX_STREAM: ["List 1", "Sheet2", "Sheet3", "Sheet4"],
+    XLS_EDIT: ["First", "Second"],
+    XLS_ON_DEMAND: ["First", "Second"],
+}
+
+CSV_BACKENDS = [CSV_EDIT, CSV_STREAM]
 
 
-# ---------------------------------------------------------------------------
-# XLSX and XLS – all modes
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    ("path", "read_only", "expected"),
-    [
-        (XLSX_FILE, False, XLSX_SHEET_NAMES),
-        (XLSX_FILE, True,  XLSX_SHEET_NAMES),
-        (XLS_FILE,  False, XLS_SHEET_NAMES),
-        (XLS_FILE,  True,  XLS_SHEET_NAMES),
-    ],
-    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand"],
-)
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_returns_correct_sheet_names(
-    lib: RFExcelLibrary, path: str, read_only: bool, expected: list[str]
-):
-    lib.load_workbook(path, read_only=read_only)
-    assert lib.list_sheet_names() == expected
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    if backend_name in CSV_BACKENDS:
+        with pytest.raises(OperationNotSupportedForFormat):
+            lib.list_sheet_names()
+        return
+    assert lib.list_sheet_names() == EXPECTED_SHEET_NAMES_BY_BACKEND[backend_name]
 
 
-@pytest.mark.parametrize(
-    ("path", "read_only"),
-    [
-        (XLSX_FILE, False),
-        (XLSX_FILE, True),
-        (XLS_FILE,  False),
-        (XLS_FILE,  True),
-    ],
-    ids=["xlsx_edit", "xlsx_stream", "xls_edit", "xls_on_demand"],
-)
-def test_returns_list_type(lib: RFExcelLibrary, path: str, read_only: bool):
-    lib.load_workbook(path, read_only=read_only)
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_returns_list_type_for_supported_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    if backend_name in CSV_BACKENDS:
+        with pytest.raises(OperationNotSupportedForFormat):
+            lib.list_sheet_names()
+        return
     assert isinstance(lib.list_sheet_names(), list)
 
 
-# ---------------------------------------------------------------------------
-# CSV – raises for both modes
-# ---------------------------------------------------------------------------
-
-@pytest.mark.parametrize(
-    "read_only",
-    [False, True],
-    ids=["csv_edit", "csv_stream"],
-)
-def test_csv_raises_operation_not_supported(lib: RFExcelLibrary, read_only: bool):
-    lib.load_workbook(CSV_FILE, read_only=read_only)
-    with pytest.raises(OperationNotSupportedForFormat):
+def test_raises_when_no_workbook_open(lib: RFExcelLibrary) -> None:
+    with pytest.raises(WorkbookNotOpenException):
         lib.list_sheet_names()
 
 
-# ---------------------------------------------------------------------------
-# No active workbook
-# ---------------------------------------------------------------------------
-
-class TestListSheetNamesNoWorkbook:
-
-    def test_raises_when_no_workbook_open(self, lib: RFExcelLibrary):
-        with pytest.raises(WorkbookNotOpenException):
-            lib.list_sheet_names()
-
-    def test_raises_after_close(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.close()
-        with pytest.raises(WorkbookNotOpenException):
-            lib.list_sheet_names()
+def test_raises_after_close(lib: RFExcelLibrary) -> None:
+    open_backend(lib, XLSX_EDIT)
+    lib.close()
+    with pytest.raises(WorkbookNotOpenException):
+        lib.list_sheet_names()
