@@ -407,7 +407,7 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
         - ``LibraryException``: If the sheet does not exist or deletion is invalid.
 
