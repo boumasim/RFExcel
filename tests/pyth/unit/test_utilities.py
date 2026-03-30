@@ -1,9 +1,10 @@
-"""Parametrized unit tests for rfexcel.utils.utilities."""
 from pathlib import Path
 
 import pytest
 import xlrd
 from openpyxl import Workbook
+
+from rfexcel.utils.types import *
 
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
@@ -105,8 +106,8 @@ def test_safe_str_to_type_cast_type(value: str, expected_type: type) -> None:
     ],
 )
 def test_search_in_row(
-    source_row: dict,
-    search_criteria: dict,
+    source_row: DictRowData,
+    search_criteria: dict[str, str],
     partial_match: bool,
     expected: bool,
 ) -> None:
@@ -136,7 +137,7 @@ def test_search_in_row(
         ({}, {}),
     ],
 )
-def test_headers_to_header_map(headers: object, expected: dict[str, int]) -> None:
+def test_headers_to_header_map(headers: HeaderMap , expected: dict[str, int]) -> None:
     assert headers_to_header_map(headers) == expected
 
 
@@ -179,7 +180,7 @@ def test_headers_to_header_map(headers: object, expected: dict[str, int]) -> Non
     ],
 )
 def test_convert_string_to_dict_row_data(
-    data: dict | str,
+    data: dict[str, str],
     delimiter: str,
     expected: dict[str, str],
 ) -> None:
