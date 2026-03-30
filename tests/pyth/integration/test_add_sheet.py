@@ -1,116 +1,96 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    NullComponentException, OperationNotSupportedForFormat)
+    HeadersNotDeterminedException, NullComponentException,
+    OperationNotSupportedForFormat)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
+                                  XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
+                                  XLSX_STREAM, open_backend)
 
-# ---------------------------------------------------------------------------
-# XLSX – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestAddSheetXlsxEdit:
-
-    def test_add_sheet_creates_new_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.add_sheet("NewSheet")
-        assert "NewSheet" in lib.list_sheet_names()
-
-    def test_add_sheet_does_not_remove_existing_sheets(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        original = lib.list_sheet_names()
-        lib.add_sheet("Extra")
-        updated = lib.list_sheet_names()
-        for name in original:
-            assert name in updated
-
-    def test_add_sheet_switches_active_sheet(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.add_sheet("ActiveAfterAdd")
-        rows = lib.get_rows()
-        assert rows == []
-
-    def test_add_multiple_sheets(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.add_sheet("Alpha")
-        lib.add_sheet("Beta")
-        names = lib.list_sheet_names()
-        assert "Alpha" in names
-        assert "Beta" in names
-
-    def test_add_sheet_increments_sheet_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        before = len(lib.list_sheet_names())
-        lib.add_sheet("OneMore")
-        after = len(lib.list_sheet_names())
-        assert after == before + 1
+EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = {
+    XLSX_EDIT: None,
+    XLS_EDIT: None,
+    XLSX_STREAM: NullComponentException,
+    XLS_ON_DEMAND: NullComponentException,
+    CSV_EDIT: OperationNotSupportedForFormat,
+    CSV_STREAM: NullComponentException,
+}
 
 
-# ---------------------------------------------------------------------------
-# Read-only / streaming modes – raises for xlsx and xls
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_add_sheet_creates_new_sheet_or_raises_expected_exception(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    expected_exception = EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND[backend_name]
 
-@pytest.mark.parametrize(
-    "path",
-    [XLSX_FILE, XLS_FILE],
-    ids=["xlsx_stream", "xls_on_demand"],
-)
-def test_add_sheet_raises_in_read_only_mode(lib: RFExcelLibrary, path: str):
-    lib.load_workbook(path, read_only=True)
-    with pytest.raises(NullComponentException):
-        lib.add_sheet("ShouldFail")
+    if expected_exception is not None:
+        with pytest.raises(expected_exception):
+            lib.add_sheet("NewSheet")
+        return
 
-
-# ---------------------------------------------------------------------------
-# XLS – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestAddSheetXlsEdit:
-
-    def test_add_sheet_triggers_xls_conversion(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.add_sheet("ConvertedSheet")
-        assert "ConvertedSheet" in lib.list_sheet_names()
-
-    def test_add_sheet_preserves_original_sheets_after_conversion(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        original = lib.list_sheet_names()
-        lib.add_sheet("New")
-        for name in original:
-            assert name in lib.list_sheet_names()
-
-    def test_add_sheet_new_sheet_is_empty(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.add_sheet("EmptySheet")
-        rows = lib.get_rows()
-        assert rows == []
-
-    def test_add_multiple_sheets_on_xls(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        lib.add_sheet("First")
-        lib.add_sheet("Second")
-        names = lib.list_sheet_names()
-        assert "First" in names
-        assert "Second" in names
-
-    def test_add_sheet_increments_sheet_count(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        before = len(lib.list_sheet_names())
-        lib.add_sheet("OneMore")
-        after = len(lib.list_sheet_names())
-        assert after == before + 1
+    before = lib.list_sheet_names()
+    lib.add_sheet("NewSheet")
+    after = lib.list_sheet_names()
+    assert "NewSheet" in after
+    assert len(after) == len(before) + 1
 
 
-# ---------------------------------------------------------------------------
-# CSV – raises for both modes
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_add_sheet_preserves_existing_sheet_names_when_supported(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    expected_exception = EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND[backend_name]
 
-@pytest.mark.parametrize(
-    "read_only",
-    [False, True],
-    ids=["csv_edit", "csv_stream"],
-)
-def test_add_sheet_raises_for_csv(lib: RFExcelLibrary, read_only: bool):
-    lib.load_workbook(CSV_FILE, read_only=read_only)
-    with pytest.raises((OperationNotSupportedForFormat, NullComponentException)):
-        lib.add_sheet("ShouldFail")
+    if expected_exception is not None:
+        with pytest.raises(expected_exception):
+            lib.add_sheet("Extra")
+        return
+
+    original_sheet_names = lib.list_sheet_names()
+    lib.add_sheet("Extra")
+    updated_sheet_names = lib.list_sheet_names()
+    for sheet_name in original_sheet_names:
+        assert sheet_name in updated_sheet_names
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_add_sheet_switches_to_new_empty_sheet_when_supported(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    expected_exception = EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND[backend_name]
+
+    if expected_exception is not None:
+        with pytest.raises(expected_exception):
+            lib.add_sheet("ActiveAfterAdd")
+        return
+
+    lib.add_sheet("ActiveAfterAdd")
+    with pytest.raises(HeadersNotDeterminedException):
+        lib.get_rows()
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_add_multiple_sheets_behaves_consistently_per_backend(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    open_backend(lib, backend_name)
+    expected_exception = EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND[backend_name]
+
+    if expected_exception is not None:
+        with pytest.raises(expected_exception):
+            lib.add_sheet("Alpha")
+        return
+
+    lib.add_sheet("Alpha")
+    lib.add_sheet("Beta")
+    names = lib.list_sheet_names()
+    assert "Alpha" in names
+    assert "Beta" in names
