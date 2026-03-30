@@ -11,7 +11,7 @@ from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NotMatchingColumns,
+    HeadersNotDeterminedException, NotMatchingColumns, NotSupportedInReadOnlyMode, NullComponentException,
     RowIndexOutOfBoundsException)
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
@@ -152,7 +152,10 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_sheet(self, name: str):
-        self._writer.delete_sheet(name=name, resource=self._resource)
+        try:
+            self._writer.delete_sheet(name=name, resource=self._resource)
+        except NullComponentException:
+            raise NotSupportedInReadOnlyMode()
 
     @override
     def save_workbook(self, path: str | None = None) -> None:

@@ -1,7 +1,7 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    LibraryException, NullComponentException, OperationNotSupportedForFormat)
+    SheetDoesNotExistException, OperationNotSupportedForFormat, NotSupportedInReadOnlyMode)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
                                   XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
@@ -11,9 +11,9 @@ EXPECTED_DELETE_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = 
     XLSX_EDIT: None,
     XLS_EDIT: None,
     CSV_EDIT: OperationNotSupportedForFormat,
-    XLSX_STREAM: NullComponentException,
-    XLS_ON_DEMAND: NullComponentException,
-    CSV_STREAM: NullComponentException,
+    XLSX_STREAM: NotSupportedInReadOnlyMode,
+    XLS_ON_DEMAND: NotSupportedInReadOnlyMode,
+    CSV_STREAM: NotSupportedInReadOnlyMode,
 }
 
 
@@ -108,5 +108,5 @@ def test_delete_nonexistent_sheet_raises_expected_exception(
             lib.delete_sheet("DoesNotExist")
         return
 
-    with pytest.raises(LibraryException):
+    with pytest.raises(SheetDoesNotExistException):
         lib.delete_sheet("DoesNotExist")

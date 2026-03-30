@@ -64,7 +64,7 @@ class XlsxEditResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         if name not in self._wb.sheetnames:
-            raise LibraryException(f"Sheet '{name}' does not exist")
+            raise SheetDoesNotExistException(name)
         del self._wb[name]
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
 
