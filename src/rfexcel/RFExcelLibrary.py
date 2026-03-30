@@ -78,7 +78,7 @@ class RFExcelLibrary:
     - ``NativeType``: The types returned by the library when reading cells (str, int, float, bool, datetime, timedelta). Note that for xls, xlrd returns ints as floats, so floats like 5.00 are implicitly cast to int by this library.
 
     = Generic Behavior =
-    
+
     - Closing workbooks at the end of a test is not neccessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
     - Saving workbooks does not happen implicitly, use `Save Workbook` keyword to persist any change.
     """
@@ -186,9 +186,10 @@ class RFExcelLibrary:
         | ${rows} =      | Get Rows            |
         | Close Workbook |                     |
         """
-        if self._active_workbook: self._active_workbook.close()
-        logger.info("File successfully closed")
-        self._active_workbook = None
+        if self._active_workbook: 
+            self._active_workbook.close()
+            logger.info("File successfully closed")
+            self._active_workbook = None
 
     @overload
     def get_rows(self,
