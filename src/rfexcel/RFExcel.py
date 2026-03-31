@@ -11,7 +11,7 @@ from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NotMatchingColumns, NotSupportedInReadOnlyMode, NullComponentException,
+    HeadersNotDeterminedException, NotMatchingColumns,
     RowIndexOutOfBoundsException)
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,

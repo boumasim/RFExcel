@@ -4,7 +4,7 @@ from typing import Any, cast
 import pytest
 
 from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  NotSupportedInReadOnlyMode,
+                                                  NullComponentException,
                                                   WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT, XLS_EDIT,
@@ -71,7 +71,7 @@ def test_save_workbook_matches_backend_capabilities_for_all_backends(
     loaded_path = load_backend_copy(lib, backend_name, tmp_path)
 
     if BACKENDS[backend_name][1]:
-        with pytest.raises(NotSupportedInReadOnlyMode):
+        with pytest.raises(NullComponentException):
             lib.save_workbook()
         return
 
@@ -106,7 +106,7 @@ def test_save_as_matches_backend_capabilities_for_all_backends(
     new_path = tmp_path / f"copy.{SAVE_AS_SUFFIX_BY_BACKEND[backend_name]}"
 
     if BACKENDS[backend_name][1]:
-        with pytest.raises(NotSupportedInReadOnlyMode):
+        with pytest.raises(NullComponentException):
             lib.save_workbook(str(new_path))
         return
 
