@@ -50,7 +50,7 @@ class RFExcelLibrary:
 
     = Error Handling =
     - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
-    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode)
+    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode), since those components are not present in that context.
 
     = Data Types =
 
@@ -233,8 +233,8 @@ class RFExcelLibrary:
         In streaming mode, rows are consumed sequentially — calling ``Get Rows`` twice
         on the same open workbook raises ``StreamingViolationException``.
 
-        Returns ``[]`` (or ``{}`` when ``one_row=True``) when ``header_row`` is beyond
-        the file or no row matches.
+        Returns ``[]`` (or ``{}`` when ``one_row=True``) when no row matches.
+        If ``header_row`` is out of range or empty, raises ``HeadersNotDeterminedException``.
 
         Arguments:
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
@@ -248,6 +248,8 @@ class RFExcelLibrary:
         - ``DotDict`` when ``one_row=True``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
         - ``StreamingViolationException``: When called again after stream consumption in forward-only mode.
 
         Examples:
@@ -298,6 +300,10 @@ class RFExcelLibrary:
         - ``list[str]`` when ``headers`` is omitted.
         - ``DotDict`` when ``headers`` is provided.
 
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``StreamingViolationException``: In forward-only streaming mode when attempting to read an already consumed row.
+
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
         | ${row} =       | Get Row             | 2                             |               |
@@ -324,6 +330,7 @@ class RFExcelLibrary:
         - ``list[str]``: Sheet names in workbook order.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
 
         Examples:
@@ -351,8 +358,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: If the named sheet does not exist.
+        - ``SheetDoesNotExistException``: If the named sheet does not exist.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |        |
@@ -370,7 +378,7 @@ class RFExcelLibrary:
         """Adds a new sheet to the active workbook and switches to it.
 
         Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
-        Streaming mode and ``.csv`` raise ``NotSupportedInReadOnlyMode`` or ``OperationNotSupportedForFormat``.
+        Streaming mode raises ``NullComponentException``. ``.csv`` raises ``OperationNotSupportedForFormat``.
 
         Arguments:
         - ``name``: Name of the new sheet.
@@ -379,9 +387,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: For invalid/duplicate sheet operations.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |          |
@@ -407,9 +415,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: If the sheet does not exist or deletion is invalid.
+        - ``SheetDoesNotExistException``: If the sheet does not exist.
 
         Examples:
         | Load Workbook      | ${CURDIR}/data.xlsx |          |
@@ -429,8 +438,7 @@ class RFExcelLibrary:
         *Save As* workflow and updates the active path for subsequent saves.
 
         Streaming / read-only mode raises ``NullComponentException``.
-        For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
-        trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
+        In ``.xls`` edit mode, save triggers lazy in-memory conversion to ``.xlsx`` before writing.
 
         Arguments:
         - ``path``: Optional destination path. Omit to save to the original path.
@@ -439,8 +447,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``NullComponentException``: In streaming/read-only mode.
-        - ``OperationNotSupportedForFormat``: For unsupported save scenarios (for example untouched ``.xls``).
+        - ``FileSaveException``: If the target file cannot be written.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
@@ -462,7 +471,7 @@ class RFExcelLibrary:
 
         ``row_data`` maps column header names to values. Keys not found in the headers
         are silently ignored; missing columns are written as empty strings.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
 
         Arguments:
@@ -473,7 +482,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: For invalid row/header operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
         - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
@@ -500,7 +511,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: For invalid row/header operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
         - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
@@ -522,7 +535,7 @@ class RFExcelLibrary:
         are silently ignored; missing columns are written as empty strings.
         ``row`` must be greater than ``header_row``; otherwise ``RowIndexOutOfBoundsException``
         is raised.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
 
         Arguments:
@@ -534,8 +547,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``RowIndexOutOfBoundsException``: If ``row`` is invalid.
-        - ``LibraryException``: For invalid row/header operations.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
         - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
@@ -561,7 +576,7 @@ class RFExcelLibrary:
 
         Only columns listed in ``values`` are overwritten; others are left untouched.
         Keys in ``values`` not present in headers are silently ignored.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
 
         Arguments:
@@ -575,7 +590,10 @@ class RFExcelLibrary:
         - ``int``: Number of updated rows.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
@@ -605,7 +623,7 @@ class RFExcelLibrary:
         """Deletes all rows matching ``search_criteria``. Returns the count of deleted rows.
 
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
 
         Arguments:
         - ``search_criteria``: Filter identifying which rows to delete — see `library description`_ for format details.
@@ -617,7 +635,10 @@ class RFExcelLibrary:
         - ``int``: Number of deleted rows.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
@@ -642,7 +663,7 @@ class RFExcelLibrary:
         ``row_number`` 1 is the first row.
         Raises ``RowIndexOutOfBoundsException`` if ``row_number`` is less than 1 or
         beyond the last row in the sheet.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
 
         Arguments:
         - ``row_number``: 1-based row number to delete.
@@ -651,8 +672,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``RowIndexOutOfBoundsException``: If ``row_number`` is outside valid range.
-        - ``LibraryException``: In read-only mode.
+        - ``StreamingViolationException``: In forward-only streaming mode when attempting to access an already consumed row.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |   |
@@ -722,9 +745,12 @@ class RFExcelLibrary:
         - If source and target has different number of rows, library logs error and returns differences found up until that point.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``FileDoesNotExistException``: If ``target_path`` is provided and file is missing.
         - ``FileFormatNotSupportedException``: If target format is unsupported.
         - ``HeadersNotDeterminedException``: If header rows are empty/out of range.
+        - ``SheetDoesNotExistException``: If ``target_sheet`` is provided but not present in target.
+        - ``StreamingViolationException``: In forward-only streaming mode when source/target rows are requested out of order.
         - ``NotMatchingColumns``: If required compared columns are not present in both sources.
         - ``AssertionError``: If ``fail_on_diff=True`` and differences are found.
 
