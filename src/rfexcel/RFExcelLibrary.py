@@ -407,7 +407,7 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
         - ``LibraryException``: If the sheet does not exist or deletion is invalid.
 
@@ -428,7 +428,7 @@ class RFExcelLibrary:
         By default saves back to the original path. Providing ``path`` enables a
         *Save As* workflow and updates the active path for subsequent saves.
 
-        Streaming / read-only mode raises ``NotSupportedInReadOnlyMode``.
+        Streaming / read-only mode raises ``NullComponentException``.
         For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
         trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
 
@@ -439,7 +439,7 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: For unsupported save scenarios (for example untouched ``.xls``).
 
         Examples:
@@ -473,7 +473,8 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``LibraryException``: For invalid row/header operations.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
@@ -499,7 +500,8 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``LibraryException``: For invalid row/header operations.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
@@ -533,7 +535,8 @@ class RFExcelLibrary:
 
         Raises:
         - ``RowIndexOutOfBoundsException``: If ``row`` is invalid.
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``LibraryException``: For invalid row/header operations.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                       |

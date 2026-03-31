@@ -154,17 +154,11 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_sheet(self, name: str):
-        try:
-            self._writer.delete_sheet(name=name, resource=self._resource)
-        except NullComponentException:
-            raise NotSupportedInReadOnlyMode()
+        self._writer.delete_sheet(name=name, resource=self._resource)
 
     @override
     def save_workbook(self, path: str | None = None) -> None:
-        try:
-            self._writer.save(Path(path) if path else None, self._resource)
-        except NullComponentException:
-            raise NotSupportedInReadOnlyMode()
+        self._writer.save(Path(path) if path else None, self._resource)
 
     @override
     def append_row(self, row_data: InsertDictType, header_row: int) -> None:
