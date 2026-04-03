@@ -8,7 +8,7 @@ from robot.utils import DotDict  # type: ignore
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
 from rfexcel.utils.library_logger import logger as library_logger
-from rfexcel.utils.types import HeaderSpec
+from rfexcel.utils.types import HeaderSpec, InsertNativeType, NativeType
 
 from .backend.interfaces.i_library import IExcel
 
@@ -34,6 +34,8 @@ class RFExcelLibrary:
 
     = Search Criteria & Partial Matching =
 
+    Search Criteria in both modes compares by string, even though library returns implicit types. READ MORE on that in Data Types section below.
+
     Keywords that filter or target rows accept a ``search_criteria`` argument.
     It can be supplied as:
     - A ``dict``: ``{"Product ID": "P-200", "Price": "25.50"}``
@@ -48,17 +50,53 @@ class RFExcelLibrary:
 
     = Error Handling =
     - Keywords that operate on an active workbook raise ``WorkbookNotOpenException`` when no workbook is open.
-    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode)
+    - NullComponentException is raised for use of invalid operations in the current mode or format (e.g. write operations in streaming mode), since those components are not present in that context.
+
+    = Data Types =
+
+    To provide the most accurate test data possible, this library does not force all cell values into strings. It preserves the native data types exactly as they are parsed by the underlying engines (``openpyxl``, ``xlrd``, ``csv``).
+    * For xls, xlrd library returns ints as floats, so floats like 5.00 are implicitly cast to int by this library
+
+    When reading rows, cell values will be returned as native Python objects. Depending on the cell format in your Excel file, expect the following Robot Framework equivalents:
+    - **Text/General:** ``string``
+    - **Whole Numbers:** ``int`` (e.g., ``${42}``)
+    - **Decimals/Currency:** ``float`` (e.g., ``${3.14}``)
+    - **Dates/Times:** Python ``datetime`` objects
+    - **Booleans:** ``bool`` (``${TRUE}`` or ``${FALSE}``)
+    - **Empty Cells:** ``""``
+
+    - *Important Note for Assertions:* Because types are preserved, you must be careful when writing assertions in Robot Framework. Comparing an integer cell to a string value will fail.
+    - *Search Criteria* - Although the library returns native Python types, when applying search criteria both the criteria and the compared values are treated as strings. Type normalization is not applied to Python types.
+                          Returned rows still contain native Python types.
+    - *Insertions* - All insertion keywords that require ``dict[str, InsertNativeType]`` will insert the exact type that you specify from ``InsertNativeType``.
+                     This means that a value provided as a string is inserted as a string, an integer as an integer, and so on, subject to the capabilities of the underlying libraries used for different formats.
+    - *Booleans* - Boolean values passed as ``bool`` are written as boolean cells where supported, and cells formatted as booleans are returned as ``bool`` values when reading.
+                   For csv files, string conversions to {"True", "TRUE", "true"} -> bool and {"False", "FALSE", "false"} -> bool
+
+    Library types used in public api:
+    - ``InsertNativeType``: The underlying types used by the libraries (str, int, float, bool).
+    - ``NativeType``: The types returned by the library when reading cells (str, int, float, bool, datetime, timedelta). Note that for xls, xlrd returns ints as floats, so floats like 5.00 are implicitly cast to int by this library.
+
+    = Generic Behavior =
+
+    - Closing workbooks at the end of a test is not neccessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
+    - Saving workbooks does not happen implicitly, use `Save Workbook` keyword to persist any change.
     """
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
     ROBOT_LIBRARY_LISTENER = "SELF"
     ROBOT_LISTENER_API_VERSION = 2
+    ROBOT_AUTO_KEYWORDS = False
 
     def __init__(self):
         library_logger.configure(logger)
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
+
+    @property
+    def active_workbook(self) -> IExcel | None:
+        """The currently active workbook instance, or ``None`` if no workbook is open."""
+        return self._active_workbook
 
     @not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
     def _wrap_public_result(self, value: Any) -> Any:
@@ -153,9 +191,10 @@ class RFExcelLibrary:
         | ${rows} =      | Get Rows            |
         | Close Workbook |                     |
         """
-        if self._active_workbook: self._active_workbook.close()
-        logger.info("File successfully closed")
-        self._active_workbook = None
+        if self._active_workbook: 
+            self._active_workbook.close()
+            logger.info("File successfully closed")
+            self._active_workbook = None
 
     @overload
     def get_rows(self,
@@ -194,8 +233,8 @@ class RFExcelLibrary:
         In streaming mode, rows are consumed sequentially — calling ``Get Rows`` twice
         on the same open workbook raises ``StreamingViolationException``.
 
-        Returns ``[]`` (or ``{}`` when ``one_row=True``) when ``header_row`` is beyond
-        the file or no row matches.
+        Returns ``[]`` (or ``{}`` when ``one_row=True``) when no row matches.
+        If ``header_row`` is out of range or empty, raises ``HeadersNotDeterminedException``.
 
         Arguments:
         - ``header_row``: Row that contains the column headers (row 1 = first row). Defaults to ``1``.
@@ -209,6 +248,8 @@ class RFExcelLibrary:
         - ``DotDict`` when ``one_row=True``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
         - ``StreamingViolationException``: When called again after stream consumption in forward-only mode.
 
         Examples:
@@ -233,13 +274,13 @@ class RFExcelLibrary:
             raise WorkbookNotOpenException()
 
     @overload
-    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[str]: ...
+    def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[NativeType]: ...
 
     @overload
     def get_row(self, row: int, headers: dict[str, int] | list[str], **kwargs: Any) -> DotDict: ...
 
     @keyword("Get Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[str]:
+    def get_row(self, row: int, headers: dict[str, int] | list[str] | None = None, **kwargs: Any) -> DotDict | list[NativeType]:
         """Returns a single row by its row number as a list or dict.
 
         - No ``headers``: Returns a plain ``list`` of string values.
@@ -258,6 +299,10 @@ class RFExcelLibrary:
         Returns:
         - ``list[str]`` when ``headers`` is omitted.
         - ``DotDict`` when ``headers`` is provided.
+
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``StreamingViolationException``: In forward-only streaming mode when attempting to read an already consumed row.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                               |               |
@@ -285,6 +330,7 @@ class RFExcelLibrary:
         - ``list[str]``: Sheet names in workbook order.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
 
         Examples:
@@ -312,8 +358,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: If the named sheet does not exist.
+        - ``SheetDoesNotExistException``: If the named sheet does not exist.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |        |
@@ -331,7 +378,7 @@ class RFExcelLibrary:
         """Adds a new sheet to the active workbook and switches to it.
 
         Supported in ``.xlsx`` (edit) and ``.xls`` (edit; lazily converted to ``.xlsx`` in memory).
-        Streaming mode and ``.csv`` raise ``NotSupportedInReadOnlyMode`` or ``OperationNotSupportedForFormat``.
+        Streaming mode raises ``NullComponentException``. ``.csv`` raises ``OperationNotSupportedForFormat``.
 
         Arguments:
         - ``name``: Name of the new sheet.
@@ -340,9 +387,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: For invalid/duplicate sheet operations.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |          |
@@ -368,9 +415,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``NullComponentException``: In streaming/read-only mode.
         - ``OperationNotSupportedForFormat``: When called for ``.csv``.
-        - ``LibraryException``: If the sheet does not exist or deletion is invalid.
+        - ``SheetDoesNotExistException``: If the sheet does not exist.
 
         Examples:
         | Load Workbook      | ${CURDIR}/data.xlsx |          |
@@ -389,9 +437,8 @@ class RFExcelLibrary:
         By default saves back to the original path. Providing ``path`` enables a
         *Save As* workflow and updates the active path for subsequent saves.
 
-        Streaming / read-only mode raises ``NotSupportedInReadOnlyMode``.
-        For ``.xls`` without a prior write operation, raises ``OperationNotSupportedForFormat``;
-        trigger any write (e.g. ``Add Sheet``) first, then save to a ``.xlsx`` path.
+        Streaming / read-only mode raises ``NullComponentException``.
+        In ``.xls`` edit mode, save triggers lazy in-memory conversion to ``.xlsx`` before writing.
 
         Arguments:
         - ``path``: Optional destination path. Omit to save to the original path.
@@ -400,8 +447,9 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``NotSupportedInReadOnlyMode``: In streaming/read-only mode.
-        - ``OperationNotSupportedForFormat``: For unsupported save scenarios (for example untouched ``.xls``).
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``NullComponentException``: In streaming/read-only mode.
+        - ``FileSaveException``: If the target file cannot be written.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx          |                              |
@@ -418,12 +466,12 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_row(self, row_data: dict[str, str], header_row: int = 1) -> None:
+    def append_row(self, row_data: dict[str, InsertNativeType], header_row: int = 1) -> None:
         """Appends a new row to the end of the active sheet.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
         are silently ignored; missing columns are written as empty strings.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
 
         Arguments:
@@ -434,7 +482,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                     |              |
@@ -449,7 +500,7 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def append_rows(self, rows: list[dict[str, str]], header_row: int = 1) -> None:
+    def append_rows(self, rows: list[dict[str, InsertNativeType]], header_row: int = 1) -> None:
         """Appends multiple rows to the end of the active sheet. Same rules as ``Append Row``.
 
         Arguments:
@@ -460,7 +511,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                         |
@@ -474,14 +528,14 @@ class RFExcelLibrary:
         else: raise WorkbookNotOpenException()
 
     @keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
-    def insert_row(self, row_data: dict[str, str], row: int, header_row: int = 1) -> None:
+    def insert_row(self, row_data: dict[str, InsertNativeType], row: int, header_row: int = 1) -> None:
         """Inserts a new row at the given row index, shifting existing rows down.
 
         ``row_data`` maps column header names to values. Keys not found in the headers
         are silently ignored; missing columns are written as empty strings.
         ``row`` must be greater than ``header_row``; otherwise ``RowIndexOutOfBoundsException``
         is raised.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         ``.xls`` edit mode triggers lazy conversion to ``.xlsx`` in memory.
 
         Arguments:
@@ -493,8 +547,11 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``RowIndexOutOfBoundsException``: If ``row`` is invalid.
-        - ``LibraryException``: In read-only mode or for invalid row/header operations.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook | ${CURDIR}/data.xlsx |                                                                       |
@@ -511,7 +568,7 @@ class RFExcelLibrary:
     @keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
     def update_values(self,
                       search_criteria: dict[str, str] | str,
-                      values: dict[str, str] | str,
+                      values: dict[str, InsertNativeType],
                       header_row: int = 1,
                       partial_match: bool = False,
                       first_only: bool = False) -> int:
@@ -519,7 +576,7 @@ class RFExcelLibrary:
 
         Only columns listed in ``values`` are overwritten; others are left untouched.
         Keys in ``values`` not present in headers are silently ignored.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
 
         Arguments:
@@ -533,7 +590,10 @@ class RFExcelLibrary:
         - ``int``: Number of updated rows.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                                    |                    |
@@ -563,7 +623,7 @@ class RFExcelLibrary:
         """Deletes all rows matching ``search_criteria``. Returns the count of deleted rows.
 
         See the `library introduction`_ for details on ``search_criteria`` and ``partial_match``.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
 
         Arguments:
         - ``search_criteria``: Filter identifying which rows to delete — see `library description`_ for format details.
@@ -575,7 +635,10 @@ class RFExcelLibrary:
         - ``int``: Number of deleted rows.
 
         Raises:
-        - ``LibraryException``: In read-only mode or for invalid header/search operations.
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``HeadersNotDeterminedException``: If ``header_row`` is out of range or empty.
+        - ``StreamingViolationException``: In forward-only streaming mode when header/row access is attempted out of order.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |                                    |                 |
@@ -600,7 +663,7 @@ class RFExcelLibrary:
         ``row_number`` 1 is the first row.
         Raises ``RowIndexOutOfBoundsException`` if ``row_number`` is less than 1 or
         beyond the last row in the sheet.
-        Streaming / read-only mode raises ``LibraryException``.
+        Streaming / read-only mode raises ``NullComponentException``.
 
         Arguments:
         - ``row_number``: 1-based row number to delete.
@@ -609,8 +672,10 @@ class RFExcelLibrary:
         - ``None``.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``RowIndexOutOfBoundsException``: If ``row_number`` is outside valid range.
-        - ``LibraryException``: In read-only mode.
+        - ``StreamingViolationException``: In forward-only streaming mode when attempting to access an already consumed row.
+        - ``NullComponentException``: In streaming/read-only mode.
 
         Examples:
         | Load Workbook  | ${CURDIR}/data.xlsx |   |
@@ -657,12 +722,7 @@ class RFExcelLibrary:
                         target_sheet: str | None = None,
                         headers: list[str] | None = None,
                         fail_on_diff: bool = False) -> list[DotDict]:
-        """Compares the active workbook row-by-row against a target file and returns the differences.
-
-        When ``target_path`` resolves to the same file as the active workbook, the
-        active workbook is used directly as the comparison target (in-memory state,
-        no second file load). For different files a separate read-only handle is
-        opened and closed automatically.
+        """Compares the active workbook row-by-row against a target file on native-type and returns the differences.
 
         Opens ``target_path`` in streaming (read-only) mode. The source is the currently
         active workbook. Row ``source_header_row`` / ``target_header_row`` is used as
@@ -671,12 +731,6 @@ class RFExcelLibrary:
         Only rows that differ in at least one compared column are included in the result.
         Column shift is handled automatically — tables that start at a column other than A
         (or have missing columns) are compared by header name, not by position.
-
-        Raises ``NotMatchingColumns`` if:
-        - ``headers=None`` and any source header is absent from the target.
-        - ``headers`` is provided and any listed header is absent from either file.
-
-        Raises ``HeadersNotDeterminedException`` if either header row is out of range or empty.
 
         Arguments:
         - ``target_path``: Path to the file to compare against (may equal the active workbook path), for same file comparison, argument can be omitted.
@@ -688,11 +742,15 @@ class RFExcelLibrary:
 
         Returns:
         - ``list[DotDict]``: One item per source row with at least one compared difference.
+        - If source and target has different number of rows, library logs error and returns differences found up until that point.
 
         Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
         - ``FileDoesNotExistException``: If ``target_path`` is provided and file is missing.
         - ``FileFormatNotSupportedException``: If target format is unsupported.
         - ``HeadersNotDeterminedException``: If header rows are empty/out of range.
+        - ``SheetDoesNotExistException``: If ``target_sheet`` is provided but not present in target.
+        - ``StreamingViolationException``: In forward-only streaming mode when source/target rows are requested out of order.
         - ``NotMatchingColumns``: If required compared columns are not present in both sources.
         - ``AssertionError``: If ``fail_on_diff=True`` and differences are found.
 
@@ -700,9 +758,10 @@ class RFExcelLibrary:
         | [
         |   {
         |     "source_row_index": 5,
+        |     "target_row_index": 5,
         |     "differences": {
-        |       "Cena":    {"source": "100", "target": "120"},
-        |       "Skladem": {"source": "10",  "target": "8"}
+        |       "Price":    {"source": 100, "target": 120},
+        |       "In_Stock": {"source": 10,  "target": 8}
         |     }
         |   },
         |   ...
@@ -711,7 +770,7 @@ class RFExcelLibrary:
         Examples:
         | Load Workbook    | ${CURDIR}/source.xlsx |                              |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx        |
-        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Cena", "Skladem"]} |
+        | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | headers=${["Price", "In_Stock"]} |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | target_sheet=Sheet2           |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/source.xlsx |                               |
         | ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |

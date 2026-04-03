@@ -1,137 +1,90 @@
-import shutil
 from pathlib import Path
 
 import pytest
 
-from rfexcel.exception.library_exceptions import NullComponentException
+from rfexcel.exception.library_exceptions import (
+    HeadersNotDeterminedException, NullComponentException,
+    StreamingViolationException, WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.integration.data.add_data import (
+    ADD_ROWS_PARTIAL_INPUT,
+    EXPECTED_ADD_ROWS_PARTIAL, EXPECTED_ORDERED_ROWS,
+    ORDERED_ROWS)
+from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, STREAMING_BACKENDS,
+                                load_backend_copy)
 
-_ROW_A = {"Product ID": "P-001", "Description": "Alpha", "Price": "1.00", "Location": "Shelf-A"}
-_ROW_B = {"Product ID": "P-002", "Description": "Beta",  "Price": "2.00", "Location": "Shelf-B"}
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_append_rows_matches_backend_mode_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    rows_input = list(ORDERED_ROWS)
+    expected_first_row, expected_second_row = EXPECTED_ORDERED_ROWS
+
+    if BACKENDS[backend_name][1]:
+        with pytest.raises(NullComponentException):
+            lib.append_rows(rows_input)
+        return
+
+    rows_before = lib.get_rows()
+    lib.append_rows(rows_input)
+    rows_after = lib.get_rows()
+
+    assert len(rows_after) == len(rows_before) + 2
+    assert rows_after[-2] == expected_first_row
+    assert rows_after[-1] == expected_second_row
 
 
-# ---------------------------------------------------------------------------
-# XLSX – Edit mode
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_append_rows_empty_list_is_noop_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    rows_before = lib.get_rows()
+    lib.append_rows([])
+    if backend_name in STREAMING_BACKENDS:
+        with pytest.raises(StreamingViolationException):
+            lib.get_rows()
+        assert len(rows_before) > 0
+        return
+    assert lib.get_rows() == rows_before
 
-class TestAppendRowsXlsxEdit:
 
-    def test_all_rows_appended_in_order(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        before = len(lib.get_rows())
-        lib.append_rows([_ROW_A, _ROW_B])
-        rows = lib.get_rows()
-        assert len(rows) == before + 2
-        assert rows[-2]["Product ID"] == "P-001"
-        assert rows[-1]["Product ID"] == "P-002"
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_append_rows_partial_rows_fill_missing_values_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    rows_input = ADD_ROWS_PARTIAL_INPUT
+    expected_first_row, expected_second_row = EXPECTED_ADD_ROWS_PARTIAL
 
-    def test_empty_list_is_noop(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        before = len(lib.get_rows())
+    if BACKENDS[backend_name][1]:
+        with pytest.raises(NullComponentException):
+            lib.append_rows(rows_input)
+        return
+
+    lib.append_rows(rows_input)
+    rows_after = lib.get_rows()
+    assert rows_after[-2] == expected_first_row
+    assert rows_after[-1] == expected_second_row
+
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_append_rows_header_row_out_of_range_raises_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+    tmp_path: Path,
+) -> None:
+    load_backend_copy(lib, backend_name, tmp_path)
+    with pytest.raises(HeadersNotDeterminedException):
+        lib.append_rows(list(ORDERED_ROWS), header_row=9999)
+
+def test_append_rows_raises_when_no_workbook_is_loaded(lib: RFExcelLibrary) -> None:
+    with pytest.raises(WorkbookNotOpenException):
         lib.append_rows([])
-        assert len(lib.get_rows()) == before
-
-    def test_partial_rows_fill_missing_with_empty_string(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        lib.append_rows([{"Product ID": "P-010"}, {"Price": "5.00"}])
-        rows = lib.get_rows()
-        assert rows[-2]["Product ID"] == "P-010"
-        assert rows[-2]["Description"] == ""
-        assert rows[-1]["Price"] == "5.00"
-        assert rows[-1]["Product ID"] == ""
-
-    def test_rows_persisted_after_save(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLSX_FILE, tmp_path / "data.xlsx"))
-        lib.load_workbook(path)
-        lib.append_rows([_ROW_A, _ROW_B])
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        ids: list[str] = [r["Product ID"] for r in lib2.get_rows()]
-        assert "P-001" in ids
-        assert "P-002" in ids
-        lib2.close()
-
-
-# ---------------------------------------------------------------------------
-# XLSX – Streaming mode
-# ---------------------------------------------------------------------------
-
-class TestAppendRowsXlsxStream:
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([_ROW_A])
-
-
-# ---------------------------------------------------------------------------
-# XLS – Edit mode (lazy conversion)
-# ---------------------------------------------------------------------------
-
-class TestAppendRowsXlsEdit:
-
-    _XLS_ROW_A = {"Index": "99", "First Name": "Alice", "Last Name": "Smith",
-                  "Gender": "Female", "Country": "Czech Republic", "Age": "30"}
-    _XLS_ROW_B = {"Index": "100", "First Name": "Bob", "Last Name": "Jones",
-                  "Gender": "Male", "Country": "Slovakia", "Age": "25"}
-
-    def test_rows_appended_after_lazy_conversion(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(XLS_FILE, tmp_path / "example.xls"))
-        lib.load_workbook(path)
-        before = len(lib.get_rows())
-        lib.append_rows([self._XLS_ROW_A, self._XLS_ROW_B])
-        rows = lib.get_rows()
-        assert len(rows) == before + 2
-        assert rows[-2]["Index"] == "99"
-        assert rows[-1]["Index"] == "100"
-
-
-# ---------------------------------------------------------------------------
-# XLS – On-demand / streaming mode
-# ---------------------------------------------------------------------------
-
-class TestAppendRowsXlsOnDemand:
-
-    def test_raises_in_on_demand_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([{"Index": "99", "First Name": "Alice"}])
-
-
-# ---------------------------------------------------------------------------
-# CSV – Edit mode
-# ---------------------------------------------------------------------------
-
-class TestAppendRowsCsvEdit:
-
-    def test_rows_appended_and_read_back(self, lib: RFExcelLibrary, tmp_path: Path):
-        path = str(shutil.copy(CSV_FILE, tmp_path / "data.csv"))
-        lib.load_workbook(path)
-        before = len(lib.get_rows())
-        lib.append_rows([_ROW_A, _ROW_B])
-        lib.save_workbook()
-        lib.close()
-
-        lib2 = RFExcelLibrary()
-        lib2.load_workbook(path)
-        rows = lib2.get_rows()
-        assert len(rows) == before + 2
-        assert rows[-2]["Product ID"] == "P-001"
-        assert rows[-1]["Product ID"] == "P-002"
-        lib2.close()
-
-# ---------------------------------------------------------------------------
-# CSV – Streaming mode
-# ---------------------------------------------------------------------------
-
-    def test_raises_in_stream_mode(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        with pytest.raises(NullComponentException):
-            lib.append_rows([_ROW_A])

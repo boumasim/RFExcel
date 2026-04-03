@@ -1,12 +1,34 @@
+import re
 from pathlib import Path
 
 import xlrd
 from openpyxl import Workbook
+from openpyxl.utils import coordinate_to_tuple
 
 from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
+_NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
+_TRUE_VALUES = frozenset({"true", "True", "TRUE"})
+_FALSE_VALUES = frozenset({"false", "False", "FALSE"})
 
-def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial_match: bool) -> bool:
+def safe_str_to_type_cast(value: str) -> str | int | float | bool:
+    """
+    Transforms string to either float, int, bool or keeps it as a string.
+    """
+    cleaned = value.strip()
+    
+    if _NUMBER_REGEX.match(cleaned):
+        num = float(cleaned)
+        if num.is_integer():
+            return int(num)
+        return num
+    if cleaned in _TRUE_VALUES:
+        return True
+    if cleaned in _FALSE_VALUES:
+        return False
+    return cleaned
+
+def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
 
     Each key-value pair in search_criteria is one rule. A rule matches when:
@@ -18,17 +40,15 @@ def search_in_row(source_row: DictRowData, search_criteria: DictRowData, partial
     Returns True only when every rule in search_criteria produces a match.
     An empty search_criteria always returns True.
     """
-    for key, criteria_value in search_criteria.items():  # type: ignore[misc]
-        key_str: str = str(key)  # type: ignore[arg-type]
-        criteria_str: str = str(criteria_value)  # type: ignore[arg-type]
-        if key_str not in source_row:
+    for key, criteria_value in search_criteria.items():
+        if key not in source_row:
             return False
-        row_value: str = str(source_row[key_str])  # type: ignore[arg-type]
+        row_value_str = str(source_row[key])
         if partial_match:
-            if criteria_str not in row_value:
+            if criteria_value not in row_value_str:
                 return False
         else:
-            if criteria_str != row_value:
+            if criteria_value != row_value_str:
                 return False
     return True
 
@@ -48,8 +68,8 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';') -> DictRowData:
-    """Converts a string like ``animal=cat;person=Ted`` into a DictRowData.
+def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str = ';') -> dict[str, str]:
+    """Converts a string like ``animal=cat;person=Ted`` into a dict[str, str].
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
     before the first ``=`` is the key; everything after is the value. This
@@ -59,7 +79,7 @@ def convert_string_to_dict_row_data(data: str | DictRowData, delimiter: str = ';
     """
     if isinstance(data, dict):
         return dict(data)
-    result: DictRowData = {}
+    result: dict[str, str] = {}
     for segment in data.split(delimiter):
         segment = segment.strip()
         if '=' not in segment:
@@ -74,7 +94,7 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     """
     xls_book = xlrd.open_workbook(str(xls_path), formatting_info=False)
     try:
-        xlsx_book = Workbook()   
+        xlsx_book = Workbook()
         if xlsx_book.active:
             xlsx_book.remove(xlsx_book.active)
                 
@@ -92,3 +112,15 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     finally:
         xls_book.release_resources()
     return xlsx_book
+
+def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[int, int]:
+    """
+    Parses a cell coordinate like "A1" into (row_index, column_index).
+    If zero_based is True, returns zero-based indices; otherwise, returns one-based.
+    Xlrd is 0-based, openpyxl is 1-based, so this function can be used to convert coordinates accordingly.
+    """
+    
+    row, col = coordinate_to_tuple(coordinate)
+    if zero_based:
+        return row - 1, col - 1
+    return row, col

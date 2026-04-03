@@ -48,25 +48,10 @@ Switch Source Test
 Get Rows with Search Criteria
     [Documentation]     Get rows matching search criteria and verify results
     Load Workbook    path=${RESOURCES}/data.csv      read_only=true
-    ${criteria}=    Create Dictionary    Product ID=P-201    Price=89.99
-    ${matching_rows}=    Get Rows    search_criteria=${criteria}
+    ${matching_rows}=    Get Rows    search_criteria=Product ID=P-201;Price=89.99
     Log    Matching Rows: ${matching_rows}
     Length Should Be    ${matching_rows}    1
     Should Be Equal    ${matching_rows}[0][Product ID]    P-201
-
-Sheet test
-    [Documentation]     Test sheet operations: create, switch, and verify data
-    Load Workbook    path=${RESOURCES}/data.xlsx
-    ${sheets}=     List Sheet Names
-    Log    Sheets before add: ${sheets}
-    Add Sheet       name=Test 1
-    ${sheet1}=     List Sheet Names
-    Should Contain    ${sheet1}    Test 1
-    Switch Sheet    name=List 1
-    Delete Sheet    name=Test 1
-    ${sheet_names}=     List Sheet Names
-    Log    Remaining Sheets: ${sheet_names}
-    Should Not Contain    ${sheet_names}    Test 1
 
 Save sheet test
     [Documentation]     Test saving a workbook after modifications

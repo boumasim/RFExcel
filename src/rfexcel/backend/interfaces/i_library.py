@@ -6,7 +6,7 @@ from typing import Any, List, Union
 from rfexcel.backend.reader.i_reader import IReader
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
-from rfexcel.utils.types import (DictRowData, HeaderSpec, ListRowData,
+from rfexcel.utils.types import (DictRowData, HeaderSpec, InsertDictType, ListRowData,
                                  RowDifference)
 
 
@@ -39,7 +39,7 @@ class IExcel(ABC):
     @abstractmethod
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | DictRowData | None = None,
+                search_criteria: str | dict[str, str] | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
@@ -70,17 +70,17 @@ class IExcel(ABC):
         pass
 
     @abstractmethod
-    def append_row(self, row_data: DictRowData, header_row: int) -> None:
+    def append_row(self, row_data: InsertDictType, header_row: int) -> None:
         pass
 
     @abstractmethod
-    def append_rows(self, rows: list[DictRowData], header_row: int) -> None:
+    def append_rows(self, rows: list[InsertDictType], header_row: int) -> None:
         pass
 
     @abstractmethod
     def update_values(self,
-                      search_criteria: str | DictRowData,
-                      values: str | DictRowData,
+                      search_criteria: str | dict[str, str],
+                      values: InsertDictType,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool) -> int:
@@ -88,7 +88,7 @@ class IExcel(ABC):
 
     @abstractmethod
     def delete_rows(self,
-                    search_criteria: str | DictRowData,
+                    search_criteria: str | dict[str, str],
                     header_row: int,
                     partial_match: bool,
                     first_only: bool) -> int:
@@ -99,7 +99,7 @@ class IExcel(ABC):
         pass
 
     @abstractmethod
-    def insert_row(self, row_data: DictRowData, row: int, header_row: int) -> None:
+    def insert_row(self, row_data: InsertDictType, row: int, header_row: int) -> None:
         pass
 
     @abstractmethod

@@ -61,3 +61,5 @@ State Mutation Pattern kvuli zapisovani.
 Adapter in logger
 
 python-calamine -> potencialne pro be, napsano v rustu, mnohem rychlejsi -> moznost na to prejit pozdjei
+
+potreba se vyporadat s datumy ve vsech formatech -> pravdepodobne transformace na string

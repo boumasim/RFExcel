@@ -6,6 +6,7 @@ from typing import Protocol, runtime_checkable
 class LoggerProtocol(Protocol):
     def info(self, msg: str) -> None: ...
     def warn(self, msg: str) -> None: ...
+    def error(self, msg: str) -> None: ...
 
 
 class _StdlibAdapter:
@@ -19,6 +20,8 @@ class _StdlibAdapter:
     def warn(self, msg: str) -> None:
         self._log.warning(msg)
 
+    def error(self, msg: str) -> None:
+        self._log.error(msg)
 
 class LibraryLogger:
 
@@ -34,5 +37,6 @@ class LibraryLogger:
     def warn(self, msg: str) -> None:
         self._delegate.warn(msg)
 
-
+    def error(self, msg: str) -> None:
+        self._delegate.error(msg)
 logger = LibraryLogger()

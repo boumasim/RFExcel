@@ -1,139 +1,95 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    FileDoesNotExistException, FileFormatNotSupportedException)
+    FileDoesNotExistException, FileFormatNotSupportedException,
+    WorkbookNotOpenException)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE
+from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT,
+                                  CSV_STREAM, SHEET1_EXPECTED_ROW_COUNT, XLS_EDIT, XLS_ON_DEMAND,
+                                  XLSX_EDIT, XLSX_STREAM,
+                                  XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT)
+
+EDIT_AND_READONLY_PAIRS: list[tuple[str, str]] = [
+    (XLSX_EDIT, XLSX_STREAM),
+    (CSV_EDIT, CSV_STREAM),
+    (XLS_EDIT, XLS_ON_DEMAND),
+]
+
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_load_workbook_is_immediately_readable_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+    assert len(lib.get_rows()) == SHEET1_EXPECTED_ROW_COUNT
 
 
-# ---------------------------------------------------------------------------
-# load workbook positive
-# ---------------------------------------------------------------------------
-
-class TestLoadWorkbookPositive:
-
-    def test_load_xlsx_edit_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        assert lib._active_workbook is not None
-
-    def test_load_xlsx_stream_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        assert lib._active_workbook is not None
-
-    def test_load_xls_edit_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        assert lib._active_workbook is not None
-
-    def test_load_xls_on_demand_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        assert lib._active_workbook is not None
-
-    def test_load_csv_edit_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        assert lib._active_workbook is not None
-
-    def test_load_csv_stream_mode_sets_active_workbook(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        assert lib._active_workbook is not None
-
-    def test_load_xlsx_edit_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-        assert rows[0]["Product ID"] == "P-200"
-
-    def test_load_xlsx_stream_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-
-    def test_load_xls_edit_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 9
-
-    def test_load_xls_on_demand_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE, read_only=True)
-        rows = lib.get_rows()
-        assert len(rows) == 9
-
-    def test_load_csv_edit_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        rows = lib.get_rows()
-        assert len(rows) == 4
-
-    def test_load_csv_stream_is_immediately_readable(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE, read_only=True)
-        rows = lib.get_rows()
-        assert len(rows) == 4
+@pytest.mark.parametrize("path", [
+    f"/nonexistent/path/missing.{XLSX_FORMAT}",
+    f"/nonexistent/path/missing.{CSV_FORMAT}",
+    f"/nonexistent/path/missing.{XLS_FORMAT}",
+], ids=[XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT])
+def test_load_workbook_nonexistent_file_raises(
+    lib: RFExcelLibrary,
+    path: str,
+) -> None:
+    with pytest.raises(FileDoesNotExistException):
+        lib.load_workbook(path)
 
 
-# ---------------------------------------------------------------------------
-# negative / edge
-# ---------------------------------------------------------------------------
+@pytest.mark.parametrize("path", [
+    "/some/path/file.txt",
+    "/some/path/file.ods",
+], ids=["txt", "ods"])
+def test_load_workbook_unsupported_extension_raises(
+    lib: RFExcelLibrary,
+    path: str,
+) -> None:
+    with pytest.raises(FileFormatNotSupportedException):
+        lib.load_workbook(path)
 
-class TestLoadWorkbookNegative:
 
-    def test_non_existent_xlsx_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileDoesNotExistException):
-            lib.load_workbook("/nonexistent/path/missing.xlsx")
+def test_active_workbook_is_none_after_failed_load(lib: RFExcelLibrary) -> None:
+    with pytest.raises(FileDoesNotExistException):
+        lib.load_workbook("/nonexistent/path/missing.xlsx")
 
-    def test_non_existent_csv_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileDoesNotExistException):
-            lib.load_workbook("/nonexistent/path/missing.csv")
+    assert lib.active_workbook is None
 
-    def test_non_existent_xls_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileDoesNotExistException):
-            lib.load_workbook("/nonexistent/path/missing.xls")
+    with pytest.raises(WorkbookNotOpenException):
+        lib.get_rows()
 
-    def test_unsupported_extension_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.load_workbook("/some/path/file.txt")
 
-    def test_unsupported_ods_extension_raises(self, lib: RFExcelLibrary):
-        with pytest.raises(FileFormatNotSupportedException):
-            lib.load_workbook("/some/path/file.ods")
+@pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
+def test_loading_after_close_works_for_all_backends(
+    lib: RFExcelLibrary,
+    backend_name: str,
+) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+    lib.close()
+    lib.load_workbook(path, read_only=read_only)
 
-    def test_active_workbook_is_none_after_failed_load(self, lib: RFExcelLibrary):
-        with pytest.raises(FileDoesNotExistException):
-            lib.load_workbook("/nonexistent/path/missing.xlsx")
-        assert lib._active_workbook is None
+    assert len(lib.get_rows()) == SHEET1_EXPECTED_ROW_COUNT
 
-class TestLoadWorkbookEdge:
 
-    def test_loading_second_file_replaces_first(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        first_wb = lib._active_workbook
-        lib.load_workbook(CSV_FILE)
-        assert lib._active_workbook is not first_wb
+@pytest.mark.parametrize(
+    ("edit_backend", "readonly_backend"),
+    EDIT_AND_READONLY_PAIRS,
+    ids=[XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT],
+)
+def test_edit_and_readonly_load_modes_produce_identical_rows(
+    lib: RFExcelLibrary,
+    edit_backend: str,
+    readonly_backend: str,
+) -> None:
+    edit_path, edit_read_only = BACKENDS[edit_backend]
+    lib.load_workbook(edit_path, read_only=edit_read_only)
+    edit_rows = lib.get_rows()
+    lib.close()
 
-    def test_loading_after_close_works(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        lib.close()
-        lib.load_workbook(XLSX_FILE)
-        assert lib._active_workbook is not None
-        assert len(lib.get_rows()) == 4
+    readonly_path, readonly_read_only = BACKENDS[readonly_backend]
+    lib.load_workbook(readonly_path, read_only=readonly_read_only)
+    readonly_rows = lib.get_rows()
 
-    def test_xlsx_edit_and_stream_produce_identical_rows(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLSX_FILE)
-        edit_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(XLSX_FILE, read_only=True)
-        stream_rows = lib.get_rows()
-        assert edit_rows == stream_rows
-
-    def test_csv_edit_and_stream_produce_identical_rows(self, lib: RFExcelLibrary):
-        lib.load_workbook(CSV_FILE)
-        edit_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(CSV_FILE, read_only=True)
-        stream_rows = lib.get_rows()
-        assert edit_rows == stream_rows
-
-    def test_xls_edit_and_on_demand_produce_identical_rows(self, lib: RFExcelLibrary):
-        lib.load_workbook(XLS_FILE)
-        edit_rows = lib.get_rows()
-        lib.close()
-        lib.load_workbook(XLS_FILE, read_only=True)
-        on_demand_rows = lib.get_rows()
-        assert edit_rows == on_demand_rows
+    assert edit_rows == readonly_rows

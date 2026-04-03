@@ -1,0 +1,118 @@
+import shutil
+from typing import Any
+
+from rfexcel.RFExcelLibrary import RFExcelLibrary
+from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE, Path
+
+RowData = dict[str, Any]
+RowsData = list[RowData]
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+XLSX_EDIT = "xlsx_edit"
+XLSX_STREAM = "xlsx_stream"
+CSV_EDIT = "csv_edit"
+CSV_STREAM = "csv_stream"
+XLS_EDIT = "xls_edit"
+XLS_ON_DEMAND = "xls_on_demand"
+
+XLSX_FORMAT = "xlsx"
+CSV_FORMAT = "csv"
+XLS_FORMAT = "xls"
+FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT, XLS_FORMAT]
+EDITABLE_FORMAT_LIST = [XLSX_FORMAT, CSV_FORMAT]
+
+SHEET1_NAME = "Sheet1"
+SHEET2_NAME = "Sheet2"
+SHEET3_NAME = "Sheet3"
+SHEET_LIST = [SHEET1_NAME, SHEET2_NAME, SHEET3_NAME]
+
+SHIFTED_ROW_START_IDX = 3
+
+# ---------------------------------------------------------------------------
+# Mappings
+# ---------------------------------------------------------------------------
+
+SUFFIX_BY_BACKEND: dict[str, str] = {
+    XLSX_EDIT: XLSX_FORMAT,
+    XLSX_STREAM: XLSX_FORMAT,
+    CSV_EDIT: CSV_FORMAT,
+    CSV_STREAM: CSV_FORMAT,
+    XLS_EDIT: XLS_FORMAT,
+    XLS_ON_DEMAND: XLS_FORMAT,
+}
+
+FORMAT_FILE: dict[str, str] = {
+    XLSX_FORMAT: XLSX_FILE,
+    CSV_FORMAT:  CSV_FILE,
+    XLS_FORMAT:  XLS_FILE,
+}
+
+# ---------------------------------------------------------------------------
+# Backend registry
+# ---------------------------------------------------------------------------
+
+BACKENDS: dict[str, tuple[str, bool]] = {
+    # Backend name: (file path, read-only)
+    XLSX_EDIT:     (XLSX_FILE, False),
+    XLSX_STREAM:   (XLSX_FILE, True),
+    CSV_EDIT:      (CSV_FILE,  False),
+    CSV_STREAM:    (CSV_FILE,  True),
+    XLS_EDIT:      (XLS_FILE,  False),
+    XLS_ON_DEMAND: (XLS_FILE,  True),
+}
+BACKEND_NAMES = list(BACKENDS)
+STREAMING_BACKENDS = [XLSX_STREAM, CSV_STREAM, XLS_ON_DEMAND]
+EDITABLE_BACKENDS = [backend_name for backend_name in BACKEND_NAMES if not BACKENDS[backend_name][1]]
+
+def open_backend(lib: RFExcelLibrary, backend_name: str) -> None:
+    path, read_only = BACKENDS[backend_name]
+    lib.load_workbook(path, read_only=read_only)
+
+def copy_backend_file(backend_name: str, tmp_path: Path) -> str:
+    source_path, _ = BACKENDS[backend_name]
+    source = Path(source_path)
+    copied_path = tmp_path / source.name
+    shutil.copy(source, copied_path)
+    return str(copied_path)
+
+def load_backend_copy(lib: RFExcelLibrary, backend_name: str, tmp_path: Path) -> str:
+    copied_path = copy_backend_file(backend_name, tmp_path)
+    _, read_only = BACKENDS[backend_name]
+    lib.load_workbook(copied_path, read_only=read_only)
+    return copied_path
+
+# ---------------------------------------------------------------------------
+# Common data
+# ---------------------------------------------------------------------------
+SHEET1_HEADERS = ["Product ID", "Description", "Price", "Location"]
+SHEET1_HEADER_MAP_DICT = {
+    "Location": 4,
+    "Description": 2,
+    "Price": 3,
+    "Product ID": 1,
+}
+SHEET1_ROWS = [
+    {"Product ID": "P-200", "Description": "Wireless Mouse",            "Price": 25.5,  "Location": "Warehouse A, Shelf 2"},
+    {"Product ID": "P-201", "Description": "Keyboard, Mechanical",      "Price": 89.99, "Location": "Store Front"},
+    {"Product ID": "P-202", "Description": "Monitor 24-inch",           "Price": 150,   "Location": "Paris, France"},
+    {"Product ID": "P-203", "Description": "USB Cable",                 "Price": 5.99,  "Location": "OnlineP"},
+]
+SHEET1_EXPECTED_ROW_COUNT = 4
+
+SHEET2_HEADERS: list[str] = ["Index", "First Name", "Last Name", "Gender", "Country", "Age"]
+SHEET2_ROWS = [
+    {"Index": 1, "First Name": "Dulce",     "Last Name": "Abril",       "Gender": "Female",     "Country": "United States", "Age": 32},
+    {"Index": 2, "First Name": "Mara",      "Last Name": "Hashimoto",   "Gender": "Female",     "Country": "Great Britain", "Age": 25},
+    {"Index": 3, "First Name": "Philip",    "Last Name": "Gent",        "Gender": "Male",       "Country": "France",        "Age": 36},
+    {"Index": 4, "First Name": "Kathleen",  "Last Name": "Hanner",      "Gender": "Female",     "Country": "United States", "Age": 25},
+    {"Index": 5, "First Name": "Nereida",   "Last Name": "Magwood",     "Gender": "Female",     "Country": "United States", "Age": 58},
+    {"Index": 6, "First Name": "Gaston",    "Last Name": "Brumm",       "Gender": "Male",       "Country": "United States", "Age": 24},
+    {"Index": 7, "First Name": "Etta",      "Last Name": "Hurn",        "Gender": "Female",     "Country": "Great Britain", "Age": 56},
+    {"Index": 8, "First Name": "Earlean",   "Last Name": "Melgar",      "Gender": "Female",     "Country": "United States", "Age": 27},
+    {"Index": 9, "First Name": "Vincenza",  "Last Name": "Weiland",      "Gender": "Female",    "Country": "United States", "Age": 40},
+]
+SHEET2_EXPECTED_ROW_COUNT = 9
+
+

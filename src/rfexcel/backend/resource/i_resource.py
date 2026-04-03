@@ -18,6 +18,11 @@ class IResource(ABC):
 
     @property
     @abstractmethod
+    def current_sheet(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def last_read_row_index(self) -> int:
         pass
 

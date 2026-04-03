@@ -1,52 +1,48 @@
-from typing import Any, cast, override
+from typing import Any, override
 
-from openpyxl.cell.cell import Cell
+from openpyxl.cell import Cell, MergedCell, ReadOnlyCell
+from openpyxl.cell.read_only import EmptyCell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utils.types import (ColumnValues, DictRowData, HeaderMap,
-                                 ListRowData)
+from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
 
 
 class XlsxRawRowData(IRawRowData):
-    def __init__(self, data: tuple[Cell, ...] | tuple[Any, ...], value_only: bool):
+    def __init__(self, data: tuple[Cell | MergedCell | ReadOnlyCell | EmptyCell, ...]):
         self._data = data
-        self._value_only = value_only
+
+    @staticmethod
+    def _raw_cell_value(cell: Cell | MergedCell | ReadOnlyCell | EmptyCell) -> Any | None:
+        if isinstance(cell, EmptyCell):
+            return ""
+        return cell.value
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        if self._value_only:
-            return [str(v) if v is not None else "" for v in self._data]
-        return [str(cell.value) if cell.value is not None else "" for cell in self._data]  # type: ignore[union-attr]
+        return [
+            raw
+            for index in range(len(self._data))
+            if (raw := self._raw_cell_value(self._data[index])) is not None
+            if raw != ""
+        ]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
-        if self._value_only:
-            return {
-                name: (
-                    str(self._data[col - 1])
-                    if 0 < col <= len(self._data) and self._data[col - 1] is not None
-                    else ""
-                )
-                for name, col in header_map.items()
-            }
-        col_to_value: ColumnValues = {
-            cell.column: (str(cell.value) if cell.value is not None else "")  # type: ignore[union-attr]
-            for cell in self._data
-            if hasattr(cell, 'column')
-        }
-        return {name: col_to_value.get(col, "") for name, col in header_map.items()}
+        row_len = len(self._data)
+        result: DictRowData = {}
+        for name, col in header_map.items():
+            if col <= 0 or col > row_len:
+                result[name] = ""
+                continue
+            value = self._raw_cell_value(self._data[col - 1])
+            result[name] = "" if value is None else value
+        return result
 
     @override
     def get_header_map(self) -> HeaderMap:
-        if self._value_only:
-            values = cast(tuple[Any, ...], self._data)
-            return {
-                str(v): i + 1
-                for i, v in enumerate(values)
-                if v is not None and str(v).strip() != ""
-            }
         return {
-            str(cell.value): cell.column  # type: ignore[union-attr]
-            for cell in self._data
-            if cell.value is not None and str(cell.value).strip() != ""  # type: ignore[union-attr]
+            s: i + 1
+            for i, cell in enumerate(self._data)
+            if (value := self._raw_cell_value(cell)) is not None
+            and (s := str(value).strip()) != ""
         }

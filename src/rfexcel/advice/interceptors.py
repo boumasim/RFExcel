@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import inspect
 from functools import wraps
-from typing import TYPE_CHECKING, Callable, ParamSpec, TypeVar, Concatenate
+from typing import (TYPE_CHECKING, Callable, Concatenate, ParamSpec, TypeVar,
+                    cast)
 
 if TYPE_CHECKING:
-    from rfexcel.RFExcel import RFExcel
     from rfexcel.backend.writer.xls_writer import XlsWriter
+    from rfexcel.RFExcel import RFExcel
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -27,6 +29,6 @@ def auto_convert_xls_to_xlsx(method: Callable[Concatenate[XlsWriter, P], R]
                 bound.arguments[param_name] = getattr(ref, param_name)
         
         new_method = getattr(ref.writer, method.__name__)
-        return new_method(*bound.args[1:], **bound.kwargs)
+        return cast(R, new_method(*bound.args[1:], **bound.kwargs))
     
     return wrapper

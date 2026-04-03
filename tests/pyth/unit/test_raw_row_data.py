@@ -1,6 +1,8 @@
 from typing import Any, Callable, TypeAlias
 
 import pytest
+import xlrd
+import xlrd.sheet
 from openpyxl import Workbook
 
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
@@ -11,29 +13,41 @@ from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 
 RawFactory: TypeAlias = Callable[[list[Any]], IRawRowData]
 
+
 # ---------------------------------------------------------------------------
-# Factories — normalise a conceptual value list to each format's storage type
+# Factories - normalise a conceptual value list to each format's storage type
 # ---------------------------------------------------------------------------
 
 def _make_csv(values: list[Any]) -> IRawRowData:
-    """CSV reader always yields strings; None entries become empty strings."""
     return CsvRawRowData([str(v) if v is not None else "" for v in values])
 
 
+def _xlrd_cell(ctype: int, value: Any) -> xlrd.sheet.Cell:
+    """Build an xlrd Cell while keeping test intent explicit."""
+    return xlrd.sheet.Cell(ctype, value)
+
+
 def _make_xls(values: list[Any]) -> IRawRowData:
-    return XlsRawRowData(values)
-
-
-def _make_xlsx_value_only(values: list[Any]) -> IRawRowData:
-    return XlsxRawRowData(tuple(values), value_only=True)
+    cells: list[xlrd.sheet.Cell] = []
+    for v in values:
+        if v is None:
+            cells.append(_xlrd_cell(xlrd.XL_CELL_EMPTY, ""))
+        elif isinstance(v, bool):
+            cells.append(_xlrd_cell(xlrd.XL_CELL_BOOLEAN, v))
+        elif isinstance(v, (int, float)):
+            cells.append(_xlrd_cell(xlrd.XL_CELL_NUMBER, float(v)))
+        else:
+            cells.append(_xlrd_cell(xlrd.XL_CELL_TEXT, str(v)))
+    return XlsRawRowData(cells)
 
 
 def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
     wb = Workbook()
     ws = wb.active
+    assert ws is not None
     for col, value in enumerate(values, start=1):
         ws.cell(row=1, column=col, value=value)
-    row_data = XlsxRawRowData(tuple(ws[1]), value_only=False)
+    row_data = XlsxRawRowData(tuple(ws[1]))
     wb.close()
     return row_data
 
@@ -41,10 +55,9 @@ def _make_xlsx_cell_mode(values: list[Any]) -> IRawRowData:
 _FACTORIES: list[RawFactory] = [
     _make_csv,
     _make_xls,
-    _make_xlsx_value_only,
     _make_xlsx_cell_mode,
 ]
-_IDS = ["csv", "xls", "xlsx_value_only", "xlsx_cell_mode"]
+_IDS = ["csv", "xls", "xlsx_cell_mode"]
 
 
 # ---------------------------------------------------------------------------
@@ -52,13 +65,13 @@ _IDS = ["csv", "xls", "xlsx_value_only", "xlsx_cell_mode"]
 # ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
-def test_col_zero_returns_empty_string(factory: RawFactory) -> None:
+def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
     """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
-    assert row.get_dict_row_data({"invalid_col": 0, "valid_col": 2}) == {
-        "invalid_col": "",
-        "valid_col": "second",
-    }
+    result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
+    assert result["invalid_col"] == ""
+    assert result["valid_col"] == "second"
+
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_none_or_empty_column(factory: RawFactory) -> None:
@@ -73,6 +86,7 @@ def test_get_header_map_skips_whitespace_only_column(factory: RawFactory) -> Non
     row = factory(["Name", "   ", "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
+
 def test_csv_header_keys_are_stripped() -> None:
     row = CsvRawRowData(["  Product ID  ", " Description", "Location "])
     assert row.get_header_map() == {
@@ -80,6 +94,51 @@ def test_csv_header_keys_are_stripped() -> None:
         "Description": 2,
         "Location": 3,
     }
+
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+def test_header_keys_are_stripped_in_all_backends(factory: RawFactory) -> None:
+    row = factory(["  Product ID  ", " Description", "Location "])
+    assert row.get_header_map() == {
+        "Product ID": 1,
+        "Description": 2,
+        "Location": 3,
+    }
+
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+@pytest.mark.parametrize(
+    ("data_row", "header_map", "expected"),
+    [
+        (["x"], {"A": 1, "B": 2, "C": 3}, {"A": "x", "B": "", "C": ""}),
+        (["x", "y"], {"A": 1, "B": 2, "C": 3, "D": 4}, {"A": "x", "B": "y", "C": "", "D": ""}),
+    ],
+)
+def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
+    factory: RawFactory,
+    data_row: list[str],
+    header_map: dict[str, int],
+    expected: dict[str, str],
+) -> None:
+    row = factory(data_row)
+    assert row.get_dict_row_data(header_map) == expected
+
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+@pytest.mark.parametrize(
+    ("data_row", "expected"),
+    [
+        (["", "x", None, ""], ["x"])
+    ],
+)
+def test_list_row_data_does_not_pad_with_trailing_empty_cells(
+    factory: RawFactory,
+    data_row: list[str],
+    expected: list[str],
+) -> None:
+    row = factory(data_row)
+    assert row.get_list_row_data() == expected
+
 
 def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyPatch) -> None:
     messages: list[str] = []
@@ -89,3 +148,25 @@ def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyP
 
     assert result == []
     assert messages == ["No row data values were returned"]
+
+@pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
+@pytest.mark.parametrize(
+    ("bool_value", "expected"),
+    [
+        (True,  True),
+        (False, False),
+    ],
+    ids=["bool_true", "bool_false"],
+)
+def test_boolean_get_list_row_data_returns_bool_not_int(
+    factory: RawFactory, bool_value: bool, expected: bool
+) -> None:
+    """
+    Every backend must produce a strict bool from get_list_row_data()
+    """
+    row = factory([bool_value])
+    result = row.get_list_row_data()
+    assert result == [expected]
+    assert type(result[0]) is bool, (
+        f"Expected bool, got {type(result[0]).__name__}({result[0]!r})"
+    )

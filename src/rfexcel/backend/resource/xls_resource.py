@@ -6,7 +6,7 @@ from xlrd import Book
 
 from rfexcel.exception.library_exceptions import (
     LibraryException, OperationNotSupportedForFormat,
-    SheetDoesNotExistException)
+    SheetDoesNotExistException, StreamingViolationException)
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
 from rfexcel.utils.types import ColumnValues
@@ -24,6 +24,13 @@ class XlsEditResource(IResource):
     @override
     def active_sheets(self) -> xlrd.sheet.Sheet | None:
         return self._active_sheet
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.name
 
     @property
     @override
@@ -40,7 +47,7 @@ class XlsEditResource(IResource):
         if target_xlrd_index >= self._active_sheet.nrows or target_xlrd_index < 0:
             raise StopIteration()
 
-        return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
+        return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -99,6 +106,13 @@ class XlsStreamResource(IResource):
     @override
     def active_sheets(self) -> xlrd.sheet.Sheet | None:
         return self._active_sheet
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.name
 
     @property
     @override
@@ -109,6 +123,9 @@ class XlsStreamResource(IResource):
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
+        
+        if row_index <= self._last_read_row_index:
+            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
 
         target_xlrd_index = row_index - 1
 
@@ -116,7 +133,7 @@ class XlsStreamResource(IResource):
             raise StopIteration()
 
         self._last_read_row_index = row_index
-        return XlsRawRowData(list(self._active_sheet.row_values(target_xlrd_index)))
+        return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
 
     @override
     def get_sheet_names(self) -> list[str]:

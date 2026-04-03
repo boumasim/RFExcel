@@ -28,6 +28,13 @@ class XlsxEditResource(IResource):
     @override
     def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.title
 
     @property
     @override
@@ -38,12 +45,13 @@ class XlsxEditResource(IResource):
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
-        if row_index > self._active_sheet.max_row or row_index < 1:
+        max_rows = self._active_sheet.max_row or 0
+        if row_index > max_rows or row_index < 1:
             raise StopIteration()
         row_values = next(
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
         )
-        return XlsxRawRowData(row_values, False)
+        return XlsxRawRowData(row_values)
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -63,7 +71,7 @@ class XlsxEditResource(IResource):
     @override
     def delete_sheet(self, name: str) -> None:
         if name not in self._wb.sheetnames:
-            raise LibraryException(f"Sheet '{name}' does not exist")
+            raise SheetDoesNotExistException(name)
         del self._wb[name]
         self._active_sheet = self._wb.worksheets[0] if self._wb.worksheets else None
 
@@ -131,6 +139,13 @@ class XlsxStreamResource(IResource):
     
     @property
     @override
+    def current_sheet(self) -> str:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        return self._active_sheet.title
+    
+    @property
+    @override
     def last_read_row_index(self) -> int:
         return self._last_read_row_index
     
@@ -143,11 +158,11 @@ class XlsxStreamResource(IResource):
                 else iter([])
             )
         while(self._last_read_row_index < row_index - 1):
-            self._last_read_row_index += 1
             next(self._row_generator)
+            self._last_read_row_index += 1
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
-        return XlsxRawRowData(row_data, False)
+        return XlsxRawRowData(row_data)
 
     @override
     def get_sheet_names(self) -> list[str]:

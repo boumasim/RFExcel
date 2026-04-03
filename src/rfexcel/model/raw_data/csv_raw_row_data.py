@@ -2,6 +2,7 @@ from typing import override
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
+from rfexcel.utils.utilities import safe_str_to_type_cast
 
 
 class CsvRawRowData(IRawRowData):
@@ -10,12 +11,16 @@ class CsvRawRowData(IRawRowData):
 
     @override
     def get_list_row_data(self) -> ListRowData:
-        return list(self._data)
+        return [
+            value
+            for raw in self._data
+            if (value := safe_str_to_type_cast(raw)) != ""
+        ]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (self._data[col - 1] if 0 < col <= len(self._data) else "")
+            name: (safe_str_to_type_cast(self._data[col - 1]) if 0 < col <= len(self._data) else "")
             for name, col in header_map.items()
         }
 

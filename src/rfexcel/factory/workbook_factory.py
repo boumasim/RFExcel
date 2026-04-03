@@ -43,13 +43,13 @@ class WorkbookFactory:
         if extension not in VALID_SUFFIXES: raise FileFormatNotSupportedException()
         if file_path.exists(): raise FileAlreadyExistsException()
 
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-
         if extension == XLSX_SUFFIX:
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             return self._create_xlsx_edit(path = file_path, **kwargs)
         elif extension == XLS_SUFFIX:
             raise FileFormatNotSupportedException(msg="Use xlsx format for creating and editing excel files.")
         elif extension == CSV_SUFFIX:
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             return self._create_csv_edit(path=file_path, **kwargs)
         else:
             raise FileFormatNotSupportedException("Unknown file format for creating: " + extension)

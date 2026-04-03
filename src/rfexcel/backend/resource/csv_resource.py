@@ -27,6 +27,11 @@ class CsvEditResource(IResource):
     @override
     def active_sheets(self) -> None:
         return None
+    
+    @property
+    @override
+    def current_sheet(self) -> str:
+        raise OperationNotSupportedForFormat("CSV files do not have sheets; current_sheet is not applicable")
 
     @property
     @override
@@ -77,7 +82,7 @@ class CsvEditResource(IResource):
             return
         max_col = max(cell_data.keys())
         row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
-        self._all_rows.append(row)
+        self._all_rows.append([str(cell) for cell in row])
 
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
@@ -89,7 +94,7 @@ class CsvEditResource(IResource):
             col_index = col - 1
             while len(row) <= col_index:
                 row.append("")
-            row[col_index] = value
+            row[col_index] = str(value)
 
     @override
     def delete_row(self, row_index: int) -> None:
@@ -104,7 +109,7 @@ class CsvEditResource(IResource):
             row: list[str] = []
         else:
             max_col = max(cell_data.keys())
-            row = [cell_data.get(i, "") for i in range(1, max_col + 1)]
+            row = [str(cell_data.get(i, "")) for i in range(1, max_col + 1)]
         self._all_rows.insert(list_index, row)
 
     @override
@@ -126,14 +131,19 @@ class CsvStreamResource(IResource):
 
     @property
     @override
+    def current_sheet(self) -> str:
+        raise OperationNotSupportedForFormat()
+
+    @property
+    @override
     def last_read_row_index(self) -> int:
         return self._last_read_row_index
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         while self._last_read_row_index < row_index - 1:
-            self._last_read_row_index += 1
             next(self._reader)
+            self._last_read_row_index += 1
         raw_row = next(self._reader)
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)
@@ -148,30 +158,29 @@ class CsvStreamResource(IResource):
 
     @override
     def add_sheet(self, name: str) -> None:
-        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
+        raise OperationNotSupportedForFormat()
 
     @override
     def delete_sheet(self, name: str) -> None:
-        raise OperationNotSupportedForFormat("CSV files do not support multiple sheets")
+        raise OperationNotSupportedForFormat()
 
     @override
     def save(self, path: Path | None = None) -> None:
-        raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
+        raise NotSupportedInReadOnlyMode()
 
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming (read-only) mode")
-
+        raise NotSupportedInReadOnlyMode()
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming (read-only) mode")
+        raise NotSupportedInReadOnlyMode()
     @override
     def delete_row(self, row_index: int) -> None:
-        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode()
 
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Inserting rows is not supported in streaming (read-only) mode")
+        raise NotSupportedInReadOnlyMode()
 
     @override
     def close(self):

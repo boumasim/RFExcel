@@ -1,5 +1,7 @@
+from itertools import zip_longest
 from pathlib import Path
 from typing import Any, List, Union, override
+from collections.abc import Iterator
 
 from openpyxl import Workbook
 
@@ -28,7 +30,8 @@ from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
 from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
-                          HeaderMap, HeaderSpec, ListRowData, RowDifference)
+                          HeaderMap, HeaderSpec, ListRowData, RowDifference,
+                          InsertDictType)
 
 
 class RFExcel(IExcel, ISetExcel):
@@ -81,13 +84,16 @@ class RFExcel(IExcel, ISetExcel):
     @override
     def get_rows(self,
                 header_row: int,
-                search_criteria: str | DictRowData | None = None,
+                search_criteria: dict[str, str] | str | None = None,
                 partial_match: bool = False,
                 one_row: bool = False,
                 **kwargs: Any) -> List[DictRowData] | DictRowData:
-        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria else None
+        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria is not None else None
 
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
+
+        if not header_map:
+            raise HeadersNotDeterminedException(header_row)
 
         result: List[DictRowData] = []
         row_index = header_row + 1
@@ -131,6 +137,7 @@ class RFExcel(IExcel, ISetExcel):
             f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
             f"to enable write operations. The original .xls file will NOT be modified."
         )
+        prev_sheet = self._resource.current_sheet
         wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
         new_path: Path = self._resource.path.with_suffix('.xlsx')
         self._resource.close()
@@ -139,6 +146,7 @@ class RFExcel(IExcel, ISetExcel):
         self._metadata = XlsxMetadata()
         self._writer = XlsxWriter()
         self._style = XlsxStyle()
+        self._resource.switch_sheet(prev_sheet)
 
     @override
     def add_sheet(self, name: str) -> None:
@@ -153,7 +161,7 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.save(Path(path) if path else None, self._resource)
 
     @override
-    def append_row(self, row_data: DictRowData, header_row: int) -> None:
+    def append_row(self, row_data: InsertDictType, header_row: int) -> None:
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
@@ -165,12 +173,12 @@ class RFExcel(IExcel, ISetExcel):
         self._writer.append_row(cell_data, self._resource)
 
     @override
-    def append_rows(self, rows: list[DictRowData], header_row: int) -> None:
+    def append_rows(self, rows: list[InsertDictType], header_row: int) -> None:
         for row_data in rows:
             self.append_row(row_data, header_row)
 
     @override
-    def insert_row(self, row_data: DictRowData, row: int, header_row: int) -> None:
+    def insert_row(self, row_data: InsertDictType, row: int, header_row: int) -> None:
         if row <= header_row:
             raise RowIndexOutOfBoundsException(
                 row, f"Row {row} must be greater than header_row {header_row}"
@@ -187,7 +195,7 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def delete_rows(self,
-                    search_criteria: str | DictRowData,
+                    search_criteria: dict[str, str] | str,
                     header_row: int,
                     partial_match: bool,
                     first_only: bool = False) -> int:
@@ -224,20 +232,19 @@ class RFExcel(IExcel, ISetExcel):
 
     @override
     def update_values(self,
-                      search_criteria: str | DictRowData,
-                      values: str | DictRowData,
+                      search_criteria: dict[str, str] | str,
+                      values: InsertDictType,
                       header_row: int,
                       partial_match: bool,
                       first_only: bool = False) -> int:
         search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
-        values_dict = convert_string_to_dict_row_data(values)
         header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
         if not header_map:
             raise HeadersNotDeterminedException(header_row)
         update_cell_data: ColumnValues = {
-            col: values_dict[name]
+            col: values[name]
             for name, col in header_map.items()
-            if name in values_dict
+            if name in values
         }
         updated = 0
         row_index = header_row + 1
@@ -282,46 +289,50 @@ class RFExcel(IExcel, ISetExcel):
                 if missing_in_source or missing_in_target:
                     raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
 
-            result: list[RowDifference] = []
-            source_row_index = source_header_row + 1
-            target_row_index = target_header_row + 1
-            target_exhausted = False
+            def iter_rows(reader: IReader, resource: IResource, header_map: HeaderMap, start_idx: int) -> Iterator[tuple[int, DictRowData]]:
+                idx = start_idx
+                while True:
+                    try:
+                        row = reader.get_row(row_idx=idx, resource=resource)
+                        yield idx, row.get_dict_row_data(header_map)
+                        idx += 1
+                    except StopIteration:
+                        break
 
-            while True:
-                try:
-                    source_row = self._reader.get_row(row_idx=source_row_index, resource=self._resource)
-                except StopIteration:
+            result: list[RowDifference] = []
+            src_gen = iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
+            tgt_gen = iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
+
+            _fill: tuple[None, DictRowData] = (None, {})
+            for src_data, tgt_data in zip_longest(src_gen, tgt_gen, fillvalue=_fill):
+                src_idx, src_dict = src_data
+                tgt_idx, tgt_dict = tgt_data
+
+                if src_idx is None or tgt_idx is None:
+                    if fail_on_diff:
+                        raise AssertionError(
+                            f"Row count mismatch: source has {src_idx if src_idx is not None else 'end of data'}, "
+                            f"target has {tgt_idx if tgt_idx is not None else 'end of data'}"
+                        )
+                    logger.error(f"Row count mismatch: source and target has different number of rows")
                     break
 
-                source_dict = source_row.get_dict_row_data(source_header_map)
-
-                if not target_exhausted:
-                    try:
-                        target_row = target.reader.get_row(row_idx=target_row_index, resource=target.resource)
-                        target_dict: DictRowData = target_row.get_dict_row_data(target_header_map)
-                        target_row_index += 1
-                    except StopIteration:
-                        target_exhausted = True
-                        target_dict = {}
-                else:
-                    target_dict = {}
-
-                source_values = source_dict
-                target_values = target_dict
-                differences: ColumnDifference = {
-                    h: {"source": source_values.get(h, ""), "target": target_values.get(h, "")}
-                    for h in compare_headers
-                    if source_values.get(h, "") != target_values.get(h, "")
-                }
+                differences: ColumnDifference = {}
+                
+                for h in compare_headers:
+                    s_val = src_dict.get(h)
+                    t_val = tgt_dict.get(h)
+                    
+                    if s_val != t_val:
+                        differences[h] = {"source": s_val, "target": t_val}
 
                 if differences:
                     if fail_on_diff:
                         raise AssertionError(
-                            f"Difference found at source_row_index {source_row_index}, target_row_index {target_row_index - 1 if not target_exhausted else 'N/A'}: {differences}"
+                            f"Difference at source_row_index {src_idx}, "
+                            f"target_row_index {tgt_idx}: {differences}"
                         )
-                    result.append({"source_row_index": source_row_index, "differences": differences})
-
-                source_row_index += 1
+                    result.append({"source_row_index": src_idx, "target_row_index": tgt_idx, "differences": differences})
 
             return result
         finally:
