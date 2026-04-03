@@ -4,8 +4,12 @@ on:
   pull_request:
     types:
       - opened
+      - reopened
       - edited
       - synchronize
+
+permissions:
+  pull-requests: read
 
 jobs:
   main:
@@ -15,3 +19,18 @@ jobs:
       - uses: amannn/action-semantic-pull-request@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            build
+            chore
+            ci
+            docs
+            feat
+            fix
+            perf
+            refactor
+            revert
+            style
+            test
+          scopes: |
+            .+
