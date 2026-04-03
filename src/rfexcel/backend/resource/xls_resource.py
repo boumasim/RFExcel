@@ -124,9 +124,7 @@ class XlsStreamResource(IResource):
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         
-        if row_index > self._last_read_row_index:
-            self._last_read_row_index = row_index
-        else:
+        if row_index <= self._last_read_row_index:
             raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
 
         target_xlrd_index = row_index - 1

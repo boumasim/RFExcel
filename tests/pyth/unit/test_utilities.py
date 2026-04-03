@@ -166,7 +166,7 @@ def test_headers_to_header_map(headers: HeaderMap , expected: dict[str, int]) ->
         # segments without = are silently ignored
         ("a=1;garbage;b=2", ";", {"a": "1", "b": "2"}),
 
-        # key whitespace stripped; value leading space NOT stripped
+        # key whitespace stripped; value leading space are also stripped
         ("key= value", ";", {"key": "value"}),
 
         # empty string → empty dict
