@@ -309,6 +309,11 @@ class RFExcel(IExcel, ISetExcel):
                 tgt_idx, tgt_dict = tgt_data
 
                 if src_idx is None or tgt_idx is None:
+                    if fail_on_diff:
+                        raise AssertionError(
+                            f"Row count mismatch: source has {src_idx if src_idx is not None else 'end of data'}, "
+                            f"target has {tgt_idx if tgt_idx is not None else 'end of data'}"
+                        )
                     logger.error(f"Row count mismatch: source and target has different number of rows")
                     break
 
