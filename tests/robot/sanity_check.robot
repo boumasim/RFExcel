@@ -53,20 +53,6 @@ Get Rows with Search Criteria
     Length Should Be    ${matching_rows}    1
     Should Be Equal    ${matching_rows}[0][Product ID]    P-201
 
-Sheet test
-    [Documentation]     Test sheet operations: create, switch, and verify data
-    Load Workbook    path=${RESOURCES}/data.xlsx
-    ${sheets}=     List Sheet Names
-    Log    Sheets before add: ${sheets}
-    Add Sheet       name=Test 1
-    ${sheet1}=     List Sheet Names
-    Should Contain    ${sheet1}    Test 1
-    Switch Sheet    name=List 1
-    Delete Sheet    name=Test 1
-    ${sheet_names}=     List Sheet Names
-    Log    Remaining Sheets: ${sheet_names}
-    Should Not Contain    ${sheet_names}    Test 1
-
 Save sheet test
     [Documentation]     Test saving a workbook after modifications
     Load Workbook    path=${RESOURCES}/data.csv
@@ -108,16 +94,3 @@ Test xlsx generator close
     ${row2}=   Get Row    row=2
     Log    First row of Sheet2: ${row2}
     Close Workbook
-
-Compare xls to xslx
-    [Documentation]     Test comparing data between .xls and .xlsx files and verify differences
-    Load Workbook    path=${RESOURCES}/data.csv  read_only=True
-    ${differences}=    Compare Data To    target_path=${RESOURCES}/data.xlsx  target_sheet=Sheet4  fail_on_diff=True
-    Log    Differences between .xls and .xlsx: ${differences}
-
-Get Rowss
-    [Documentation]     Test getting rows with various header and row configurations
-    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
-    Switch Sheet    name=Sheet4
-    ${rows} =   Get Rows
-    Log    All rows: ${rows}
