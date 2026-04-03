@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Any
+
+from rfexcel.utils.types import NativeType
 
 
 class IRawCellData(ABC):
 
     @abstractmethod
-    def get_value(self) -> Any:
+    def get_value(self) -> NativeType:
         pass

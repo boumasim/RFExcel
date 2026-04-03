@@ -1,8 +1,10 @@
-from typing import Any, override
+from typing import override
 
 from xlrd.sheet import Cell
 
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
+from rfexcel.utils.types import NativeType
+from rfexcel.model.common_model import norm_xls_value
 
 
 class XlsRawCellData(IRawCellData):
@@ -11,5 +13,5 @@ class XlsRawCellData(IRawCellData):
         self._coordinate = coordinate
 
     @override
-    def get_value(self) -> Any:
-        return self._cell_value.value
+    def get_value(self) -> NativeType:
+        return norm_xls_value(self._cell_value)

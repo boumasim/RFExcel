@@ -6,6 +6,7 @@ from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.exception.library_exceptions import (
     FileSaveException, NotSupportedInReadOnlyMode,
     OperationNotSupportedForFormat)
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
@@ -46,6 +47,10 @@ class CsvEditResource(IResource):
             raise StopIteration()
 
         return CsvRawRowData(self._all_rows[list_index])
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -147,6 +152,10 @@ class CsvStreamResource(IResource):
         raw_row = next(self._reader)
         self._last_read_row_index += 1
         return CsvRawRowData(raw_row)
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
 
     @override
     def get_sheet_names(self) -> list[str]:

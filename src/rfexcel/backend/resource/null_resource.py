@@ -5,6 +5,7 @@ from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import NullComponentException
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utils.types import ColumnValues
 
@@ -45,6 +46,10 @@ class NullResource(IResource):
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
+        raise NullComponentException()
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
         raise NullComponentException()
 
     @override

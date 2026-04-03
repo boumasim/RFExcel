@@ -1,41 +1,28 @@
-from typing import Any, override
+from typing import override
 
-import xlrd
 from xlrd.sheet import Cell
 
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
+from rfexcel.model.common_model import norm_xls_value
 
 
 class XlsRawRowData(IRawRowData):
     def __init__(self, data: list[Cell]):
         self._data = data
 
-    @staticmethod
-    def _norm(cell: Cell) -> Any:
-        """Converts value to library friendly type"""
-        if cell.ctype == xlrd.XL_CELL_NUMBER:
-            v: float = float(cell.value)
-            if v.is_integer():
-                return int(v)
-        elif cell.ctype == xlrd.XL_CELL_BOOLEAN:
-            return bool(cell.value)
-        elif cell.ctype == xlrd.XL_CELL_EMPTY or cell.ctype == xlrd.XL_CELL_BLANK or cell.ctype == xlrd.XL_CELL_ERROR:
-            return ""
-        return cell.value
-
     @override
     def get_list_row_data(self) -> ListRowData:
         return [
             value
             for cell in self._data
-            if (value := self._norm(cell)) not in (None, "")
+            if (value := norm_xls_value(cell)) not in (None, "")
         ]
 
     @override
     def get_dict_row_data(self, header_map: HeaderMap) -> DictRowData:
         return {
-            name: (self._norm(self._data[col - 1]) if 0 < col <= len(self._data) else "")
+            name: (norm_xls_value(self._data[col - 1]) if 0 < col <= len(self._data) else "")
             for name, col in header_map.items()
         }
 
@@ -44,5 +31,5 @@ class XlsRawRowData(IRawRowData):
         return {
             s: i + 1
             for i, cell in enumerate(self._data)
-            if (s := str(self._norm(cell)).strip()) != ""
+            if (s := str(norm_xls_value(cell)).strip()) != ""
         }

@@ -1,7 +1,7 @@
+from collections.abc import Iterator
 from itertools import zip_longest
 from pathlib import Path
 from typing import Any, List, Union, override
-from collections.abc import Iterator
 
 from openpyxl import Workbook
 
@@ -30,8 +30,8 @@ from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
 from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
-                          HeaderMap, HeaderSpec, ListRowData, RowDifference,
-                          InsertDictType)
+                          HeaderMap, HeaderSpec, InsertDictType, ListRowData,
+                          NativeType, RowDifference)
 
 
 class RFExcel(IExcel, ISetExcel):
@@ -130,6 +130,10 @@ class RFExcel(IExcel, ISetExcel):
         if not headers:
             return raw.get_list_row_data()
         return raw.get_dict_row_data(headers_to_header_map(headers))
+
+    @override
+    def get_cell(self, cell_name: str) -> NativeType:
+        return self._resource.fetch_cell(cell_name=cell_name).get_value()
     
     @override
     def xls_to_xlsx(self):

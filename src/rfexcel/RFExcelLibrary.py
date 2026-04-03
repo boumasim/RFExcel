@@ -320,6 +320,35 @@ class RFExcelLibrary:
             return self._wrap_public_result(result)
         else: raise WorkbookNotOpenException()
 
+    @keyword("Get Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def get_cell(self, cell_name: str) -> NativeType:
+        """Returns a single cell value using Excel-style coordinates.
+
+        Supported only for ``.xlsx`` and ``.xls`` in both edit and streaming modes.
+        ``.csv`` does not support coordinate-based addressing and raises
+        ``OperationNotSupportedForFormat``.
+
+        Arguments:
+        - ``cell_name``: Cell coordinate such as ``A1`` or ``D4``.
+
+        Returns:
+        - ``NativeType``: The native value stored in the cell.
+
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``InvalidCellNameException``: If ``cell_name`` is not a valid coordinate.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |
+        | ${value} =    | Get Cell            | A2 |
+        | Load Workbook | ${CURDIR}/data.xls  |
+        | ${value} =    | Get Cell            | C3 |
+        """
+        if self._active_workbook:
+            return self._active_workbook.get_cell(cell_name=cell_name)
+        raise WorkbookNotOpenException()
+
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
     def list_sheet_names(self) -> list[str]:
         """Returns the names of all sheets in the active workbook.

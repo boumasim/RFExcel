@@ -5,6 +5,7 @@ import xlrd
 from openpyxl import Workbook
 from openpyxl.utils import coordinate_to_tuple
 
+from rfexcel.exception.library_exceptions import InvalidCellNameException
 from rfexcel.utils.types import DictRowData, HeaderMap, HeaderSpec
 
 _NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
@@ -120,7 +121,12 @@ def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[in
     Xlrd is 0-based, openpyxl is 1-based, so this function can be used to convert coordinates accordingly.
     """
     
-    row, col = coordinate_to_tuple(coordinate)
+    try:
+        row, col = coordinate_to_tuple(coordinate)
+    except Exception as exc:
+        raise InvalidCellNameException(coordinate) from exc
+    if row < 1 or col < 1:
+        raise InvalidCellNameException(coordinate)
     if zero_based:
         return row - 1, col - 1
     return row, col

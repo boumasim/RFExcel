@@ -7,9 +7,12 @@ from xlrd import Book
 from rfexcel.exception.library_exceptions import (
     LibraryException, OperationNotSupportedForFormat,
     SheetDoesNotExistException, StreamingViolationException)
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
+from rfexcel.model.cell_data.xls_raw_cell_data import XlsRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
 from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.utilities import parse_cell_coordinate
 
 from .i_resource import IResource
 
@@ -37,6 +40,10 @@ class XlsEditResource(IResource):
     def last_read_row_index(self) -> int:
         return -1
 
+    @staticmethod
+    def _empty_cell() -> xlrd.sheet.Cell:
+        return xlrd.sheet.Cell(0, "")
+
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
@@ -48,6 +55,17 @@ class XlsEditResource(IResource):
             raise StopIteration()
 
         return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        row_index, col_index = parse_cell_coordinate(cell_name, zero_based=True)
+        if row_index < 0 or col_index < 0:
+            return XlsRawCellData(self._empty_cell(), cell_name)
+        if row_index >= self._active_sheet.nrows or col_index >= self._active_sheet.ncols:
+            return XlsRawCellData(self._empty_cell(), cell_name)
+        return XlsRawCellData(self._active_sheet.cell(row_index, col_index), cell_name)
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -119,6 +137,10 @@ class XlsStreamResource(IResource):
     def last_read_row_index(self) -> int:
         return self._last_read_row_index
 
+    @staticmethod
+    def _empty_cell() -> xlrd.sheet.Cell:
+        return xlrd.sheet.Cell(0, "")
+
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
@@ -134,6 +156,21 @@ class XlsStreamResource(IResource):
 
         self._last_read_row_index = row_index
         return XlsRawRowData(list(self._active_sheet.row(target_xlrd_index)))
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        row_index, col_index = parse_cell_coordinate(cell_name, zero_based=True)
+        one_based_row_index = row_index + 1
+        if one_based_row_index <= self._last_read_row_index:
+            raise StreamingViolationException(row_index=one_based_row_index, last_read=self._last_read_row_index)
+        self._last_read_row_index = one_based_row_index
+        if row_index < 0 or col_index < 0:
+            return XlsRawCellData(self._empty_cell(), cell_name)
+        if row_index >= self._active_sheet.nrows or col_index >= self._active_sheet.ncols:
+            return XlsRawCellData(self._empty_cell(), cell_name)
+        return XlsRawCellData(self._active_sheet.cell(row_index, col_index), cell_name)
 
     @override
     def get_sheet_names(self) -> list[str]:

@@ -9,11 +9,15 @@ from openpyxl.worksheet.worksheet import Worksheet
 from rfexcel.exception.library_exceptions import (FileSaveException,
                                                   LibraryException,
                                                   NotSupportedInReadOnlyMode,
-                                                  SheetDoesNotExistException)
+                                                  SheetDoesNotExistException,
+                                                  StreamingViolationException)
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
+from rfexcel.model.cell_data.xlsx_raw_cell_data import XlsxRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 from rfexcel.utils.library_logger import logger
 from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.utilities import parse_cell_coordinate
 
 from .i_resource import IResource
 
@@ -52,6 +56,13 @@ class XlsxEditResource(IResource):
             self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
         )
         return XlsxRawRowData(row_values)
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        row_index, col_index = parse_cell_coordinate(cell_name)
+        return XlsxRawCellData(self._active_sheet.cell(row=row_index, column=col_index), cell_name)
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -163,6 +174,16 @@ class XlsxStreamResource(IResource):
         row_data = next(self._row_generator)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data)
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        row_index, col_index = parse_cell_coordinate(cell_name)
+        if row_index <= self._last_read_row_index:
+            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
+        self._last_read_row_index = row_index
+        return XlsxRawCellData(self._active_sheet.cell(row=row_index, column=col_index), cell_name)
 
     @override
     def get_sheet_names(self) -> list[str]:
