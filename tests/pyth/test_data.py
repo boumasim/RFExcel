@@ -1,7 +1,11 @@
 import shutil
+from typing import Any
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE, Path
+
+RowData = dict[str, Any]
+RowsData = list[RowData]
 
 # ---------------------------------------------------------------------------
 # Constants
