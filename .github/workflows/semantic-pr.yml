@@ -34,5 +34,3 @@ jobs:
             test
           scopes: |
             .+
-          validateSingleCommit: true
-          validateSingleCommitMatchesPrTitle: true
