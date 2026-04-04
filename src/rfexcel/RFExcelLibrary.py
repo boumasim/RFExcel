@@ -79,7 +79,7 @@ class RFExcelLibrary:
 
     = Generic Behavior =
 
-    - Closing workbooks at the end of a test is not neccessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
+    - Closing workbooks at the end of a test is not necessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
     - Saving workbooks does not happen implicitly, use `Save Workbook` keyword to persist any change.
     """
 

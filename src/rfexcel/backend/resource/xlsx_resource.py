@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, override
 
 from openpyxl import Workbook
+from openpyxl.cell.read_only import EmptyCell
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -150,6 +151,15 @@ class XlsxStreamResource(IResource):
         self._row_generator: Iterator[tuple[Any, ...]] | None = None
         self._last_read_row_index = 0
 
+    def _get_generator(self) -> Iterator[tuple[Any, ...]]  :
+        if self._row_generator is None:
+            self._row_generator = (
+                self._active_sheet.iter_rows(values_only=False)
+                if self._active_sheet
+                else iter([])
+            )
+        return self._row_generator
+
     @property
     @override
     def active_sheets(self) -> Worksheet | Chartsheet | None:
@@ -169,16 +179,11 @@ class XlsxStreamResource(IResource):
     
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
-        if self._row_generator is None:
-            self._row_generator = (
-                self._active_sheet.iter_rows(values_only=False)
-                if self._active_sheet
-                else iter([])
-            )
+        gen = self._get_generator()
         while(self._last_read_row_index < row_index - 1):
-            next(self._row_generator)
+            next(gen)
             self._last_read_row_index += 1
-        row_data = next(self._row_generator)
+        row_data = next(gen)
         self._last_read_row_index += 1
         return XlsxRawRowData(row_data)
 
@@ -189,8 +194,21 @@ class XlsxStreamResource(IResource):
         row_index, col_index = parse_cell_coordinate(cell_name)
         if row_index <= self._last_read_row_index:
             raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
-        self._last_read_row_index = row_index
-        return XlsxRawCellData(self._active_sheet.cell(row=row_index, column=col_index), cell_name)
+        gen = self._get_generator()
+        while self._last_read_row_index < row_index - 1:
+            try:
+                next(gen)
+            except StopIteration:
+                return XlsxRawCellData(EmptyCell(), cell_name)
+            self._last_read_row_index += 1
+        try:
+            row_tuple = next(gen)
+        except StopIteration:
+            return XlsxRawCellData(EmptyCell(), cell_name)
+        self._last_read_row_index += 1
+        if col_index - 1 >= len(row_tuple):
+            return XlsxRawCellData(EmptyCell(), cell_name)
+        return XlsxRawCellData(row_tuple[col_index - 1], cell_name)
 
     @override
     def get_sheet_names(self) -> list[str]:
