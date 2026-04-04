@@ -11,7 +11,7 @@ from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.cell_data.xls_raw_cell_data import XlsRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xls_raw_row_data import XlsRawRowData
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 from rfexcel.utils.utilities import parse_cell_coordinate
 
 from .i_resource import IResource
@@ -107,6 +107,10 @@ class XlsEditResource(IResource):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; inserting rows is not supported")
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; set_cell is not supported")
 
     @override
     def close(self):
@@ -210,6 +214,10 @@ class XlsStreamResource(IResource):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise OperationNotSupportedForFormat(".xls format is read-only; inserting rows is not supported")
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat(".xls format is read-only; set_cell is not supported")
 
     @override
     def close(self):

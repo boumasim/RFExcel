@@ -12,7 +12,7 @@ from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
                                        CSV_NOT_SUPPORTED_MSG)
 from rfexcel.utils.library_logger import logger
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class CsvEditResource(IResource):
@@ -118,6 +118,10 @@ class CsvEditResource(IResource):
         self._all_rows.insert(list_index, row)
 
     @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
+
+    @override
     def close(self):
         pass
 
@@ -190,6 +194,10 @@ class CsvStreamResource(IResource):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode()
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
 
     @override
     def close(self):

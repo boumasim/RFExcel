@@ -16,7 +16,7 @@ from rfexcel.model.cell_data.xlsx_raw_cell_data import XlsxRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 from rfexcel.utils.library_logger import logger
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 from rfexcel.utils.utilities import parse_cell_coordinate
 
 from .i_resource import IResource
@@ -131,6 +131,13 @@ class XlsxEditResource(IResource):
             self._active_sheet.cell(row=row_index, column=col, value=value)
 
     @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        row_index, col_index = parse_cell_coordinate(cell_name)
+        self._active_sheet.cell(row=row_index, column=col_index, value=value)
+
+    @override
     def close(self):
         self._wb.close()
 
@@ -222,6 +229,10 @@ class XlsxStreamResource(IResource):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode("Inserting rows is not supported in streaming mode")
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise NotSupportedInReadOnlyMode("Set Cell is not supported in streaming mode")
 
     @override
     def save(self, path: Path | None = None) -> None:

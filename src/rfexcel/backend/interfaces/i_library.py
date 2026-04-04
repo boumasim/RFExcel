@@ -7,7 +7,8 @@ from rfexcel.backend.reader.i_reader import IReader
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.utils.types import (DictRowData, HeaderSpec, InsertDictType,
-                                 ListRowData, NativeType, RowDifference)
+                                 InsertNativeType, ListRowData, NativeType,
+                                 RowDifference)
 
 
 class IExcel(ABC):
@@ -67,6 +68,10 @@ class IExcel(ABC):
 
     @abstractmethod
     def get_cell(self, cell_name: str) -> NativeType:
+        pass
+
+    @abstractmethod
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
         pass
 
     @abstractmethod

@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import override
 
 from rfexcel.backend.resource.i_resource import IResource
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 from .i_writer import IWriter
 
@@ -43,3 +43,7 @@ class XlsxWriter(IWriter):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
         resource.insert_row(row_index, cell_data)
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType, resource: IResource) -> None:
+        resource.set_cell(cell_name, value)

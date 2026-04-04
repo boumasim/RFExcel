@@ -349,6 +349,40 @@ class RFExcelLibrary:
             return self._active_workbook.get_cell(cell_name=cell_name)
         raise WorkbookNotOpenException()
 
+    @keyword("Set Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        """Sets the value of a single cell using Excel-style coordinates.
+
+        Supported only for ``.xlsx`` and ``.xls`` in *edit mode* (``read_only=False``).
+        Write operations on ``.xls`` trigger a lazy in-memory conversion to ``.xlsx``;
+        the original ``.xls`` file is never modified on disk.
+
+        Arguments:
+        - ``cell_name``: Cell coordinate such as ``A1`` or ``D4``.
+        - ``value``: Value to write. Must be an ``InsertNativeType`` (``str``, ``int``, ``float``, or ``bool``).
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``InvalidCellNameException``: If ``cell_name`` is not a valid coordinate.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``NullComponentException``: When called in streaming (read-only) mode.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |         |       |
+        | Set Cell      | A1                  | Hello   |       |
+        | Set Cell      | B2                  | ${42}   |       |
+        | Load Workbook | ${CURDIR}/data.xls  |         |       |
+        | Set Cell      | C3                  | ${3.14} |       |
+        | Save Workbook | ${OUTPUT_DIR}${/}result.xlsx  |       |
+        """
+        if self._active_workbook:
+            self._active_workbook.set_cell(cell_name=cell_name, value=value)
+        else:
+            raise WorkbookNotOpenException()
+
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
     def list_sheet_names(self) -> list[str]:
         """Returns the names of all sheets in the active workbook.
