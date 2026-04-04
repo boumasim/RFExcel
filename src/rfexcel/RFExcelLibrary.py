@@ -28,9 +28,8 @@ class RFExcelLibrary:
     - *Edit mode* (``read_only=False``, default): Loads the full file into memory.
       Supports reading and writing.
     - *Streaming mode* (``read_only=True``): Memory-efficient, read-only.
-      For ``.xlsx`` and ``.csv`` access is strictly forward-only — calling a read
+      For ``.xlsx``, ``.csv`` and ``.xls`` access is strictly forward-only — calling a read
       keyword twice on the same open workbook raises ``StreamingViolationException``.
-      For ``.xls``, on-demand sheet loading is used; random row access is still available.
 
     = Search Criteria & Partial Matching =
 
@@ -79,7 +78,7 @@ class RFExcelLibrary:
 
     = Generic Behavior =
 
-    - Closing workbooks at the end of a test is not neccessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
+    - Closing workbooks at the end of a test is not necessary, library does it automatically but can be safely closed manually using `Close Workbook` keyword.
     - Saving workbooks does not happen implicitly, use `Save Workbook` keyword to persist any change.
     """
 
@@ -319,6 +318,69 @@ class RFExcelLibrary:
             result = self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
             return self._wrap_public_result(result)
         else: raise WorkbookNotOpenException()
+
+    @keyword("Get Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def get_cell(self, cell_name: str) -> NativeType:
+        """Returns a single cell value using Excel-style coordinates.
+
+        Supported only for ``.xlsx`` and ``.xls`` in both edit and streaming modes.
+        ``.csv`` does not support coordinate-based addressing and raises
+        ``OperationNotSupportedForFormat``.
+
+        Arguments:
+        - ``cell_name``: Cell coordinate such as ``A1`` or ``D4``.
+
+        Returns:
+        - ``NativeType``: The native value stored in the cell.
+
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``InvalidCellNameException``: If ``cell_name`` is not a valid coordinate.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |
+        | ${value} =    | Get Cell            | A2 |
+        | Load Workbook | ${CURDIR}/data.xls  |
+        | ${value} =    | Get Cell            | C3 |
+        """
+        if self._active_workbook:
+            return self._active_workbook.get_cell(cell_name=cell_name)
+        raise WorkbookNotOpenException()
+
+    @keyword("Set Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        """Sets the value of a single cell using Excel-style coordinates.
+
+        Supported only for ``.xlsx`` and ``.xls`` in *edit mode* (``read_only=False``).
+        Write operations on ``.xls`` trigger a lazy in-memory conversion to ``.xlsx``;
+        the original ``.xls`` file is never modified on disk.
+
+        Arguments:
+        - ``cell_name``: Cell coordinate such as ``A1`` or ``D4``.
+        - ``value``: Value to write. Must be an ``InsertNativeType`` (``str``, ``int``, ``float``, or ``bool``).
+
+        Returns:
+        - ``None``.
+
+        Raises:
+        - ``WorkbookNotOpenException``: If no workbook is currently open.
+        - ``InvalidCellNameException``: If ``cell_name`` is not a valid coordinate.
+        - ``OperationNotSupportedForFormat``: When called for ``.csv``.
+        - ``NullComponentException``: When called in streaming (read-only) mode.
+
+        Examples:
+        | Load Workbook | ${CURDIR}/data.xlsx |         |       |
+        | Set Cell      | A1                  | Hello   |       |
+        | Set Cell      | B2                  | ${42}   |       |
+        | Load Workbook | ${CURDIR}/data.xls  |         |       |
+        | Set Cell      | C3                  | ${3.14} |       |
+        | Save Workbook | ${OUTPUT_DIR}${/}result.xlsx  |       |
+        """
+        if self._active_workbook:
+            self._active_workbook.set_cell(cell_name=cell_name, value=value)
+        else:
+            raise WorkbookNotOpenException()
 
     @keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
     def list_sheet_names(self) -> list[str]:

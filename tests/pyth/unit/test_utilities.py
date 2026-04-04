@@ -4,13 +4,13 @@ import pytest
 import xlrd
 from openpyxl import Workbook
 
+from rfexcel.exception.library_exceptions import InvalidCellNameException
 from rfexcel.utils.types import *
-
 from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
                                      convert_xls_to_xlsx,
                                      headers_to_header_map,
-                                     parse_cell_coordinate, safe_str_to_type_cast,
-                                     search_in_row)
+                                     parse_cell_coordinate,
+                                     safe_str_to_type_cast, search_in_row)
 from tests.pyth.conftest import XLS_FILE
 
 # ---------------------------------------------------------------------------
@@ -223,6 +223,12 @@ def test_parse_cell_coordinate(
     coordinate: str, zero_based: bool, expected: tuple[int, int]
 ) -> None:
     assert parse_cell_coordinate(coordinate, zero_based=zero_based) == expected
+
+
+@pytest.mark.parametrize("coordinate", ["", "A", "1A", "not-a-cell", "A0"])
+def test_parse_cell_coordinate_raises_invalid_cell_name(coordinate: str) -> None:
+    with pytest.raises(InvalidCellNameException):
+        parse_cell_coordinate(coordinate)
 
 
 # ---------------------------------------------------------------------------

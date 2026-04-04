@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class IResource(ABC):
@@ -47,6 +48,10 @@ class IResource(ABC):
         pass
 
     @abstractmethod
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        pass
+
+    @abstractmethod
     def add_sheet(self, name: str) -> None:
         pass
 
@@ -72,4 +77,8 @@ class IResource(ABC):
 
     @abstractmethod
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        pass
+
+    @abstractmethod
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
         pass

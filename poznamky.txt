@@ -52,7 +52,7 @@ XLS rozhodnuti:
     edit -> vynutime konverzi na xslx -> neda se editovat, musela by se delat kopie a ta pak ukladat, stejne ztratime formule tak i tak
     excely na xls -> https://github.com/robocorp/rpaframework/tree/master/packages/main/tests/resources/excels
 
-generovani docs - python -m robot.libdoc src/rfexcel docs/RFExcel.html
+generovani docs - python -m robot.libdoc rfexcel.RFExcelLibrary docs/RFExcel.html
 
 1-base indexing koncept pro reach do dat
 

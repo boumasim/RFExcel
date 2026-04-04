@@ -6,12 +6,13 @@ from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.exception.library_exceptions import (
     FileSaveException, NotSupportedInReadOnlyMode,
     OperationNotSupportedForFormat)
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.rfexcel_constants import (BASE_DIALECT, BASE_ENCODING,
                                        CSV_NOT_SUPPORTED_MSG)
 from rfexcel.utils.library_logger import logger
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class CsvEditResource(IResource):
@@ -46,6 +47,10 @@ class CsvEditResource(IResource):
             raise StopIteration()
 
         return CsvRawRowData(self._all_rows[list_index])
+
+    @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -113,6 +118,10 @@ class CsvEditResource(IResource):
         self._all_rows.insert(list_index, row)
 
     @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
+
+    @override
     def close(self):
         pass
 
@@ -149,6 +158,10 @@ class CsvStreamResource(IResource):
         return CsvRawRowData(raw_row)
 
     @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
+
+    @override
     def get_sheet_names(self) -> list[str]:
         raise OperationNotSupportedForFormat()
 
@@ -181,6 +194,10 @@ class CsvStreamResource(IResource):
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode()
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
 
     @override
     def close(self):

@@ -5,8 +5,9 @@ from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
 from rfexcel.exception.library_exceptions import NullComponentException
+from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 from .i_resource import IResource
 
@@ -48,6 +49,10 @@ class NullResource(IResource):
         raise NullComponentException()
 
     @override
+    def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
+        raise NullComponentException()
+
+    @override
     def add_sheet(self, name: str) -> None:
         raise NullComponentException()
 
@@ -73,4 +78,8 @@ class NullResource(IResource):
 
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
+        raise NullComponentException()
+
+    @override
+    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
         raise NullComponentException()

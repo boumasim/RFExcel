@@ -21,6 +21,11 @@ class LibraryException(RFExcelException):
     def __init__(self, msg: str):
         super().__init__(msg)
 
+class InvalidCellNameException(RFExcelException):
+    """Exception raised when a cell name cannot be parsed as an Excel coordinate"""
+    def __init__(self, cell_name: str):
+        super().__init__(f"Invalid cell name: {cell_name}")
+
 class NullComponentException(RFExcelException):
     """Raised when a Null Object method is called."""
     def __init__(self):

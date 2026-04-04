@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import weakref
 from pathlib import Path
 from typing import TYPE_CHECKING, override
@@ -7,7 +8,7 @@ from rfexcel.advice.interceptors import auto_convert_xls_to_xlsx
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
-from rfexcel.utils.types import ColumnValues
+from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 if TYPE_CHECKING:
     from rfexcel.RFExcel import RFExcel
@@ -61,4 +62,9 @@ class XlsWriter(IWriter):
     @override
     @auto_convert_xls_to_xlsx
     def insert_row(self, row_index: int, cell_data: ColumnValues, resource: IResource) -> None:
+        raise OperationNotSupportedForFormat("Write operations not supported for xls format")
+
+    @override
+    @auto_convert_xls_to_xlsx
+    def set_cell(self, cell_name: str, value: InsertNativeType, resource: IResource) -> None:
         raise OperationNotSupportedForFormat("Write operations not supported for xls format")
