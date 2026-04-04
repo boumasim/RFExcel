@@ -28,9 +28,8 @@ class RFExcelLibrary:
     - *Edit mode* (``read_only=False``, default): Loads the full file into memory.
       Supports reading and writing.
     - *Streaming mode* (``read_only=True``): Memory-efficient, read-only.
-      For ``.xlsx`` and ``.csv`` access is strictly forward-only — calling a read
+      For ``.xlsx``, ``.csv`` and ``.xls`` access is strictly forward-only — calling a read
       keyword twice on the same open workbook raises ``StreamingViolationException``.
-      For ``.xls``, on-demand sheet loading is used; random row access is still available.
 
     = Search Criteria & Partial Matching =
 

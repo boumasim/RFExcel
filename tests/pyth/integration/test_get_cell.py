@@ -69,4 +69,3 @@ def test_get_cell_raises_when_revisiting_same_row_in_xlsx_stream_mode(
 
 	with pytest.raises(StreamingViolationException):
 		lib.get_cell("B5")
-		lib.get_cell("B5")

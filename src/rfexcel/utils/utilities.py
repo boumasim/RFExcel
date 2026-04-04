@@ -123,7 +123,7 @@ def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[in
     
     try:
         row, col = coordinate_to_tuple(coordinate)
-    except Exception as exc:
+    except (TypeError, ValueError, UnboundLocalError) as exc:
         raise InvalidCellNameException(coordinate) from exc
     if row < 1 or col < 1:
         raise InvalidCellNameException(coordinate)

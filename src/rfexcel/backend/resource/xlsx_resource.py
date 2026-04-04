@@ -179,6 +179,10 @@ class XlsxStreamResource(IResource):
     
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
+        if not self._active_sheet:
+            raise LibraryException("No active worksheet")
+        if row_index <= self._last_read_row_index:
+            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
         gen = self._get_generator()
         while(self._last_read_row_index < row_index - 1):
             next(gen)
