@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/boumasim/RFExcel/compare/v0.7.0...v0.8.0) (2026-04-04)
+
+
+### Features
+
+* **cell:** get and set ([#18](https://github.com/boumasim/RFExcel/issues/18)) ([26eea73](https://github.com/boumasim/RFExcel/commit/26eea736e21bbfb6be2751b91ebdae1b7a5f22b2))
+
 ## [0.7.0](https://github.com/boumasim/RFExcel/compare/v0.6.0...v0.7.0) (2026-04-03)
 
 
