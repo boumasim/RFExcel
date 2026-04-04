@@ -33,7 +33,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.PAT_FOR_DOCS_PR }} 
-          commit-message: "docs(bot): regenerate RFExcel.html"
+          commit-message: "docs(bot): regenerate RFExcel.html [skip ci]"
           title: "docs(bot): regenerate RFExcel.html"
           body: "Automated PR to update Libdoc after changes to master."
           branch: "bot/update-docs"
