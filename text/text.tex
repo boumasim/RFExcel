@@ -37,7 +37,7 @@ Tímto rozdělením jsme u architektur schopni docílit následujících věcí:
     \item Nezávislost na UI, databázi, frameworku
 \end{itemize}
 
-Software je napsán monoliticky, veškerá funkcionalita programu je zabalena na jednom místě. Dále tedy popíši možné vnitřní architektury, tedy některé z možností, jak je možné program strukturovat uvnitř jednoho projektu.\cite{BibEntry2023Jan} \cite{Monolitic}
+Software je napsán monoliticky, veškerá funkcionalita programu je zabalena na jednom místě. Dále tedy popíši možné vnitřní architektury, tedy některé z možností, jak je možné program strukturovat uvnitř jednoho projektu.\cite{Architecture} \cite{Monolitic}
 
 \subsection{Vrstvená architektura}
 
@@ -47,17 +47,44 @@ Mezi charakteristiky patří to, že vrstvy zásadně komunikují pouze s vrstva
 
 \begin{itemize}
     \item Prezenční vrstva, která je zodpovědna za komunikaci softwaru s uživatelem
-    \item Vrstva aplikační logiky, která provádí funkcionální požadavky aplikace
+    \item Vrstva aplikační logiky, která provádí aplikační požadavky aplikace
     \item Doménová vrstva, která se stará o algoritmy, komponenty
     \item Prezenční vrstva, která se stará o data, komunikaci s databází
 \end{itemize}
 
 Tato architektura je jedna z nejznámějších a nejvíce používaných. Dobře se udržuje díky rozdělení na jednotlivé vrstvy, které se neovlivňují. Díky tomu je také jednoduší testování, kde jednotkové testy dobře otestují pouze funkčnost dané vrstvy, integrační zase komunikaci s nižšími vrstvami.
-Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Další problémem jsou vrstvy které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern), který vede k větší komplexitě a ztrátu efektivnosti. \cite{baeldung2021Nov} \cite{Cherif2024Nov}
+Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Další problémem jsou vrstvy které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern), který vede k větší komplexitě a ztrátu efektivnosti. \cite{Layer1} \cite{Layer2}
 
-\subsection{}
+\subsection{Hexagonální architektura}
+
+Jinak referována také jako "Ports and Adapters".Definuje "Port" jakožto vstupní bod do aplikace, který je determinován rozhraním, přes který se s aplikací komunikuje. Zároveň porty také slouží pro komunikaci s externími systémy, jako například databáze, ostatní aplikace, systém pro zpracování zpráv. S portem se komunikuje pomocí "Adaptéru", který slouží jako prostředek pro komunikaci s aplikací skrz port. Toto vytváří abstrakci, kdy jádro aplikace je izolováno před externími nástroji a technologiemi.
+
+Jádro aplikace obsahuje servisní a doménovou vrstvu, což jsou obě věci vyjadřující čistě aplikační logiku programu.
+
+Tato architektura rozlišuje 2 strany komunikace:
+
+\begin{itemize}
+    \item Hlavní aktor, což je externí aktor, který iniciuje komunikaci s naší aplikací pomocí námi definovaného rozhraní
+    \item Vedlejší aktor, což jsou externí systémy, které aplikace používá nebo s nimi komunikuje
+\end{itemize}
+
+Tato struktura vynucuje DIP. Jádro aplikace určuje striktní pravidla skrz abstraktní rozhraní (Porty). Externí technologie (Adaptéry) jsou nuceny se jádru přizpůsobit, než aby toto přizpůsobení dělalo jádro oproti různým externím technologiím.
+
+Toto způsobí, je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testovnání to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje. \cite{Hexagonal}
+
+\subsection{Mikrokernel Architektura}
+
+Také známy jako "Plug-in", je ideální pro aplikace, u kterých chceme více rámcově hodně integrací na externí entity u kterých přesně nevíme, jak budou vypadat. Skládá se ze 2 hlavních komponent, jádro a přípojné komponenty. 
+
+V jádru se udržuje minimální funkcionalita nutná pro běh aplikace. Při změně jádra se narozdíl od ostatních aplikací nic ve zbytku aplikace nezmění, jelikož jednotlivá pravidla a funkcionality aplikace jsou izolovány v přípojných komponentách, které jsou navzájem nazávislé.
+
+Na správu jednotlivých nezávislých komponent slouží takzvané "registry", kde se aplikace registrují a odhlašují podle toho, zrovna komunikují s jádrem aplikace.
+
+Smlouva (contract) definuje standartní příchozí a odchozí data mezi modulem a jednotlivými komponentami. Pokud komponenta není schopna smlouvu dodržet, je možné použít adaptér. Toto zajištuje, že jádro aplikace nikdy nemusí implementovat speciální kód pro externí komponenty. \cite{Microkernel}
 
 \section{Návrhové vzory}
+
+Návrhové vzoru jsou typická řešení pro běžné problémy, se kterými se v programování setkáváme. Jsou to předdělaná obecná řešení, která řeší stále dokola vyskytující se problémy při návrhu aplikací. Dále vysvětlím a definuji vzory, které poté budou použity v implementaci. \cite{DesignPatterns}
 
 \section{Technologie}
 
