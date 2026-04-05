@@ -1,12 +1,25 @@
 name: Update Libdoc
 
 on:
-  push:
+  pull_request:
     branches: ["master"]
+    types:
+      - closed
 
 jobs:
   docs:
     runs-on: ubuntu-latest
+
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.title != 'docs(bot): regenerate RFExcel.html' &&
+      (
+        startsWith(github.event.pull_request.title, 'feat(') ||
+        startsWith(github.event.pull_request.title, 'fix(') ||
+        startsWith(github.event.pull_request.title, '!feat(') ||
+        startsWith(github.event.pull_request.title, 'docs(')
+      )
+    
     permissions:
       contents: write
       pull-requests: write
