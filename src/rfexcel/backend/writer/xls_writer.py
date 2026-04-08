@@ -2,24 +2,22 @@ from __future__ import annotations
 
 import weakref
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from rfexcel.advice.interceptors import auto_convert_xls_to_xlsx
+from rfexcel.backend.interfaces.i_library import ISetExcel
 from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.backend.writer.i_writer import IWriter
 from rfexcel.exception.library_exceptions import OperationNotSupportedForFormat
 from rfexcel.utils.types import ColumnValues, InsertNativeType
 
-if TYPE_CHECKING:
-    from rfexcel.RFExcel import RFExcel
-
 
 class XlsWriter(IWriter):
 
-    def set_excel_reference(self, ref: RFExcel):
+    def set_excel_reference(self, ref: ISetExcel):
         self._ref = weakref.ref(ref)
 
-    def resolve_weak_ref(self) -> RFExcel:
+    def resolve_weak_ref(self) -> ISetExcel:
         ref = self._ref()
         if ref is None:
             raise ReferenceError("RFExcel reference is not set or has been garbage collected.")
