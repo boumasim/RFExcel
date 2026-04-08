@@ -9,7 +9,7 @@ class LoggerProtocol(Protocol):
     def error(self, msg: str) -> None: ...
 
 
-class _StdlibAdapter:
+class DefaultLogger:
 
     def __init__(self) -> None:
         self._log = logging.getLogger("rfexcel")
@@ -26,7 +26,7 @@ class _StdlibAdapter:
 class LibraryLogger:
 
     def __init__(self) -> None:
-        self._delegate: LoggerProtocol = _StdlibAdapter()
+        self._delegate: LoggerProtocol = DefaultLogger()
 
     def configure(self, delegate: LoggerProtocol) -> None:
         self._delegate = delegate
