@@ -7,7 +7,7 @@ from robot.utils import DotDict  # type: ignore
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.factory.workbook_factory import WorkbookFactory
-from rfexcel.utils.library_logger import logger as library_logger
+from rfexcel.utils.library_logger import RobotLogger, logger as library_logger
 from rfexcel.utils.types import HeaderSpec, InsertNativeType, NativeType
 
 from .backend.interfaces.i_library import IExcel
@@ -88,7 +88,7 @@ class RFExcelLibrary:
     ROBOT_AUTO_KEYWORDS = False
 
     def __init__(self):
-        library_logger.configure(logger)
+        library_logger.configure(RobotLogger())
         self._factory = WorkbookFactory()
         self._active_workbook: IExcel | None = None
 
