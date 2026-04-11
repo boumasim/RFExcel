@@ -28,6 +28,7 @@ Cílem této práce je navrhnout a implementovat open-source knihovnu pro Robot 
 V této kapitole se budu věnovat teoretické části bakalářské práce. Proberu návrhové vzory, architektonické principy, technologie, stávající řešení, metody testování. Veškerá probraná témata v této kapitole jsou teoretický základ pro následný návrh a implementaci knihovny 
 
 \section{Druhy vnitřní architektury}
+\label{internal architectures}
 
 Jedním z prvním a zároveň tím jedním z nejdůležitějších rozhodnutích ve vývoji softwaru je jeho architektura. Architektur je mnoho, všechny mají za cíl jednu hlavní věc, oddělení odpovědnosti jednotlivých částí softwaru. Tohoto oddělení docilují jednotlivé architektury pomocí rozdělení na vrstvy.
 
@@ -42,6 +43,7 @@ Tímto rozdělením jsme u architektur schopni docílit následujících věcí:
 Celý program je napsán v jednom repozitáři, není potřeba žádná další síťová komunikace s dalšími aplikacemi. Dále tedy popíši možné vnitřní architektury, tedy některé z možností, jak je možné program strukturovat uvnitř jednoho projektu.\cite{Architecture} \cite{Monolitic}
 
 \subsection{Vrstvená architektura}
+\label{layered architecture}
 
 Vrstvená (layered) architektura jedna z nejběžnějších architektur pro vývoj softwaru.\cite{Layer1}  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části které spolu úzce souvisí poté většinou leží na stejné vrstvě.
 
@@ -137,8 +139,9 @@ Tento návrhový vzor řeší problém pomocí zaobalení aplikace do jedné tř
 Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fasádě vůbec neví a interně komunikuje dále meze změny. Naopak to platí stejně, při změnách v jádru aplikace uživatel nepozná změnu, jelikož je odstíněn od detailů pomocí vystaveného rozhraní.
 
 \subsection{Most}
+\label{bridge}
 
-Most (Bridge)\cite{Bridge} je strukturální návrhový vzor, který nám dovoluje rozdělit velkou třídu nebo množinu sobě podobných tříd do více hierarchií, které můžou být vyvíjeny nezávisle na sobě.
+Most (Bridge)\cite{Bridge} je strukturální návrhový vzor, který nám dovoluje rozdělit velkou třídu nebo množinu sobě podobných tříd do více hierarchií, abstrakcí a implementací, které můžou být vyvíjeny nezávisle na sobě.
 
 Jako příklad si vezmeme geometrický objekt \texttt{Shape}. \texttt{Shape} má 2 podtřídy, \texttt{Circle} a \texttt{Square}. A tuto hierarchie chceme rozšířit o barvy, náš \texttt{Shape} budeme chtít \texttt{Blue} a \texttt{Red}. Pomocí klasického dědění nebudou muset vzniknout třídy 2, ale rovnou 4, \texttt{BlueCircle}, \texttt{RedCircle}, \texttt{BlueSquare}, \texttt{RedSquare}. Přidání dalších vlastností třídy \texttt{Shape} nám bude náročnost hierarchie růst exponenciálně. S rostoucí velikostí projektu bude udržování této architektury stále těžší a těžší.
 
@@ -146,7 +149,7 @@ Problém nastává, protože se snažíme \texttt{Shape} rozšiřovat do 2 více
 
 S tímto přístupem tedy rozdělíme formu a barvy do separátních hierarchií, které pak původní třída \texttt{Shape} bude odkazovat. Pro \texttt{Blue} a \texttt{Red} vznikne tedy rozhraní \texttt{Color}, ze kterého budou dědit \texttt{Red} a \texttt{Blue}, tím vzniká první hierarchie, podobně vznikne i hierarchie \texttt{Form} pro \texttt{Circle} a \texttt{Square}. \texttt{Square} tedy nově odkazuje pouze \texttt{Color} a \texttt{Form}, detaily ho nezajímají a práci deleguje na tyto rozhraní. Přidání další barvy nebo formy nově nevynucuje změny v \texttt{Shape}.
 
-\subsection{Trategie}
+\subsection{Strategie}
 
 Návrhový vzor chování (Behavioral), který nám dovoluje definovat rodinu algoritmů, které dáme do separátních tříd, zároveň budou ale navzájem zaměnitelné.\cite{Strategy}
 
@@ -182,6 +185,7 @@ Abstraktní továrna navrhuje explicitní deklaraci rozhraní pro všechny typy 
 Pro každou variantu vytvoříme konkrétní separátní tovární třídu, která již vrací přesný typ produktu(\texttt{ModernFactory} může vytvořit pouze \texttt{ModernSofa}, \texttt{ModernChair}, ...). Kód uživatele interaguje jak s továrnou, tak s jednotlivými produkty pouze přes jejich společné rozhraní. Tím docílíme možnosti upravovat jak továrnu, tak i jednotlivé produkty bez nutnosti zásahu do kódu, který s nimi pracuje. Uživatel tedy nemá ponětí o detailech jednotlivých produktů ani továrny, jediné co zná je jejich společné rozhraní a s tím nadále pracuje.
 
 \subsection{Adaptér}
+\label{adapter}
 
 Strukturální návrhový vzor, který dovoluje komunikaci objektům s nekompatibilním rozhraním.\cite{Adapter}
 
@@ -206,8 +210,16 @@ Dělejme na knihovně, která posílá notifikace. Knihovna má hlavní třídu 
 Dekorátor je objekt, který zaobaluje původní objekt a udržuje si na něj referenci. Má stejné rozhraní jako původní objekt. Při zavolání má dekorátor možnost provést nějakou práci po nebo před delegováním na původní objekt. Z vnějšku nejde dekorátor od původního objektu rozeznat.
 
 \subsection{Nulový objekt}
+\label{null object}
 
 Tady jde spíše o metodu než vzor, Nulový objekt (Null object) je pouhé nahrazení návratové hodnoty null objektem, který má defaultní prázdné chování.\cite{NullObject} Díky tomuto zmizí potřeba mít všude kontroly null hodnot, což lehce zjednoduší kód. Na druhou stranu vznikne potřeba vytvořit novou třídu, která bude nulový objekt reprezentovat.
+
+\subsection{Singleton}
+\label{singleton}
+
+Návrhový vzor pro výtváření objektů, který zajišťuje, že třída má pouze jednu instanci a poskytuje k ní globální přístup.
+
+Vzor se používá nejčastěji v situacích, kdy potřebujeme přístup ke sdílenému zdroji (databáze, soubor, ...). \cite{Singleton}
 
 \section{Robot Framework}
 \label{sec:RF}
@@ -481,6 +493,20 @@ Knihovna používána hlavně in-memory datavou analýzu.\cite{Pandas} Hlavním 
 
 Důležitou částí knihovny je její architektura. Speciálně u knihoven je nutné, aby byly dobře navržené a flexibilní pro budoucí vývoj, v tomto případě se může jednat o přidání nových klíčových slov, podpora dalšího formátu, optimalizace, nebo například i výměna knihoven, kterou tato knihovna používá pro práci s jednotlivými formáty.
 
+\subsection{Rozvržení knihovny}
+
+Z dostupných možností\ref{internal architectures}, byla nakonec vybrána architektura vrstvená.
+
+Jedná se architekturu, která jasně rozděluje, co která vrstva dělá, zároveň je z vyjmenovaných nejjednodušší na napsání, zajišťuje jednoduchou rozšiřitelnost a testovatelnost. Rozdělení na vrstvy by se dalo popsat následovně:
+
+\begin{itemize}
+    \item API, které bude vystavené uživatelům knihovny \ref{User API}
+    \item Jádro aplikace, které se bude starat o hlavní funkcionality knihovny \ref{Application core}
+    \item Komunikace s jednotlivými knihovnami pro práci se soubory a způsob jejich komunikace \ref{Components}
+\end{itemize}
+
+Zároveň je do návrhu nutno zahrnout model\ref{model}, což jsou objekty, které umožňují jednoduchou komunikaci mezi Jádrem aplikace a jednotlivými komponentami.
+
 \subsection{Vystavené rozhraní}
 \label{User API}
 
@@ -490,14 +516,15 @@ Velice důležitá část celé knihovny. Vystavené rozhraní by se mělo měni
     \centering
     \includegraphics[width=1\linewidth]{images/API.png}
     \caption{Architektura rozhraní}
-    \label{fig:placeholder}
+    \label{fig:architecture}
 \end{figure}
 
 Pro implementaci rozhraní byl zvolena fasáda\ref{facade}, která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory}\ref{factory}, která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel} a je následně uloženo ve \textit{workbook}.
 
 \subsection{Jádro aplikace}
+\label{Application core}
 
-O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vnitří část architektury knihovny:
+O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vnitřní část architektury knihovny:
 
 \begin{figure}[H]
     \centering
@@ -506,9 +533,56 @@ O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vni
     \label{fig:placeholder}
 \end{figure}
 
-Třída \texttt{RFExcel} implementuje rozhraní 2 tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a jsou deklarované v uživatelském rozhraní aplikace.\ref{User API} Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, její použití je vysvětleno níže.\ref{FUTURE REFERENCE}
+Třída \texttt{RFExcel} implementuje rozhraní 2 tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a jsou deklarované v uživatelském rozhraní aplikace.\ref{User API} Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, její použití je vysvětleno v kapitole implementace.\ref{FUTURE REFERENCE}
 
 \texttt{RFExcel} využívá principu kompozice\ref{Composition}, pro definování funkčností, které knihovna umožňuje. Jedná se o rozhraní, které pak jednotlivé implementace musí splňovat a \texttt{RFExcel} je může používat bez jakékoliv znalosti toho, jaký přesný typ třídy zrovna dostane.
+
+\subsection{Model}
+\label{model}
+
+Aplikace pracuje s několika různými souborovými typy, kdy každý může vracet data jinak interpretované. Pro sjednocení logiky a vyhnutí se kontrolování, s jakým zdrojem aplikace zrovna aplikace, jsou použity následující modely:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Model.png}
+    \caption{Modely}
+    \label{fig:placeholder}
+\end{figure}
+
+Tento návrh respektuje návrhový vzor Most\ref{bridge}, kdy máme pro 2 modely 2 různé rozhraní, která jsou potom implementována pro jednotlivé souborové typy. Všechny komponenty \ref{Components} tedy vrací tyto modely, pro získání unifikovaných informací pak aplikace pouze volá metody společného rozhraní a je jí jedno, se kterým typem souboru zrovna pracuje. Také je zde vidět použití nulového objektu\ref{null object}, který reprezentuje prázdnou informaci.
+
+\subsection{Komponenty}
+\label{Components}
+
+Jako komponenty jsou brány jednotlivé rozhraní která jsou součástí \texttt{RFExcel} instance pomocí kompozice. Jedná se tedy o rozhraní \texttt{IReader}, \texttt{IMetadata}, \texttt{IStyle}, \texttt{IResource} a \texttt{IWriter}. Pro jednoduchost je níže ukázán pouze jeden příklad, \texttt{IResource}, ostatní fungují na stejném principu:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Components.png}
+    \caption{Komponenta \texttt{IResource}}
+    \label{fig:placeholder}
+\end{figure}
+
+\texttt{IResource} je tedy rozhraní, které používá třída \texttt{RFExcel}. Pro jednotlivé druhy souborů a typy práce se soubory (editační a streamovací mód) poté existuje třída, která rozhraní implementuje.
+
+\subsection{Vytvoření komponent}
+
+Na obrázku \ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje 2 věci, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializována pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí instanci \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny \ref{factory}, kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
+
+\subsection{Logování}
+
+Robot Framework hojně využívá systém logování, který ovlivňuje zobrazení výsledků jednotlivých testů. Pro logování byla vybrána následující architektura:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Logovani.png}
+    \caption{Architektura logování}
+    \label{fig:placeholder}
+\end{figure}
+
+\texttt{ILogger} je rozhraní, které musí každý logger splňovat. Každá stávající (potenciálně budoucí) je pak singleton \ref{singleton}, který implementuje jednotlivé loggery. Instance \texttt{RobotLogger} a \texttt{DefaultLogger} jsou vlastně jen adaptéry \ref{adapter}, které mění rozhraní původních loggerů na rozhraní \texttt{ILogger} pro jednodušší unifikované použití ve zbytku kódu. 
+
+\texttt{LibraryLogger} je poté taky singleton a hlavní logger, který se používá ve zbytku aplikace. Obsahuje odkaz na \texttt{ILogger}, na který deleguje veškerou svojí práci.
 
 \chapter{Implementace}
 
