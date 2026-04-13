@@ -10,13 +10,6 @@ from .i_reader import IReader
 
 class XlsxStreamReader(IReader):
 
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("xlsx stream reader\n")
-
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         if resource.last_read_row_index >= header_row_idx:

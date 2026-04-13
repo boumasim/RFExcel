@@ -8,10 +8,6 @@ from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 class IReader(ABC):
 
     @abstractmethod
-    def print(self) -> None:
-        pass
-
-    @abstractmethod
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         pass
     

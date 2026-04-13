@@ -8,12 +8,6 @@ from rfexcel.model.raw_data.null_raw_row_data import NullRawRowData
 
 
 class CsvStreamReader(IReader):
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("csv stream reader")
 
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:

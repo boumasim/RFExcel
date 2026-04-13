@@ -1,8 +1,5 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class IStyle(ABC):
-
-    @abstractmethod
-    def print(self) -> None:
-        pass
+	pass

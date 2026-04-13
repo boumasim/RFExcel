@@ -6,12 +6,6 @@ from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 
 
 class CsvEditReader(IReader):
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("csv edit reader")
 
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
