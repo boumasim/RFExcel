@@ -1,4 +1,5 @@
 from typing import override
+
 from rfexcel.backend.style.i_style import IStyle
 
 
