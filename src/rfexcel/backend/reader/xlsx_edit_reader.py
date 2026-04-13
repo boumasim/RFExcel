@@ -8,13 +8,6 @@ from .i_reader import IReader
 
 class XlsxEditReader(IReader):
 
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("xlsx edit reader\n")
-
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
         filtered = {k: v for k, v in kwargs.items() if k != 'data_only'}

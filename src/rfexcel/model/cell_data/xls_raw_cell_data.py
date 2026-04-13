@@ -3,8 +3,8 @@ from typing import override
 from xlrd.sheet import Cell
 
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
-from rfexcel.utils.types import NativeType
 from rfexcel.model.common_model import norm_xls_value
+from rfexcel.utils.types import NativeType
 
 
 class XlsRawCellData(IRawCellData):

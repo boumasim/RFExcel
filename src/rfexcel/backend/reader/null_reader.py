@@ -8,15 +8,10 @@ from .i_reader import IReader
 
 
 class NullReader(IReader):
+	@override
+	def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
+		raise NullComponentException()
 
-    @override
-    def print(self):
-        raise NullComponentException()
-    
-    @override
-    def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
-        raise NullComponentException()
-    
-    @override
-    def get_row(self, row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
-        raise NullComponentException()
+	@override
+	def get_row(self, row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:
+		raise NullComponentException()

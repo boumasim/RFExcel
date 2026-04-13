@@ -7,11 +7,7 @@ from openpyxl.cell.read_only import EmptyCell
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
-from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  LibraryException,
-                                                  NotSupportedInReadOnlyMode,
-                                                  SheetDoesNotExistException,
-                                                  StreamingViolationException)
+from rfexcel.exception.library_exceptions import FileSaveException, LibraryException, NotSupportedInReadOnlyMode, SheetDoesNotExistException, StreamingViolationException
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.cell_data.xlsx_raw_cell_data import XlsxRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData

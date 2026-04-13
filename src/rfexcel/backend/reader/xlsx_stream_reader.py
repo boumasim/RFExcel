@@ -4,17 +4,11 @@ from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.exception.library_exceptions import StreamingViolationException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.null_raw_row_data import NullRawRowData
+
 from .i_reader import IReader
 
 
 class XlsxStreamReader(IReader):
-
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("xlsx stream reader\n")
 
     @override
     def get_headers(self, header_row_idx: int, resource: IResource, **kwargs: Any) -> IRawRowData:

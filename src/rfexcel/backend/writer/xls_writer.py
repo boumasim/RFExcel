@@ -24,10 +24,6 @@ class XlsWriter(IWriter):
         return ref
 
     @override
-    def print(self):
-        print("xls writer\n")
-
-    @override
     @auto_convert_xls_to_xlsx
     def add_sheet(self, name: str, resource: IResource):
         raise OperationNotSupportedForFormat("Write operations not supported for xls format")
