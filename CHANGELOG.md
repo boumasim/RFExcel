@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/boumasim/RFExcel/compare/v0.8.0...v0.8.1) (2026-04-13)
+
+
+### Documentation
+
+* **bot:** regenerate RFExcel.html ([#21](https://github.com/boumasim/RFExcel/issues/21)) ([6c8aaef](https://github.com/boumasim/RFExcel/commit/6c8aaef52be809b3884665e7f27beff9b978e7c2))
+
 ## [0.8.0](https://github.com/boumasim/RFExcel/compare/v0.7.0...v0.8.0) (2026-04-04)
 
 
