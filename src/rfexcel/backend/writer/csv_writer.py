@@ -8,12 +8,6 @@ from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class CsvWriter(IWriter):
-    def __init__(self):
-        pass
-
-    @override
-    def print(self):
-        print("csv writer")
 
     @override
     def add_sheet(self, name: str, resource: IResource):

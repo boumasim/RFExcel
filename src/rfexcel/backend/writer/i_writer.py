@@ -6,10 +6,6 @@ from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class IWriter(ABC):
-    
-    @abstractmethod
-    def print(self) -> None:
-        pass
 
     @abstractmethod
     def add_sheet(self, name: str, resource: IResource):
