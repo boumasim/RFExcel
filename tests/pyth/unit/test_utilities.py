@@ -14,7 +14,7 @@ from rfexcel.utils.utilities import (
     safe_str_to_type_cast,
     search_in_row,
 )
-from tests.pyth.conftest import XLS_FILE
+from tests.pyth.test_data import XLS_FILE
 
 # ---------------------------------------------------------------------------
 # safe_str_to_type_cast
