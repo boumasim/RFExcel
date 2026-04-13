@@ -4,8 +4,7 @@ import pytest
 
 from rfexcel.exception.library_exceptions import WorkbookNotOpenException
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, EDITABLE_FORMAT_LIST,
-                                  open_backend)
+from tests.pyth.test_data import BACKEND_NAMES, EDITABLE_FORMAT_LIST, open_backend
 
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)

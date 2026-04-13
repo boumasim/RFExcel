@@ -4,18 +4,30 @@ from typing import cast
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NullComponentException,
-    RowIndexOutOfBoundsException, WorkbookNotOpenException)
+	HeadersNotDeterminedException,
+	NullComponentException,
+	RowIndexOutOfBoundsException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.integration.data.add_data import (EXPECTED_FULL_ROW,
-                                                  EXPECTED_PARTIAL_ROW,
-                                                  EXPECTED_UNKNOWN_KEY_ROW,
-                                                  FULL_ROW, PARTIAL_ROW,
-                                                  UNKNOWN_KEY_ROW)
-from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS,
-                                  SHEET1_ROWS, SHEET3_NAME,
-                                  SHIFTED_ROW_START_IDX, XLS_EDIT, XLSX_EDIT,
-                                  load_backend_copy)
+from tests.pyth.integration.data.add_data import (
+	EXPECTED_FULL_ROW,
+	EXPECTED_PARTIAL_ROW,
+	EXPECTED_UNKNOWN_KEY_ROW,
+	FULL_ROW,
+	PARTIAL_ROW,
+	UNKNOWN_KEY_ROW,
+)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	BACKENDS,
+	SHEET1_ROWS,
+	SHEET3_NAME,
+	SHIFTED_ROW_START_IDX,
+	XLS_EDIT,
+	XLSX_EDIT,
+	load_backend_copy,
+)
 
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)

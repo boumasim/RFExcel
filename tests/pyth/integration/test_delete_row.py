@@ -2,9 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from rfexcel.exception.library_exceptions import (NullComponentException,
-                                                  RowIndexOutOfBoundsException,
-                                                  WorkbookNotOpenException)
+from rfexcel.exception.library_exceptions import (
+	NullComponentException,
+	RowIndexOutOfBoundsException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.integration.data.delete_data import DELETE_ROW_SCENARIOS
 from tests.pyth.test_data import BACKEND_NAMES, BACKENDS, load_backend_copy

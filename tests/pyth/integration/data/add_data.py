@@ -1,6 +1,5 @@
 from tests.pyth.test_data import RowData, RowsData
 
-
 FULL_ROW: RowData = {"Product ID": "P-999", "Description": "Widget", "Price": 9.99, "Location": "Online"}
 EXPECTED_FULL_ROW: RowData = {"Product ID": "P-999", "Description": "Widget", "Price": 9.99, "Location": "Online"}
 

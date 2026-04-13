@@ -3,11 +3,12 @@ from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    FileAlreadyExistsException, FileFormatNotSupportedException,
-    HeadersNotDeterminedException)
+	FileAlreadyExistsException,
+	FileFormatNotSupportedException,
+	HeadersNotDeterminedException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (CSV_FORMAT, FORMAT_FILE, FORMAT_LIST,
-                                  XLS_FORMAT, XLSX_FORMAT)
+from tests.pyth.test_data import CSV_FORMAT, FORMAT_FILE, FORMAT_LIST, XLS_FORMAT, XLSX_FORMAT
 
 BACKEND_CREATABLE_BY_FORMAT: dict[str, bool] = {
     XLSX_FORMAT: True,
@@ -17,7 +18,6 @@ BACKEND_CREATABLE_BY_FORMAT: dict[str, bool] = {
 
 CREATABLE_FORMATS     = [fmt for fmt in FORMAT_LIST if BACKEND_CREATABLE_BY_FORMAT[fmt]]
 NON_CREATABLE_FORMATS = [fmt for fmt in FORMAT_LIST if not BACKEND_CREATABLE_BY_FORMAT[fmt]]
-
 
 @pytest.mark.parametrize("fmt", CREATABLE_FORMATS, ids=CREATABLE_FORMATS)
 def test_create_sets_active_workbook(

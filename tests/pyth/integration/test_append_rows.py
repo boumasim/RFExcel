@@ -3,15 +3,20 @@ from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NullComponentException,
-    StreamingViolationException, WorkbookNotOpenException)
+	HeadersNotDeterminedException,
+	NullComponentException,
+	StreamingViolationException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.integration.data.add_data import (
-    ADD_ROWS_PARTIAL_INPUT,
-    EXPECTED_ADD_ROWS_PARTIAL, EXPECTED_ORDERED_ROWS,
-    ORDERED_ROWS)
-from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, STREAMING_BACKENDS,
-                                load_backend_copy)
+	ADD_ROWS_PARTIAL_INPUT,
+	EXPECTED_ADD_ROWS_PARTIAL,
+	EXPECTED_ORDERED_ROWS,
+	ORDERED_ROWS,
+)
+from tests.pyth.test_data import BACKEND_NAMES, BACKENDS, STREAMING_BACKENDS, load_backend_copy
+
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_append_rows_matches_backend_mode_for_all_backends(

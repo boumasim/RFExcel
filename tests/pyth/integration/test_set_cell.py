@@ -3,14 +3,21 @@ from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    InvalidCellNameException, NullComponentException,
-    OperationNotSupportedForFormat)
+	InvalidCellNameException,
+	NullComponentException,
+	OperationNotSupportedForFormat,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (CSV_EDIT, STREAMING_BACKENDS, XLS_EDIT,
-                                  XLSX_EDIT, load_backend_copy, open_backend)
+from tests.pyth.test_data import (
+	CSV_EDIT,
+	STREAMING_BACKENDS,
+	XLS_EDIT,
+	XLSX_EDIT,
+	load_backend_copy,
+	open_backend,
+)
 
 EDIT_BACKENDS = [XLSX_EDIT, XLS_EDIT]
-
 
 @pytest.mark.parametrize("backend_name", EDIT_BACKENDS, ids=EDIT_BACKENDS)
 def test_set_cell_writes_string_value_for_edit_backends(

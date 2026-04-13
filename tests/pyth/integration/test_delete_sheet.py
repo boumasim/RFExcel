@@ -1,11 +1,21 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    SheetDoesNotExistException, OperationNotSupportedForFormat, NullComponentException)
+	NullComponentException,
+	OperationNotSupportedForFormat,
+	SheetDoesNotExistException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
-                                  XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
-                                  XLSX_STREAM, open_backend)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	CSV_EDIT,
+	CSV_STREAM,
+	XLS_EDIT,
+	XLS_ON_DEMAND,
+	XLSX_EDIT,
+	XLSX_STREAM,
+	open_backend,
+)
 
 EXPECTED_DELETE_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = {
     XLSX_EDIT: None,
@@ -15,7 +25,6 @@ EXPECTED_DELETE_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = 
     XLS_ON_DEMAND: NullComponentException,
     CSV_STREAM: NullComponentException,
 }
-
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_delete_sheet_removes_sheet_when_supported_or_raises_expected_exception(

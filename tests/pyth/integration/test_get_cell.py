@@ -1,17 +1,24 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    InvalidCellNameException, OperationNotSupportedForFormat,
-    StreamingViolationException)
+	InvalidCellNameException,
+	OperationNotSupportedForFormat,
+	StreamingViolationException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (CSV_EDIT, CSV_STREAM, XLS_EDIT,
-                                  XLS_ON_DEMAND, XLSX_EDIT, XLSX_STREAM,
-                                  open_backend)
+from tests.pyth.test_data import (
+	CSV_EDIT,
+	CSV_STREAM,
+	XLS_EDIT,
+	XLS_ON_DEMAND,
+	XLSX_EDIT,
+	XLSX_STREAM,
+	open_backend,
+)
 
 SUPPORTED_BACKENDS = [XLSX_EDIT, XLSX_STREAM, XLS_EDIT, XLS_ON_DEMAND]
 CSV_BACKENDS = [CSV_EDIT, CSV_STREAM]
 CELL_STREAMING_BACKENDS = [XLSX_STREAM, XLS_ON_DEMAND]
-
 
 @pytest.mark.parametrize("backend_name", SUPPORTED_BACKENDS, ids=SUPPORTED_BACKENDS)
 def test_get_cell_returns_expected_value_for_supported_backends(

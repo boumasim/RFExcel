@@ -3,12 +3,21 @@ from typing import Any, cast
 
 import pytest
 
-from rfexcel.exception.library_exceptions import (FileSaveException,
-                                                  NullComponentException,
-                                                  WorkbookNotOpenException)
+from rfexcel.exception.library_exceptions import (
+	FileSaveException,
+	NullComponentException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, BACKENDS, CSV_EDIT, XLS_EDIT,
-                                  load_backend_copy, EDITABLE_BACKENDS, XLSX_FORMAT)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	BACKENDS,
+	CSV_EDIT,
+	EDITABLE_BACKENDS,
+	XLS_EDIT,
+	XLSX_FORMAT,
+	load_backend_copy,
+)
 
 SAVE_AS_SUFFIX_BY_BACKEND: dict[str, str] = {
     backend_name: (XLSX_FORMAT if backend_name == XLS_EDIT else Path(BACKENDS[backend_name][0]).suffix.lstrip("."))
@@ -17,7 +26,6 @@ SAVE_AS_SUFFIX_BY_BACKEND: dict[str, str] = {
 
 COPY_ONLY_MARKER = "OnlyInCopy"
 SECOND_SAVE_MARKER = "SecondSave"
-
 
 def build_csv_marker_row(marker: str) -> dict[str, Any]:
     return {

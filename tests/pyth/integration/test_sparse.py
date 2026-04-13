@@ -3,13 +3,19 @@ from typing import Any, cast
 import pytest
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (XLS_EDIT, XLS_ON_DEMAND,
-                                  XLSX_EDIT, XLSX_STREAM,
-                                  SHEET1_HEADERS, SHEET1_ROWS, SHEET3_NAME,
-                                  SHIFTED_ROW_START_IDX, open_backend)
+from tests.pyth.test_data import (
+	SHEET1_HEADERS,
+	SHEET1_ROWS,
+	SHEET3_NAME,
+	SHIFTED_ROW_START_IDX,
+	XLS_EDIT,
+	XLS_ON_DEMAND,
+	XLSX_EDIT,
+	XLSX_STREAM,
+	open_backend,
+)
 
 SPARSE_BACKENDS = [XLSX_EDIT, XLSX_STREAM, XLS_EDIT, XLS_ON_DEMAND]
-
 
 @pytest.mark.parametrize("backend_name", SPARSE_BACKENDS, ids=SPARSE_BACKENDS)
 def test_sparse_sheet_returns_expected_rows_for_all_backends(

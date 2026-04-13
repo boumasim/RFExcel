@@ -3,14 +3,21 @@ from pathlib import Path
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NullComponentException,
-    WorkbookNotOpenException)
+	HeadersNotDeterminedException,
+	NullComponentException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 from tests.pyth.integration.data.add_data import (
-    EXPECTED_FULL_ROW, EXPECTED_ORDERED_ROWS,
-    EXPECTED_PARTIAL_ROW, EXPECTED_UNKNOWN_KEY_ROW,
-    FULL_ROW, ORDERED_ROWS, PARTIAL_ROW,
-    UNKNOWN_KEY_ROW)
+	EXPECTED_FULL_ROW,
+	EXPECTED_ORDERED_ROWS,
+	EXPECTED_PARTIAL_ROW,
+	EXPECTED_UNKNOWN_KEY_ROW,
+	FULL_ROW,
+	ORDERED_ROWS,
+	PARTIAL_ROW,
+	UNKNOWN_KEY_ROW,
+)
 from tests.pyth.test_data import BACKEND_NAMES, BACKENDS, XLS_EDIT, load_backend_copy
 
 
