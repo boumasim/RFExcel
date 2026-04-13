@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 from itertools import zip_longest
 from pathlib import Path
-from typing import Any, List, Union, override
+from typing import Any, override
 
 from openpyxl import Workbook
 
@@ -11,12 +11,17 @@ from rfexcel.backend.resource.xlsx_resource import XlsxEditResource
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NotMatchingColumns,
-    RowIndexOutOfBoundsException)
+	HeadersNotDeterminedException,
+	NotMatchingColumns,
+	RowIndexOutOfBoundsException,
+)
 from rfexcel.utils.library_logger import logger
-from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
-                                     convert_xls_to_xlsx,
-                                     headers_to_header_map, search_in_row)
+from rfexcel.utils.utilities import (
+	convert_string_to_dict_row_data,
+	convert_xls_to_xlsx,
+	headers_to_header_map,
+	search_in_row,
+)
 
 from .backend.interfaces.i_library import IExcel, ISetExcel
 from .backend.metadata.i_metadata import IMetadata
@@ -29,321 +34,341 @@ from .backend.style.i_style import IStyle
 from .backend.style.null_style import NullStyle
 from .backend.writer.i_writer import IWriter
 from .backend.writer.null_writer import NullWriter
-from .utils.types import (ColumnDifference, ColumnValues, DictRowData,
-                          HeaderMap, HeaderSpec, InsertDictType,
-                          InsertNativeType, ListRowData, NativeType,
-                          RowDifference)
+from .utils.types import (
+	ColumnDifference,
+	ColumnValues,
+	DictRowData,
+	HeaderMap,
+	HeaderSpec,
+	InsertDictType,
+	InsertNativeType,
+	ListRowData,
+	NativeType,
+	RowDifference,
+)
 
 
 class RFExcel(IExcel, ISetExcel):
+	def __init__(
+		self,
+		read_only: bool,
+		writer: IWriter = NullWriter(),
+		reader: IReader = NullReader(),
+		style: IStyle = NullStyle(),
+		metadata: IMetadata = NullMetadata(),
+		resource: IResource = NullResource(),
+	):
+		self._read_only = read_only
+		self._writer: IWriter = writer
+		self._reader: IReader = reader
+		self._style: IStyle = style
+		self._metadata: IMetadata = metadata
+		self._resource: IResource = resource
 
-    def __init__(self,
-                read_only: bool,
-                writer: IWriter = NullWriter(),
-                reader: IReader = NullReader(),
-                style: IStyle = NullStyle(),
-                metadata: IMetadata = NullMetadata(),
-                resource: IResource = NullResource()):
-        self._read_only = read_only
-        self._writer: IWriter = writer
-        self._reader: IReader = reader
-        self._style: IStyle = style
-        self._metadata: IMetadata = metadata
-        self._resource: IResource = resource
+	@property
+	@override
+	def read_only(self) -> bool:
+		return self._read_only
 
-    @property
-    @override
-    def read_only(self) -> bool:
-        return self._read_only
+	@property
+	@override
+	def writer(self) -> IWriter:
+		return self._writer
 
-    @property
-    @override
-    def writer(self) -> IWriter:
-        return self._writer
+	@property
+	@override
+	def resource(self) -> IResource:
+		return self._resource
 
-    @property
-    @override
-    def resource(self) -> IResource:
-        return self._resource
-    
-    @property
-    @override
-    def reader(self) -> IReader:
-        return self._reader
+	@property
+	@override
+	def reader(self) -> IReader:
+		return self._reader
 
-    @staticmethod
-    def _read_header_map(reader: IReader, resource: IResource, header_row: int, **kwargs: Any) -> HeaderMap:
-        try:
-            return reader.get_headers(header_row_idx=header_row, resource=resource, **kwargs).get_header_map()
-        except StopIteration:
-            raise HeadersNotDeterminedException(header_row)
+	@staticmethod
+	def _read_header_map(reader: IReader, resource: IResource, header_row: int, **kwargs: Any) -> HeaderMap:
+		try:
+			return reader.get_headers(header_row_idx=header_row, resource=resource, **kwargs).get_header_map()
+		except StopIteration:
+			raise HeadersNotDeterminedException(header_row)
 
-    @override
-    def close(self):
-        self._resource.close()
+	@override
+	def close(self):
+		self._resource.close()
 
-    @override
-    def get_rows(self,
-                header_row: int,
-                search_criteria: dict[str, str] | str | None = None,
-                partial_match: bool = False,
-                one_row: bool = False,
-                **kwargs: Any) -> List[DictRowData] | DictRowData:
-        search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria is not None else None
+	@override
+	def get_rows(
+		self,
+		header_row: int,
+		search_criteria: dict[str, str] | str | None = None,
+		partial_match: bool = False,
+		one_row: bool = False,
+		**kwargs: Any,
+	) -> list[DictRowData] | DictRowData:
+		search_criteria_dict = convert_string_to_dict_row_data(search_criteria) if search_criteria is not None else None
 
-        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
+		header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row, **kwargs)
 
-        if not header_map:
-            raise HeadersNotDeterminedException(header_row)
+		if not header_map:
+			raise HeadersNotDeterminedException(header_row)
 
-        result: List[DictRowData] = []
-        row_index = header_row + 1
+		result: list[DictRowData] = []
+		row_index = header_row + 1
 
-        while True:
-            try:
-                row = self._reader.get_row(row_idx=row_index, resource=self._resource, **kwargs)
-                row_dict = row.get_dict_row_data(header_map)
-                if not search_criteria_dict or search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
-                    result.append(row_dict)
-                    if one_row:
-                        break
-                row_index += 1
-            except StopIteration:
-                break
+		while True:
+			try:
+				row = self._reader.get_row(row_idx=row_index, resource=self._resource, **kwargs)
+				row_dict = row.get_dict_row_data(header_map)
+				if not search_criteria_dict or search_in_row(
+					source_row=row_dict,
+					search_criteria=search_criteria_dict,
+					partial_match=partial_match,
+				):
+					result.append(row_dict)
+					if one_row:
+						break
+				row_index += 1
+			except StopIteration:
+				break
 
-        return result if not one_row else (result[0] if result else {})
+		return result if not one_row else (result[0] if result else {})
 
-    @override
-    def list_sheet_names(self) -> list[str]:
-        return self._metadata.get_sheet_names(self._resource)
+	@override
+	def list_sheet_names(self) -> list[str]:
+		return self._metadata.get_sheet_names(self._resource)
 
-    @override
-    def switch_sheet(self, name: str) -> None:
-        self._resource.switch_sheet(name)
+	@override
+	def switch_sheet(self, name: str) -> None:
+		self._resource.switch_sheet(name)
 
-    @override
-    def get_row(self, row: int, headers: HeaderSpec, **kwargs: Any) -> Union[DictRowData, ListRowData]:
-        try:
-            raw = self._reader.get_row(row_idx=row, resource=self._resource, **kwargs)
-        except StopIteration:
-            return []
+	@override
+	def get_row(self, row: int, headers: HeaderSpec, **kwargs: Any) -> DictRowData | ListRowData:
+		try:
+			raw = self._reader.get_row(row_idx=row, resource=self._resource, **kwargs)
+		except StopIteration:
+			return []
 
-        if not headers:
-            return raw.get_list_row_data()
-        return raw.get_dict_row_data(headers_to_header_map(headers))
+		if not headers:
+			return raw.get_list_row_data()
+		return raw.get_dict_row_data(headers_to_header_map(headers))
 
-    @override
-    def get_cell(self, cell_name: str) -> NativeType:
-        return self._resource.fetch_cell(cell_name=cell_name).get_value()
+	@override
+	def get_cell(self, cell_name: str) -> NativeType:
+		return self._resource.fetch_cell(cell_name=cell_name).get_value()
 
-    @override
-    def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
-        self._writer.set_cell(cell_name, value, self._resource)
-    
-    @override
-    def xls_to_xlsx(self):
-        logger.info(
-            f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory "
-            f"to enable write operations. The original .xls file will NOT be modified."
-        )
-        prev_sheet = self._resource.current_sheet
-        wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
-        new_path: Path = self._resource.path.with_suffix('.xlsx')
-        self._resource.close()
-        self._resource = XlsxEditResource(wb, new_path)
-        self._reader = XlsxEditReader()
-        self._metadata = XlsxMetadata()
-        self._writer = XlsxWriter()
-        self._style = XlsxStyle()
-        self._resource.switch_sheet(prev_sheet)
+	@override
+	def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
+		self._writer.set_cell(cell_name, value, self._resource)
 
-    @override
-    def add_sheet(self, name: str) -> None:
-        self._writer.add_sheet(name=name, resource=self._resource)
+	@override
+	def xls_to_xlsx(self):
+		logger.info(f"Converting '{self._resource.path.name}' from .xls to .xlsx in memory to enable write operations. The original .xls file will NOT be modified.")
+		prev_sheet = self._resource.current_sheet
+		wb: Workbook = convert_xls_to_xlsx(Path(self._resource.path))
+		new_path: Path = self._resource.path.with_suffix(".xlsx")
+		self._resource.close()
+		self._resource = XlsxEditResource(wb, new_path)
+		self._reader = XlsxEditReader()
+		self._metadata = XlsxMetadata()
+		self._writer = XlsxWriter()
+		self._style = XlsxStyle()
+		self._resource.switch_sheet(prev_sheet)
 
-    @override
-    def delete_sheet(self, name: str):
-        self._writer.delete_sheet(name=name, resource=self._resource)
+	@override
+	def add_sheet(self, name: str) -> None:
+		self._writer.add_sheet(name=name, resource=self._resource)
 
-    @override
-    def save_workbook(self, path: str | None = None) -> None:
-        self._writer.save(Path(path) if path else None, self._resource)
+	@override
+	def delete_sheet(self, name: str):
+		self._writer.delete_sheet(name=name, resource=self._resource)
 
-    @override
-    def append_row(self, row_data: InsertDictType, header_row: int) -> None:
-        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
-        if not header_map:
-            raise HeadersNotDeterminedException(header_row)
-        cell_data: ColumnValues = {
-            col: row_data[name]
-            for name, col in header_map.items()
-            if name in row_data
-        }
-        self._writer.append_row(cell_data, self._resource)
+	@override
+	def save_workbook(self, path: str | None = None) -> None:
+		self._writer.save(Path(path) if path else None, self._resource)
 
-    @override
-    def append_rows(self, rows: list[InsertDictType], header_row: int) -> None:
-        for row_data in rows:
-            self.append_row(row_data, header_row)
+	@override
+	def append_row(self, row_data: InsertDictType, header_row: int) -> None:
+		header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+		if not header_map:
+			raise HeadersNotDeterminedException(header_row)
+		cell_data: ColumnValues = {col: row_data[name] for name, col in header_map.items() if name in row_data}
+		self._writer.append_row(cell_data, self._resource)
 
-    @override
-    def insert_row(self, row_data: InsertDictType, row: int, header_row: int) -> None:
-        if row <= header_row:
-            raise RowIndexOutOfBoundsException(
-                row, f"Row {row} must be greater than header_row {header_row}"
-            )
-        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
-        if not header_map:
-            raise HeadersNotDeterminedException(header_row)
-        cell_data: ColumnValues = {
-            col: row_data[name]
-            for name, col in header_map.items()
-            if name in row_data
-        }
-        self._writer.insert_row(row, cell_data, self._resource)
+	@override
+	def append_rows(self, rows: list[InsertDictType], header_row: int) -> None:
+		for row_data in rows:
+			self.append_row(row_data, header_row)
 
-    @override
-    def delete_rows(self,
-                    search_criteria: dict[str, str] | str,
-                    header_row: int,
-                    partial_match: bool,
-                    first_only: bool = False) -> int:
-        search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
-        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
-        if not header_map:
-            raise HeadersNotDeterminedException(header_row)
-        matches: list[int] = []
-        row_index = header_row + 1
-        while True:
-            try:
-                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-                row_dict = row.get_dict_row_data(header_map)
-                if search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
-                    matches.append(row_index)
-                    if first_only:
-                        break
-                row_index += 1
-            except StopIteration:
-                break
-        for idx in reversed(matches):
-            self._writer.delete_row(idx, self._resource)
-        return len(matches)
+	@override
+	def insert_row(self, row_data: InsertDictType, row: int, header_row: int) -> None:
+		if row <= header_row:
+			raise RowIndexOutOfBoundsException(row, f"Row {row} must be greater than header_row {header_row}")
+		header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+		if not header_map:
+			raise HeadersNotDeterminedException(header_row)
+		cell_data: ColumnValues = {col: row_data[name] for name, col in header_map.items() if name in row_data}
+		self._writer.insert_row(row, cell_data, self._resource)
 
-    @override
-    def delete_row(self, row_number: int) -> None:
-        if row_number < 1:
-            raise RowIndexOutOfBoundsException(row_number)
-        try:
-            self._reader.get_row(row_idx=row_number, resource=self._resource)
-        except StopIteration:
-            raise RowIndexOutOfBoundsException(row_number)
-        self._writer.delete_row(row_number, self._resource)
+	@override
+	def delete_rows(
+		self,
+		search_criteria: dict[str, str] | str,
+		header_row: int,
+		partial_match: bool,
+		first_only: bool = False,
+	) -> int:
+		search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
+		header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+		if not header_map:
+			raise HeadersNotDeterminedException(header_row)
+		matches: list[int] = []
+		row_index = header_row + 1
+		while True:
+			try:
+				row = self._reader.get_row(row_idx=row_index, resource=self._resource)
+				row_dict = row.get_dict_row_data(header_map)
+				if search_in_row(
+					source_row=row_dict,
+					search_criteria=search_criteria_dict,
+					partial_match=partial_match,
+				):
+					matches.append(row_index)
+					if first_only:
+						break
+				row_index += 1
+			except StopIteration:
+				break
+		for idx in reversed(matches):
+			self._writer.delete_row(idx, self._resource)
+		return len(matches)
 
-    @override
-    def update_values(self,
-                      search_criteria: dict[str, str] | str,
-                      values: InsertDictType,
-                      header_row: int,
-                      partial_match: bool,
-                      first_only: bool = False) -> int:
-        search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
-        header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
-        if not header_map:
-            raise HeadersNotDeterminedException(header_row)
-        update_cell_data: ColumnValues = {
-            col: values[name]
-            for name, col in header_map.items()
-            if name in values
-        }
-        updated = 0
-        row_index = header_row + 1
-        while True:
-            try:
-                row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-                row_dict = row.get_dict_row_data(header_map)
-                if search_in_row(source_row=row_dict, search_criteria=search_criteria_dict, partial_match=partial_match):
-                    self._writer.update_row(row_index, update_cell_data, self._resource)
-                    updated += 1
-                    if first_only:
-                        break
-                row_index += 1
-            except StopIteration:
-                break
-        return updated
+	@override
+	def delete_row(self, row_number: int) -> None:
+		if row_number < 1:
+			raise RowIndexOutOfBoundsException(row_number)
+		try:
+			self._reader.get_row(row_idx=row_number, resource=self._resource)
+		except StopIteration:
+			raise RowIndexOutOfBoundsException(row_number)
+		self._writer.delete_row(row_number, self._resource)
 
-    @override
-    def compare_data_to(self,
-                        target: IExcel,
-                        source_header_row: int,
-                        target_header_row: int,
-                        target_sheet: str | None,
-                        headers: list[str] | None,
-                        fail_on_diff: bool) -> list[RowDifference]:
-        try:
-            if target_sheet is not None:
-                target.switch_sheet(target_sheet)
+	@override
+	def update_values(
+		self,
+		search_criteria: dict[str, str] | str,
+		values: InsertDictType,
+		header_row: int,
+		partial_match: bool,
+		first_only: bool = False,
+	) -> int:
+		search_criteria_dict = convert_string_to_dict_row_data(search_criteria)
+		header_map: HeaderMap = self._read_header_map(self._reader, self._resource, header_row)
+		if not header_map:
+			raise HeadersNotDeterminedException(header_row)
+		update_cell_data: ColumnValues = {col: values[name] for name, col in header_map.items() if name in values}
+		updated = 0
+		row_index = header_row + 1
+		while True:
+			try:
+				row = self._reader.get_row(row_idx=row_index, resource=self._resource)
+				row_dict = row.get_dict_row_data(header_map)
+				if search_in_row(
+					source_row=row_dict,
+					search_criteria=search_criteria_dict,
+					partial_match=partial_match,
+				):
+					self._writer.update_row(row_index, update_cell_data, self._resource)
+					updated += 1
+					if first_only:
+						break
+				row_index += 1
+			except StopIteration:
+				break
+		return updated
 
-            source_header_map: HeaderMap = self._read_header_map(self._reader, self._resource, source_header_row)
-            target_header_map: HeaderMap = self._read_header_map(target.reader, target.resource, target_header_row)
+	@override
+	def compare_data_to(
+		self,
+		target: IExcel,
+		source_header_row: int,
+		target_header_row: int,
+		target_sheet: str | None,
+		headers: list[str] | None,
+		fail_on_diff: bool,
+	) -> list[RowDifference]:
+		try:
+			if target_sheet is not None:
+				target.switch_sheet(target_sheet)
 
-            if headers is None:
-                compare_headers: list[str] = list(source_header_map.keys())
-                missing_in_target = [h for h in compare_headers if h not in target_header_map]
-                if missing_in_target:
-                    raise NotMatchingColumns(missing_in_source=[], missing_in_target=missing_in_target)
-            else:
-                compare_headers = headers
-                missing_in_source = [h for h in compare_headers if h not in source_header_map]
-                missing_in_target = [h for h in compare_headers if h not in target_header_map]
-                if missing_in_source or missing_in_target:
-                    raise NotMatchingColumns(missing_in_source=missing_in_source, missing_in_target=missing_in_target)
+			source_header_map: HeaderMap = self._read_header_map(self._reader, self._resource, source_header_row)
+			target_header_map: HeaderMap = self._read_header_map(target.reader, target.resource, target_header_row)
 
-            def iter_rows(reader: IReader, resource: IResource, header_map: HeaderMap, start_idx: int) -> Iterator[tuple[int, DictRowData]]:
-                idx = start_idx
-                while True:
-                    try:
-                        row = reader.get_row(row_idx=idx, resource=resource)
-                        yield idx, row.get_dict_row_data(header_map)
-                        idx += 1
-                    except StopIteration:
-                        break
+			if headers is None:
+				compare_headers: list[str] = list(source_header_map.keys())
+				missing_in_target = [h for h in compare_headers if h not in target_header_map]
+				if missing_in_target:
+					raise NotMatchingColumns(missing_in_source=[], missing_in_target=missing_in_target)
+			else:
+				compare_headers = headers
+				missing_in_source = [h for h in compare_headers if h not in source_header_map]
+				missing_in_target = [h for h in compare_headers if h not in target_header_map]
+				if missing_in_source or missing_in_target:
+					raise NotMatchingColumns(
+						missing_in_source=missing_in_source,
+						missing_in_target=missing_in_target,
+					)
 
-            result: list[RowDifference] = []
-            src_gen = iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
-            tgt_gen = iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
+			def iter_rows(
+				reader: IReader,
+				resource: IResource,
+				header_map: HeaderMap,
+				start_idx: int,
+			) -> Iterator[tuple[int, DictRowData]]:
+				idx = start_idx
+				while True:
+					try:
+						row = reader.get_row(row_idx=idx, resource=resource)
+						yield idx, row.get_dict_row_data(header_map)
+						idx += 1
+					except StopIteration:
+						break
 
-            _fill: tuple[None, DictRowData] = (None, {})
-            for src_data, tgt_data in zip_longest(src_gen, tgt_gen, fillvalue=_fill):
-                src_idx, src_dict = src_data
-                tgt_idx, tgt_dict = tgt_data
+			result: list[RowDifference] = []
+			src_gen = iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
+			tgt_gen = iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
 
-                if src_idx is None or tgt_idx is None:
-                    if fail_on_diff:
-                        raise AssertionError(
-                            f"Row count mismatch: source has {src_idx if src_idx is not None else 'end of data'}, "
-                            f"target has {tgt_idx if tgt_idx is not None else 'end of data'}"
-                        )
-                    logger.error(f"Row count mismatch: source and target has different number of rows")
-                    break
+			_fill: tuple[None, DictRowData] = (None, {})
+			for src_data, tgt_data in zip_longest(src_gen, tgt_gen, fillvalue=_fill):
+				src_idx, src_dict = src_data
+				tgt_idx, tgt_dict = tgt_data
 
-                differences: ColumnDifference = {}
-                
-                for h in compare_headers:
-                    s_val = src_dict.get(h)
-                    t_val = tgt_dict.get(h)
-                    
-                    if s_val != t_val:
-                        differences[h] = {"source": s_val, "target": t_val}
+				if src_idx is None or tgt_idx is None:
+					if fail_on_diff:
+						raise AssertionError(f"Row count mismatch: source has {src_idx if src_idx is not None else 'end of data'}, target has {tgt_idx if tgt_idx is not None else 'end of data'}")
+					logger.error("Row count mismatch: source and target has different number of rows")
+					break
 
-                if differences:
-                    if fail_on_diff:
-                        raise AssertionError(
-                            f"Difference at source_row_index {src_idx}, "
-                            f"target_row_index {tgt_idx}: {differences}"
-                        )
-                    result.append({"source_row_index": src_idx, "target_row_index": tgt_idx, "differences": differences})
+				differences: ColumnDifference = {}
 
-            return result
-        finally:
-            if self is not target:
-                target.close()
+				for h in compare_headers:
+					s_val = src_dict.get(h)
+					t_val = tgt_dict.get(h)
+
+					if s_val != t_val:
+						differences[h] = {"source": s_val, "target": t_val}
+
+				if differences:
+					if fail_on_diff:
+						raise AssertionError(f"Difference at source_row_index {src_idx}, target_row_index {tgt_idx}: {differences}")
+					result.append(
+						{
+							"source_row_index": src_idx,
+							"target_row_index": tgt_idx,
+							"differences": differences,
+						}
+					)
+
+			return result
+		finally:
+			if self is not target:
+				target.close()
