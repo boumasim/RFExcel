@@ -125,3 +125,8 @@ class ISetExcel(ABC):
     @abstractmethod
     def xls_to_xlsx(self):
         pass
+
+    @property
+    @abstractmethod
+    def writer(self) -> IWriter:
+        pass

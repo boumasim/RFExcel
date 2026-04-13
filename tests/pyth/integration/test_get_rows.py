@@ -4,11 +4,22 @@ from typing import Any, cast
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    FileDoesNotExistException, HeadersNotDeterminedException,
-    StreamingViolationException, WorkbookNotOpenException)
+	FileDoesNotExistException,
+	HeadersNotDeterminedException,
+	StreamingViolationException,
+	WorkbookNotOpenException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, CSV_STREAM, EDITABLE_FORMAT_LIST, SHEET1_HEADERS, SHEET1_ROWS,
-                                  XLSX_EDIT, XLSX_STREAM, open_backend)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	CSV_STREAM,
+	EDITABLE_FORMAT_LIST,
+	SHEET1_HEADERS,
+	SHEET1_ROWS,
+	XLSX_EDIT,
+	XLSX_STREAM,
+	open_backend,
+)
 
 STREAMING_VIOLATION_BACKENDS = [XLSX_STREAM, CSV_STREAM]
 
@@ -17,7 +28,6 @@ EXACT_SEARCH: tuple[dict[str, Any], dict[str, Any]] = ({"Product ID": "P-202"}, 
 PARTIAL_SEARCH: tuple[dict[str, Any], int] = ({"Description": "Keyboard"}, 1)
 
 NO_MATCH_SEARCH: dict[str, Any] = {"Product ID": "NOPE"}
-
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_get_rows_returns_expected_data_for_all_backends(

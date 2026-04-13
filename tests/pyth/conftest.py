@@ -1,29 +1,12 @@
-from pathlib import Path
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
 
-_RESOURCES = Path(__file__).parent.parent / "resources"
-
-XLSX_FILE  = str(_RESOURCES / "data.xlsx")
-XLSX2_FILE = str(_RESOURCES / "data2.xlsx")
-CSV_FILE   = str(_RESOURCES / "data.csv")
-XLS_FILE   = str(_RESOURCES / "example.xls")
-
 
 @pytest.fixture
-def lib() -> Generator[RFExcelLibrary, None, None]:
+def lib() -> Generator[RFExcelLibrary]:
     library = RFExcelLibrary()
     yield library
     library.close()
-
-
-@pytest.fixture
-def loaded_xlsx() -> Generator[RFExcelLibrary, None, None]:
-    library = RFExcelLibrary()
-    library.load_workbook(XLSX_FILE)
-    yield library
-    library.close()
-

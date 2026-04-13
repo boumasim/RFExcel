@@ -1,12 +1,21 @@
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    HeadersNotDeterminedException, NullComponentException,
-    OperationNotSupportedForFormat)
+	HeadersNotDeterminedException,
+	NullComponentException,
+	OperationNotSupportedForFormat,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM,
-                                  XLS_EDIT, XLS_ON_DEMAND, XLSX_EDIT,
-                                  XLSX_STREAM, open_backend)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	CSV_EDIT,
+	CSV_STREAM,
+	XLS_EDIT,
+	XLS_ON_DEMAND,
+	XLSX_EDIT,
+	XLSX_STREAM,
+	open_backend,
+)
 
 EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = {
     XLSX_EDIT: None,
@@ -16,7 +25,6 @@ EXPECTED_ADD_SHEET_EXCEPTION_BY_BACKEND: dict[str, type[Exception] | None] = {
     CSV_EDIT: OperationNotSupportedForFormat,
     CSV_STREAM: NullComponentException,
 }
-
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_add_sheet_creates_new_sheet_or_raises_expected_exception(

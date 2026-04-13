@@ -3,17 +3,28 @@ from typing import Any, cast
 import pytest
 
 from rfexcel.exception.library_exceptions import (
-    OperationNotSupportedForFormat, SheetDoesNotExistException)
+	OperationNotSupportedForFormat,
+	SheetDoesNotExistException,
+)
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.test_data import (BACKEND_NAMES, CSV_EDIT, CSV_STREAM, SHEET1_ROWS, SHEET2_EXPECTED_ROW_COUNT, SHEET2_HEADERS, SHEET2_NAME, SHEET2_ROWS, open_backend, SHEET1_NAME)
+from tests.pyth.test_data import (
+	BACKEND_NAMES,
+	CSV_EDIT,
+	CSV_STREAM,
+	SHEET1_NAME,
+	SHEET1_ROWS,
+	SHEET2_EXPECTED_ROW_COUNT,
+	SHEET2_HEADERS,
+	SHEET2_NAME,
+	SHEET2_ROWS,
+	open_backend,
+)
 
 CSV_BACKENDS = [CSV_EDIT, CSV_STREAM]
 
 PRIMARY_FIRST_ROW: dict[str, Any] = SHEET1_ROWS[0]
 
 SECONDARY_FIRST_ROW: dict[str, Any] = SHEET2_ROWS[0]
-
-
 
 @pytest.mark.parametrize("backend_name", BACKEND_NAMES, ids=BACKEND_NAMES)
 def test_switch_to_secondary_sheet_returns_expected_first_row_for_all_backends(
