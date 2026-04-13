@@ -27,9 +27,10 @@ Cílem této práce je navrhnout a implementovat open-source knihovnu pro Robot 
 
 V této kapitole se budu věnovat teoretické části bakalářské práce. Proberu návrhové vzory, architektonické principy, technologie, stávající řešení, metody testování. Veškerá probraná témata v této kapitole jsou teoretický základ pro následný návrh a implementaci knihovny 
 
-\section{Architektura}
+\section{Druhy vnitřní architektury}
+\label{internal architectures}
 
-Jedním z prvním a zároveň tím jedním z nejduležitějších rozhodnutích ve vývoji softwaru je jeho architektura. Architektur je mnoho, všechny mají za cíl jednu hlavní věc, oddělení odpovědnosti jednotlivých částí softwaru. Tohoto oddělení docilují jednotlivé architektury pomocí rozdělení na vrstvy.
+Jedním z prvním a zároveň tím jedním z nejdůležitějších rozhodnutích ve vývoji softwaru je jeho architektura. Architektur je mnoho, všechny mají za cíl jednu hlavní věc, oddělení odpovědnosti jednotlivých částí softwaru. Tohoto oddělení docilují jednotlivé architektury pomocí rozdělení na vrstvy.
 
 Tímto rozdělením jsme u architektur schopni docílit následujících věcí:
 
@@ -39,58 +40,86 @@ Tímto rozdělením jsme u architektur schopni docílit následujících věcí:
     \item Nezávislost na UI\footnote{User Interface}, databázi, frameworku
 \end{itemize}
 
-Software je napsán monoliticky, veškerá funkcionalita programu je zabalena na jednom místě. Dále tedy popíši možné vnitřní architektury, tedy některé z možností, jak je možné program strukturovat uvnitř jednoho projektu.\cite{Architecture} \cite{Monolitic}
+Celý program je napsán v jednom repozitáři, není potřeba žádná další síťová komunikace s dalšími aplikacemi. Dále tedy popíši možné vnitřní architektury, tedy některé z možností, jak je možné program strukturovat uvnitř jednoho projektu.\cite{Architecture} \cite{Monolitic}
 
-\subsection{Layered architecture}
+\subsection{Vrstvená architektura}
+\label{layered architecture}
 
-Jedna z nejběžnějších architektur pro vývoj softwaru. Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části které spolu úzce souvisí poté většinou leží na stejné vrstvě.
+Vrstvená (layered) architektura jedna z nejběžnějších architektur pro vývoj softwaru.\cite{Layer1}  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části které spolu úzce souvisí poté většinou leží na stejné vrstvě.
 
-Mezi charakteristiky patří to, že vrstvy zásadně komunikují pouze s vrstvami, které jsou zasazené pod nimi. Architektura také zajištuje izolaci, kdy změny v jednotlivých vrstvách by neměli mít vliv na vrstvy ostatní. Každá vrstva by měla mít jasně stanovenou odpovědnost. Rozdělení může vypadat následovně:
+Mezi charakteristiky patří to, že vrstvy zásadně komunikují pouze s vrstvami, které jsou zasazené pod nimi. Architektura také zajišťuje izolaci, kdy změny v jednotlivých vrstvách by neměli mít vliv na vrstvy ostatní. Každá vrstva by měla mít jasně stanovenou odpovědnost. Rozdělení může vypadat následovně:
 
 \begin{itemize}
-    \item Prezenční vrstva, která je zodpovědna za komunikaci softwaru s uživatelem
+    \item Prezenční vrstva, která je zodpovědná za komunikaci softwaru s uživatelem
     \item Vrstva aplikační logiky, která provádí aplikační požadavky aplikace
     \item Doménová vrstva, která se stará o algoritmy, komponenty
     \item Perzistentní vrstva, která se stará o data, komunikaci s databází
 \end{itemize}
 
 Tato architektura je jedna z nejznámějších a nejvíce používaných. Dobře se udržuje díky rozdělení na jednotlivé vrstvy, které se neovlivňují. Díky tomu je také jednoduší testování, kde jednotkové testy dobře otestují pouze funkčnost dané vrstvy, integrační zase komunikaci s nižšími vrstvami.
-Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Další problémem jsou vrstvy které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern), který vede k větší komplexitě a ztrátu efektivnosti. \cite{Layer1} \cite{Layer2}
+Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Další problémem jsou vrstvy které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern)\cite{Layer2}, který vede k větší komplexitě a ztrátu efektivnosti.
 
-\subsection{Hexagonal architecture}
+\subsection{Hexagonální architektura}
 
-Jinak referována také jako "Ports and Adapters".Definuje "Port" jakožto vstupní bod do aplikace, který je determinován rozhraním, přes který se s aplikací komunikuje. Zároveň porty také slouží pro komunikaci s externími systémy, jako například databáze, ostatní aplikace, systém pro zpracování zpráv. S portem se komunikuje pomocí "Adaptéru", který slouží jako prostředek pro komunikaci s aplikací skrz port. Toto vytváří abstrakci, kdy jádro aplikace je izolováno před externími nástroji a technologiemi.
+Jinak referována také jako "Ports and Adapters"\cite{Hexagonal}.Definuje \textit{Port} jakožto vstupní bod do aplikace, který je determinován rozhraním, přes který se s aplikací komunikuje. Zároveň porty také slouží pro komunikaci s externími systémy, jako například databáze, ostatní aplikace, systém pro zpracování zpráv. S portem se komunikuje pomocí "Adaptéru", který slouží jako prostředek pro komunikaci s aplikací skrz port. Toto vytváří abstrakci, kdy jádro aplikace je izolováno před externími nástroji a technologiemi.
 
 Jádro aplikace obsahuje servisní a doménovou vrstvu, což jsou obě věci vyjadřující čistě aplikační logiku programu.
 
 Tato architektura rozlišuje 2 strany komunikace:
 
 \begin{itemize}
-    \item Hlavní aktor, což je externí aktor, který iniciuje komunikaci s naší aplikací pomocí námi definovaného rozhraní
+    \item Komunikaci s hlavním aktorem reprezentovaným externím aktorem, který iniciuje komunikaci s naší aplikací pomocí námi definovaného rozhraní
     \item Vedlejší aktor, což jsou externí systémy, které aplikace používá nebo s nimi komunikuje
 \end{itemize}
 
 Tato struktura vynucuje DIP\footnote{Dependency Inversion Principle}. Jádro aplikace určuje striktní pravidla skrz abstraktní rozhraní (Porty). Externí technologie (Adaptéry) jsou nuceny se jádru přizpůsobit, než aby toto přizpůsobení dělalo jádro oproti různým externím technologiím.
 
-Toto způsobí, je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testovnání to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje. \cite{Hexagonal}
+Toto způsobí, je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testování to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje.
 
-\subsection{Mikrokernel Architecture}
+\subsection{Mikrokernel Architectura}
 
-Také známa jako "Plug-in", je ideální pro aplikace, u kterých chceme více rámcově hodně integrací na externí entity u kterých přesně nevíme, jak budou vypadat. Skládá se ze 2 hlavních komponent, jádro a přípojné komponenty. 
+Také známa jako "Plug-in"\cite{Microkernel}, je ideální pro aplikace, u kterých chceme více rámcově hodně integrací na externí entity u kterých přesně nevíme, jak budou vypadat. Skládá se ze 2 hlavních komponent, jádro a přípojné komponenty. 
 
-V jádru se udržuje minimální funkcionalita nutná pro běh aplikace. Při změně jádra se narozdíl od ostatních aplikací nic ve zbytku aplikace nezmění, jelikož jednotlivá pravidla a funkcionality aplikace jsou izolovány v přípojných komponentách, které jsou navzájem nazávislé.
+V jádru se udržuje minimální funkcionalita nutná pro běh aplikace. Při změně jádra se na rozdíl od ostatních aplikací nic ve zbytku aplikace nezmění, jelikož jednotlivá pravidla a funkcionality aplikace jsou izolovány v přípojných komponentách, které jsou navzájem nazávislé.
 
 Na správu jednotlivých nezávislých komponent slouží takzvané "registry", kde se aplikace registrují a odhlašují podle toho, kdo zrovna komunikuje s jádrem aplikace.
 
-Smlouva (contract) definuje standartní příchozí a odchozí data mezi modulem a jednotlivými komponentami. Pokud komponenta není schopna smlouvu dodržet, je možné použít adaptér. Toto zajištuje, že jádro aplikace nikdy nemusí implementovat speciální kód pro externí komponenty. \cite{Microkernel}
+Smlouva (contract) definuje standardní příchozí a odchozí data mezi modulem a jednotlivými komponentami. Pokud komponenta není schopna smlouvu dodržet, je možné použít adaptér. Toto zajišťuje, že jádro aplikace nikdy nemusí implementovat speciální kód pro externí komponenty.
 
 \section{Principy znovupoužitelnosti}
 
+V softwarovém designu, architektonické rozhodnutí napřímo ovlivňují udržitelnost, flexibilitu a znovupoužitelnost kódu. Jeden ze základních a velice efektivních principů je použití kompozice namísto dědičnosti (Composition over inheritence). \cite{ReusabilityPrinciples}
 
+\subsection{Dědičnost}
+
+Dědičnost je technika OOP\footnote{bjektově orientované programování} pro implementování vztahu "is-a" mezi objekty.\cite{CompositionInheritence}
+
+Jako jednoduchý příklad lze uvést vztah mezi třídami \texttt{Animal} a \texttt{Cat}. Ten se dá jednoduše vyjádřit tím, že třída \texttt{Cat} dědí ze třídy \texttt{Animal}, což nám vyjadřuje vztah kočka je zvíře.
+
+\subsection{Kompozice}
+\label{Composition}
+
+Kompozice je technika OOP\footnote{Objektově orientované programování} pro implementaci vztahu "has-a" mezi objekty. \cite{CompositionInheritence}
+
+Jako příklad lze uvést vztah mezi třídami \texttt{Person} a \texttt{Job}. Třída \texttt{Person} bude mít uvnitř sebe odkaz na třídu \texttt{Job}, čímž se vyjadřuje vztah, že osoba má práci.
+
+\subsection{Kompozice namísto dědičnosti}
+
+Jak kompozice tak dědičnost řeší oba podobný problém, jak přepoužít kód, každý trochu jíným způsobem. Obecně se doporučuje, když je to možné, používat kompozici namísto dědičnosti.\cite{CompositionInheritence} Má to své důvody:
+
+\begin{enumerate}
+    \item \textbf{Slabá vazba}, komponenty mohou být vyvíjeny a upravovány nezávisle, s minimálním dopadem na odkazující třídu.
+    \item \textbf{Runtime flexibilita}, dovolující změnu chování za běhu programu. Je možné mít více variací objektu bez nutnosti upravovat hierarchii tříd.
+    \item \textbf{Větší zapouzdření}, implementační detaily jsou schovány před rozhraním, vnitřní změny nemají dopad na rozhraní a uživatelský kód.
+    \item \textbf{Testovatelnost}, komponenty se dají testovat odděleně, jednoduší jednotkové testy
+    \item \textbf{Počet tříd}, který je nižší než při použití dědičnosti. Hierarchie má menší komplexitu a kód je jednodušší na udržitelnost.
+\end{enumerate}
+
+Dědičnost má své místo v objektově orientovaném programování, a v některých situacích je nenahraditelná, avšak kompozice by měla být preferována, pokud je možné ji použít. \cite{ReusabilityPrinciples}
 
 \section{Návrhové vzory}
 
-Návrhové vzory(Design patterns) jsou typická řešení pro běžné problémy, se kterými se v programování setkáváme. Jsou to předdělaná obecná řešení, která řeší stále dokola vyskytující se problémy při návrhu aplikací. Návrhové paterny dělíme na následující:
+Návrhové vzory(Design patterns) jsou typická řešení pro běžné problémy, se kterými se v programování setkáváme.\cite{DesignPatterns} Jsou to předělaná obecná řešení, která řeší stále dokola vyskytující se problémy při návrhu aplikací. Návrhové vzory dělíme na následující:
 
 \begin{itemize}
     \item Creational design patterns, které slouží jakožto mechanismy pro vytváření objektů, s durázem na flexibilitu a přepoužití kódu
@@ -98,37 +127,42 @@ Návrhové vzory(Design patterns) jsou typická řešení pro běžné problémy
     \item Behavioral design patterns, zaměřující se na algoritmy a rozdělení odpovědnosti mezi objekty
 \end{itemize}
 
-Dále vysvětlím a definuji vzory, které poté budou použity v implementaci. \cite{DesignPatterns}
+Dále vysvětlím a definuji vzory, které poté budou použity v implementaci.
 
-\subsection{Facade}
+\subsection{Fasáda}
+\label{facade}
 
-Strukturální návrhový vzor, který poskytuje jednoduchý high-level interface pro knihovny, frameworky nebo komplexní množiny tříd. Při práci s takovýmito aplikacemi často musíme spravovat mnoho různých objektů, inicializovat je ve specifickém pořadí a řešit závislosti. To vede k provázání business logiky a interními detaily implementace s externími aplikacemi, tím se stěžuje vývoj i údržba.
+Strukturální návrhový vzor, který poskytuje jednoduchý high-level interface pro knihovny, frameworky nebo komplexní množiny tříd.\cite{Fasade} Při práci s takovýmito aplikacemi často musíme spravovat mnoho různých objektů, inicializovat je ve specifickém pořadí a řešit závislosti. To vede k provázání business logiky a interními detaily implementace s externími aplikacemi, tím se stěžuje vývoj i údržba.
 
 Tento návrhový vzor řeší problém pomocí zaobalení aplikace do jedné třídy (fasády), která bude mít jasně definované rozhraní. To je sice více limitující, než kdybychom interagovali naší aplikaci na vnitřní systém přímo, dovolí nám to ale vybrat pouze věci, které chceme vystavit externím uživatelům.
 
-Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fasádě vůbec neví a interně komunikuje dále meze změny. Naopak to platí stejně, při změnách v jádru aplikace uživatel nepozná změnu, jelikož je odstíněn od detailů pomocí vystaveného rozhraní. \cite{Fasade}
+Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fasádě vůbec neví a interně komunikuje dále meze změny. Naopak to platí stejně, při změnách v jádru aplikace uživatel nepozná změnu, jelikož je odstíněn od detailů pomocí vystaveného rozhraní.
 
-\subsection{Bridge}
+\subsection{Most}
+\label{bridge}
 
-Strukturální návrhový vzor, který nám dovoluje rozdělit velkou třídu nebo množinu sobě podobných tříd do více hierarchií, které můžou být vyvíjeny nezávisle na sobě.
+Most (Bridge)\cite{Bridge} je strukturální návrhový vzor, který nám dovoluje rozdělit velkou třídu nebo množinu sobě podobných tříd do více hierarchií, abstrakcí a implementací, které můžou být vyvíjeny nezávisle na sobě.
 
-Jako příklad si vezmeme geometrický objekt Shape. Shape má 2 podtřídy, Circle a Square. A tuto hierarchie chceme rozšířit o barvy, náš Shape budeme chtít Blue a Red. Pomocí klasického dědění nebudou muset vzniknout třídy 2, ale rovnou 4, BlueCircle, RedCircle, BlueSquare, RedSquare. Přidání dalších vlastností třídy Shape nám bude náročnost hierarchie růst exponencionálně. S rostoucí velikostí projektu bude udržování této architektury stále těžší a těžší.
+Jako příklad si vezmeme geometrický objekt \texttt{Shape}. \texttt{Shape} má 2 podtřídy, \texttt{Circle} a \texttt{Square}. A tuto hierarchie chceme rozšířit o barvy, náš \texttt{Shape} budeme chtít \texttt{Blue} a \texttt{Red}. Pomocí klasického dědění nebudou muset vzniknout třídy 2, ale rovnou 4, \texttt{BlueCircle}, \texttt{RedCircle}, \texttt{BlueSquare}, \texttt{RedSquare}. Přidání dalších vlastností třídy \texttt{Shape} nám bude náročnost hierarchie růst exponenciálně. S rostoucí velikostí projektu bude udržování této architektury stále těžší a těžší.
 
-Problém nastává, protože se snažíme Shape rozšiřovat do 2 více různých dimenzí najednou, formy a barvy. Bridge tento problém řeší změnou z dědění na kompozici objektů. Tím dimenzi extrahujeme do separátní hierarchie, kterou originální třída bude referencovat, místo toho, aby jí obsahovala ve své hierarchii. S tímto přístupem tedy rozdělíme formu a barvy do separátních hierarchií, které pak původní třída Shape bude referencovat. Pro Blue a Red vznikne tedy rozhraní Color, ze kterého budou dědit Red a Blue, tím vzniká první hierarchie, podobně vznikne i hierarchie Form pro Circle a Square. Square tedy nově referencuje pouze Color a Form, detaily ho nezajímají a práci deleguje na tyto rozhraní. Přidání další barvy nebo formy nově nevynucuje změny v Shape. \cite{Bridge}
+Problém nastává, protože se snažíme \texttt{Shape} rozšiřovat do 2 více různých dimenzí najednou, formy a barvy. Most tento problém řeší změnou z dědění na kompozici objektů. Tím dimenzi extrahujeme do separátní hierarchie, kterou originální třída bude odkazovat, místo toho, aby jí obsahovala ve své hierarchii. 
 
-\subsection{Strategy}
+S tímto přístupem tedy rozdělíme formu a barvy do separátních hierarchií, které pak původní třída \texttt{Shape} bude odkazovat. Pro \texttt{Blue} a \texttt{Red} vznikne tedy rozhraní \texttt{Color}, ze kterého budou dědit \texttt{Red} a \texttt{Blue}, tím vzniká první hierarchie, podobně vznikne i hierarchie \texttt{Form} pro \texttt{Circle} a \texttt{Square}. \texttt{Square} tedy nově odkazuje pouze \texttt{Color} a \texttt{Form}, detaily ho nezajímají a práci deleguje na tyto rozhraní. Přidání další barvy nebo formy nově nevynucuje změny v \texttt{Shape}.
 
-Behavioural design pattern, který nám dovoluje definovat rodinu algoritmů, které dáme do separátních tříd, zároveň budou ale navzájem zaměnitelné. 
+\subsection{Strategie}
+
+Návrhový vzor chování (Behavioral), který nám dovoluje definovat rodinu algoritmů, které dáme do separátních tříd, zároveň budou ale navzájem zaměnitelné.\cite{Strategy}
 
 Mějme aplikaci navigace, která automaticky naplánuje po zadání cílové adresy nejkratší cestu. V první verzi aplikace se dali naplánovat pouze trasy přes silniční cesty. Poté následovalo přidání cest pro chodce, cyklisty, pomocí hromadné dopravy. Při implementování tohoto všeho v jedné třídě nastává mnoho problémů. Rychle rostoucí počet řádků kódu v hlavní třídě, veškeré změny algoritmů pro plánování, oprava chyb, lehké úpravy, toto vše zvyšuje komplexitu třídy.
 
-Strategy pattern navrhuje extrahování rodiny algoritmů, které dělají specifickou věc mnoha různými způsoby do sepatrátní hierarchie tříd. Vznikne tedy rozhraní pro všechny tyto algoritmy, na které potom bude mít referenci originální třída. Ta práci poté jen deleguje na konkrétní instanci třídy. Originální třídu již nezajímá, jak se práce udělala, zároveň přidání, úpravy a změny algortimů se jí již také netýkají. \cite{Strategy}
+Strategie navrhuje extrahování rodiny algoritmů, které dělají specifickou věc mnoha různými způsoby do separátní hierarchie tříd. Vznikne tedy rozhraní pro všechny tyto algoritmy, na které potom bude mít referenci originální třída. Ta práci poté jen deleguje na konkrétní instanci třídy. Originální třídu již nezajímá, jak se práce udělala, zároveň přidání, úpravy a změny algoritmů se jí již také netýkají.
 
-\subsection{Abstract Factory}
+\subsection{Abstraktní továrna}
+\label{factory}
 
-Creational design pattern, který vytváří rodinu podobných objektů bez nutnosti specifikace konkrétní třídy.
+Abstraktní továrna (Abstract factory) je návrhový vzor, který vytváří rodinu podobných objektů bez nutnosti specifikace konkrétní třídy.\cite{AbstractFactory}
 
-Vezměme si obchod s nábytkem. Mějmě třídy reprezentující nasledují druhy nábytku:
+Vezměme si obchod s nábytkem. Mějme třídy reprezentující následující druhy nábytku:
 
 \begin{itemize}
     \item Sofa
@@ -146,17 +180,18 @@ A k tomu všechny tyto třídy v různých variantách:
 
 Potřebujeme způsob, jak vytvářet individuální objekty na základě toho, jakého typu jsou již ostatní objekty ze stejné rodiny. Také nechceme měnit již existující kód, kdybychom přidali další druhy nábytku, nebo přidali další styly.
 
-Abstract Factory navrhuje explicitní deklaraci rozhraní pro všechny typy produktů dané rodiny (Sofa, Chair, CoffeeTable). Poté všechny varianty těchto produktů budou implementovat dané rozhraní (např. VictorianSofa, VictorianChair, ...). Dalším krokem je vytvořit rozhraní pro třídu, která tyto produkty bude vyrábět. Metody v této třídy nutně musí vracet abstraktní typy produktu (Sofa, Chair, ...).
+Abstraktní továrna navrhuje explicitní deklaraci rozhraní pro všechny typy produktů dané rodiny (\texttt{Sofa}, \texttt{Chair}, \texttt{CoffeeTable}). Poté všechny varianty těchto produktů budou implementovat dané rozhraní (např. \texttt{VictorianSofa}, \texttt{VictorianChair}, ...). Dalším krokem je vytvořit rozhraní pro třídu, která tyto produkty bude vyrábět. Metody v této třídy nutně musí vracet abstraktní typy produktu (\texttt{Sofa}, \texttt{Chair}, ...).
 
-Pro každou variantu vytvoříme konkrétní separátní factory třídu, která již vrací přesný typ produktu(ModernFactory může vytvořit pouze ModernSofa, ModernChair, ...). Kód uživatele interaguje jak s factory, tak s jednotlivými produkty pouze přes jejich společné rozhraní. Tím docíleme možnosti upravovat jak factory, tak i jednotlivé produkty bez nutnosti zásahu do kódu, který s nimi pracuje. Uživatel tedy nemá ponětí o detailech jednotlivých produktů ani factory, jediné co zná je jejich společné rozhraní a s tím nadále pracuje. \cite{AbstractFactory}
+Pro každou variantu vytvoříme konkrétní separátní tovární třídu, která již vrací přesný typ produktu(\texttt{ModernFactory} může vytvořit pouze \texttt{ModernSofa}, \texttt{ModernChair}, ...). Kód uživatele interaguje jak s továrnou, tak s jednotlivými produkty pouze přes jejich společné rozhraní. Tím docílíme možnosti upravovat jak továrnu, tak i jednotlivé produkty bez nutnosti zásahu do kódu, který s nimi pracuje. Uživatel tedy nemá ponětí o detailech jednotlivých produktů ani továrny, jediné co zná je jejich společné rozhraní a s tím nadále pracuje.
 
-\subsection{Adapter}
+\subsection{Adaptér}
+\label{adapter}
 
-Structual design pattern, který dovoluje komunikaci objektům s nekompatibilním rozhraním.
+Strukturální návrhový vzor, který dovoluje komunikaci objektům s nekompatibilním rozhraním.\cite{Adapter}
 
-Mějme aplikaci na obchodování s cenými papíry. Aplikace stahuje data s několika různých zdrojů v XML\footnote{Extensible Markup Language} formátu. Data ukazujeme ve formě grafu. Později ale chceme přidat integraci na knihovnu 3. strany, která se bude starat o analýzu dat. Knihovna ovšem podporuje pouze data ve formátu JSON\footnote{JavaScript Object Notation}.
+Mějme aplikaci na obchodování s cennými papíry. Aplikace stahuje data s několika různých zdrojů v XML\footnote{Extensible Markup Language} formátu. Data ukazujeme ve formě grafu. Později ale chceme přidat integraci na knihovnu 3. strany, která se bude starat o analýzu dat. Knihovna ovšem podporuje pouze data ve formátu JSON\footnote{JavaScript Object Notation}.
 
-Adapter je vlastně objekt, který se stará o transformaci rozhraní jednoho objektu na rozhraní objektu druhého tak, aby mu druhý objekt rozuměl. Jedná se o zaobalení objektu do třídy tak, aby se schovala vnitřní komplexita. Vnitřní třída nemá tušení o tom, že je zaobalena Adaptérem. To funguje následovně:
+Adaptér je vlastně objekt, který se stará o transformaci rozhraní jednoho objektu na rozhraní objektu druhého tak, aby mu druhý objekt rozuměl. Jedná se o zaobalení objektu do třídy tak, aby se schovala vnitřní komplexita. Vnitřní třída nemá tušení o tom, že je zaobalena Adaptérem. To funguje následovně:
 
 \begin{enumerate}
     \item Adaptér zaobalí rozhraní existujícího objektu a vystaví vlastní
@@ -166,188 +201,228 @@ Adapter je vlastně objekt, který se stará o transformaci rozhraní jednoho ob
 
 Tímto způsobem objekt volající adaptér nemá žádnou informaci o tom, že původní objekt, se kterým chtěl komunikovat, má nekompatibilní rozhraní.
 
-\subsection{Decorater}
+\subsection{Dekorátor}
 
-Structual design pattern, jinak také "Wrapper", který funguje na principu zaobalení stávajícího objektu a přidáním funcionality tomuto objektu. Tímto způsobem přidáváme objektu další chování
+Strukturální návrhový vzor, jinak také "Wrapper", který funguje na principu zaobalení stávajícího objektu a přidáním funkcionality tomuto objektu.\cite{Decorator} Tímto způsobem přidáváme objektu další chování
 
-Dělejme na knihovně, která posílá notifikace. Knihovna má hlavní třídu Notifier, která má pár atributů a metodu \textit{send}. Třída přijímá od klienta jako argument pole stringů jakožto emaily, kam má upozornění poslat. Později se knihovna rozšiřuje, udělají se facebook, instagram a slack notifikace, pomocí klasického dědění. Poté ale budeme dále chtít také kombinované notifikace, jakožto například facebook + slack. Tímto způsobem, pro vytvoření všech kombinací, nám počet tříd bude růst exponenciálně.
+Dělejme na knihovně, která posílá notifikace. Knihovna má hlavní třídu \texttt{Notifier}, která má pár atributů a metodu \textit{send}. Třída přijímá od klienta jako argument pole řetězců jakožto emaily, kam má upozornění poslat. Později se knihovna rozšiřuje, udělají se facebook, instagram a slack notifikace, pomocí klasického dědění. Poté ale budeme dále chtít také kombinované notifikace, jakožto například facebook + slack. Tímto způsobem, pro vytvoření všech kombinací, nám počet tříd bude růst exponenciálně.
 
-Dekorátor je objekt, který zaobaluje původní objekt a udržuje si na něj referenci. Má stejné rozhraní jako původní objekt. Při zavolání dekorátor má možnost provést nějakou práci po nebo před delegováním na původní objekt. Z vnějšku nejde dekorátor od původního objektu rozeznat. \cite{Decorator}
+Dekorátor je objekt, který zaobaluje původní objekt a udržuje si na něj referenci. Má stejné rozhraní jako původní objekt. Při zavolání má dekorátor možnost provést nějakou práci po nebo před delegováním na původní objekt. Z vnějšku nejde dekorátor od původního objektu rozeznat.
 
-\subsection{Null Object}
+\subsection{Nulový objekt}
+\label{null object}
 
-Tady jde spíše o metodu než patern, Null Object je pouhé nahrazení návratové hodnoty null objektem, který má nějáké defaultní prázdné chování. Díky tomuto zmizí potřeba mít všude kontroly null hodnot, což lehce zjednoduší kód. Na druhou stranu vznikne potřeba vytvořit novou třídu, která bude Null Object reprezentovat. \cite{NullObject}
+Tady jde spíše o metodu než vzor, Nulový objekt (Null object) je pouhé nahrazení návratové hodnoty null objektem, který má defaultní prázdné chování.\cite{NullObject} Díky tomuto zmizí potřeba mít všude kontroly null hodnot, což lehce zjednoduší kód. Na druhou stranu vznikne potřeba vytvořit novou třídu, která bude nulový objekt reprezentovat.
 
-\section{Robotframewrok}
+\subsection{Singleton}
+\label{singleton}
 
-Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Duis condimentum augue id magna semper rutrum. Aliquam ornare wisi eu metus. Fusce aliquam vestibulum ipsum. Vivamus ac leo pretium faucibus~\ref{img:index}.
+Návrhový vzor pro výtváření objektů, který zajišťuje, že třída má pouze jednu instanci a poskytuje k ní globální přístup.
+
+Vzor se používá nejčastěji v situacích, kdy potřebujeme přístup ke sdílenému zdroji (databáze, soubor, ...). \cite{Singleton}
+
+\section{Robot Framework}
+\label{sec:RF}
+
+Robot Framework (dále jen RF) je obecný open-source automatizační framework pro akceptační testy, vývoj řízený akceptačními testy a robotickou automatizaci procesů (RPA). Má jednoduchý zápis a jednoduše se rozšiřuje obecných i vlastních knihoven.\cite{robotframeworkGH}
+
+RF nezávislý na operačním systému a aplikaci. Je implementován v jazyce Python, který je zároveň hlavní jazyk pro napsání jeho rozšíření. Jako většina Python projektů je stáhnutelný na PyPI\footnote{Python Package Index}
+
+\subsection{Přehled frameworku}
+
+V této se zaměříme pouze na část frameworku, která se věnuje automatickému testování, jelikož pro tuto část byla napsána knihovna, RPA\footnote{Robot Process Automation} nebude dále diskutována.
+
+Celé použití frameworku se sestává z použití nebo vývoji knihoven, které jsou poté podle potřeb používány v testování. Níže uvedeme nějaké případy a jejich užití: \cite{robotframeworkOverview}
 
 \begin{itemize}
-    \item Ut enim ad minim veniam, quis nostrud
-    \item Ut enim ad minim 
-    \item Ut enim ad minim veniam, quis 
-    \begin{itemize}
-        \item Ut enim ad
-        \item Ut enim ad
-        \begin{itemize}
-            \item Ut enim 
-            \item Ut enim 
-            \begin{itemize}
-            \item Ut enim 
-            \item Ut enim 
-        \end{itemize}
-        \end{itemize}
-    \end{itemize}
+    \item \textbf{Browser Library}, knihovna zaměřená na testování UI\footnote{User Interface} a webových aplikací. Knihovna míří na rychlost, spolehlivost a viditelnost. Je poháněna systémem Playwright \footnote{Framework pro automatizaci webů a jejich testů, běží na Chromium, Firefox a WebKit přes sdílené API \cite{PlaywrightGH}}
+    \item \textbf{Request Library}, která se zaměřuje na HTTP\footnote{HyperText Transfer Protocol} API\footnote{Aplication Programing Interface} testing, jedná se o zaobalení dobře známe Python Request Library
+    \item \textbf{Standard Library}, pro vypořádání se s logováním, souborovým systémem, operačním systémem, procesy, ...
 \end{itemize}
 
-\section{Stávající řešení}
+\subsection{Architektura frameworku}
 
+Jedná se o obecný, aplikačně i technologicky nezávislý framework. Má vysoce modulární architekturu jak ilustrováno na následujícím obrázku:
 
-Even though dark mode can be very nice for websites and apps, it does not look good when printed. Consider using white mode when print-screening dark-moded content. The contrast with the white page is too big, as seen in Figure~\ref{fig:Darkmode}.
-
-\begin{figure}[!htbp]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=\linewidth]{images/darkmode}
-    \caption{White and dark mode comparison.~\cite{darkMode}}
-    \label{fig:Darkmode}
+    \includegraphics[width=0.5\linewidth]{images/RFarchitecture.png}
+    \caption{Architektura Robot Framework}
+    \label{fig:placeholder}
 \end{figure}
 
+Testovací data jsou zadávána v jednoduchém tabulkovém formátu. Když je framework zapnut, zprocesuje data, provede jednotlivé testy a vygeneruje log a report. Jádro frameworku neví nic o cíli testu, veškerá interakce je dělána pomocí knihoven. Knihovny mohou použít aplikační rozhraní napřímo, popřípadě mohou použít nízkoúrovnější testovací nástroje.\cite{robotframeworkUserGuide}
 
-\subsection{Class aptent taciti}
+\subsection{Ukázka použití}
 
-\lipsum[6-7]
+Níže je ukázán příklad napsání testu ve frameworku a výstup, který tester získá po provedení testu. \cite{robotframeworkUserGuide}
 
-\begin{enumerate}
-    \item Ut enim ad minim veniam, quis nostrud
-    \item Ut enim ad minim 
-    \item Ut enim ad minim veniam, quis 
-    \begin{enumerate}
-        \item Ut enim ad
-        \item Ut enim ad
-        \begin{enumerate}
-            \item Ut enim 
-            \item Ut enim 
-            \begin{enumerate}
-            \item Ut enim 
-            \item Ut enim 
-        \end{enumerate}
-        \end{enumerate}
-    \end{enumerate}
-\end{enumerate}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/RFTest.png}
+    \caption{test napsán v Robot Framework \cite{robotframeworkUserGuide}}
+    \label{fig:placeholder}
+\end{figure}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{images/RFReportLog.png}
+    \caption{report a log testu v Robot Framework \cite{robotframeworkUserGuide}}
+    \label{fig:placeholder}
+\end{figure}
 
+\subsection{Vývojářské API}
 
-\section{Testování}
+Robot Framework má speciální API, přes které je možné vytvořit vlastní knihovny, které framework rozšiřují. Rozhraní nám umožňuje 2 hlavní věci:
 
+\begin{itemize}
+    \item Spustit příkazy \textit{robot} a \textit{rebot} z python scriptů
+    \item Přistup a možnost úpravy objektů frameworku, což jsou například výsledky testů, testovací případy, parser, logger, zapisovač výsledků
+\end{itemize}
 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Nulla non arcu lacinia neque faucibus fringilla. Vestibulum erat nulla, ullamcorper nec, rutrum non, nonummy ac, erat. Aliquam erat volutpat. Proin pede metus, vulputate nec, fermentum fringilla, vehicula vitae, justo.\footnote{Ut enim ad minim veniam, quis nostrud exercitation.} Etiam dictum tincidunt diam. In laoreet, magna id viverra tincidunt, sem odio bibendum justo, vel imperdiet sapien wisi sed libero. Nulla est. Maecenas fermentum, sem in pharetra pellentesque, velit turpis volutpat ante, in pharetra metus odio a lectus. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+Dále je možnost použít rozhraní na integrování frameworku s dalšími nástroji. \cite{robotframeworkAPI}
 
-\begin{lstlisting}[caption={Zbytečný kód},label=list:8-6,captionpos=b,float,abovecaptionskip=-\medskipamount,abovecaptionskip=\medskipamount,language=C]
-    #include<stdio.h>
-    #include<iostream>
-    // A comment
-    int main(void)
-    {
-        printf("Hello World\n");
-        return 0;
-    }
+\subsubsection{Vytvoření a použití knihovny}
+
+Tato práce je zaměřena na vývoj statické knihovny jakožto rozšíření frameworku, možné je však udělat knihovnu dynamickou, nebo hybridní.
+
+Nadefinovat funkce knihovny pak lze v pythonu následovně:
+
+\begin{lstlisting}[
+  caption={Definování knihovny},
+  label={list:demo-library},
+  captionpos=b,
+  language=Python,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  columns=fullflexible,
+  keepspaces=true
+]
+class DemoLibrary:
+    def __init__(self, *args, **kwargs):
+        print(f"Hello world")
+
+    def my_keyword(self, *args, **kwargs):
+        print(f"Keyword got args: {args} and kwargs: {kwargs}")
+        return "Hello World"
 \end{lstlisting}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% alternative using package minted for source highlighting
-% package minted requires execution with `-shell-escape'
-% e.g., `xelatex -shell-escape ctufit-thesis.tex'
-% \begin{listing}
-% \begin{minted}{C}
-%     #include<stdio.h>
-%     #include<iostream>
-%     // A comment
-%     int main(void)
-%     {
-%         printf("Hello World\n");
-%         return 0;
-%     }
-% \end{minted}
-% \caption{Zbytečný kód}\label{list:8-6}
-% \end{listing}
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Nullam feugiat, turpis at pulvinar vulputate, erat libero tristique tellus, nec bibendum odio risus sit amet ante. Aenean id metus id velit ullamcorper pulvinar. Fusce wisi. Integer lacinia. Aliquam id dolor. Pellentesque pretium lectus id turpis. Suspendisse sagittis ultrices augue. In laoreet, magna id viverra tincidunt, sem odio bibendum justo, vel imperdiet sapien wisi sed libero. Sed ac dolor sit amet purus malesuada congue.~\cite{Crochemore2002}
+Statická knihovna je nejjednodušší způsob, ve třídě se definuje metoda, které je základně automaticky přiřazeno klíčové slovo (keyword). Klíčové slovo dostává stejné argumenty stejně jako python metoda, která ho implementuje. Neúspěch metody je signalizován vyhozením vyjímky, je možná zápis do standardního výstupu a metoda může vracet hodnoty pomocí klíčového slova \textit{return}.
+Použití v samotných testech takto definované knihovny by pak vypadalo následovně:
 
-Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci. Duis viverra diam non justo. Curabitur ligula sapien, pulvinar a vestibulum quis, facilisis vel sapien. Duis condimentum augue id magna semper rutrum. Aliquam ornare wisi eu metus. Fusce aliquam vestibulum ipsum. Vivamus ac leo pretium faucibus.~\cite{Motwani2014}
+\begin{lstlisting}[
+  caption={Použití knihovny},
+  label={list:demo-library},
+  captionpos=b,
+  language=Python,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  breaklines=true,
+  breakatwhitespace=true,
+  columns=fullflexible,
+  keepspaces=true
+]
+*** Settings ***
+Library    DemoLibrary.py
 
+*** Test Cases ***
+Use a Keyword with multiple arguments
+    My Keyword    Argument 1    Argument 2    Named Argument=One Value
+\end{lstlisting}
 
-\subsection{Ut enim ad minim veniam, quis nostrud}
+Jméno klíčového slova je defaultně derivováno podle jména metody v python třídě. Důležité je také oddělení klíčového slova a jeho argumentů alespoň 2 mezerami. \cite{robotframeworkBaseLibrary} \cite{robotframeworkUserGuide}
 
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Nulla non arcu lacinia neque faucibus fringilla. Vestibulum erat nulla, ullamcorper nec, rutrum non, nonummy ac, erat. Aliquam erat volutpat. Proin pede metus, vulputate nec, fermentum fringilla, vehicula vitae, justo. Etiam dictum tincidunt diam. In laoreet, magna id viverra tincidunt, sem odio bibendum justo.~\cite{Sestakova2018} 
+\subsubsection{Rozsah knihovny}
 
-\begin{table}\centering
-\begin{tabular}{l|l|c|c}
-	Typ		& Prostředí		& \LaTeX{}ovská zkratka	& \TeX{}ovská zkratka	\tabularnewline \hline 
- 	Text		& \verb|math|		& \verb|\(...\)|	& \verb|$...$|	\tabularnewline \hline
- 	Displayed	& \verb|displaymath|	& \verb|\[...\]|	& \verb|$$...$$|	\tabularnewline 
-\end{tabular}
-\caption[Příklad tabulky]{Zadávání matematiky}
-\label{tab:matematika}
-\end{table}
+Knihovna má vnitřní stav, který lze nastavit v konstruktoru knihovny. Protože stav může ovlivnit chování klíčových slov, je nutné aby se jednotlivé testy neovlivňovali.
 
+Defaultně se framework snaží jednotlivé testy držet na sobě nezávislé, ne vždy je toto chování ale chtěné, občas mohou jednotlivé testy sdílet společný stav. Některé knihovny nemusí mít stav vůbec, a vytváření jejich instance není nutné.
 
-Nulla est. Maecenas fermentum, sem in pharetra pellentesque, velit turpis volutpat ante, in pharetra metus odio a lectus. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Nullam feugiat, turpis at pulvinar vulputate, erat libero tristique tellus, nec bibendum odio risus sit amet ante. Aenean id metus id velit ullamcorper pulvinar. 
+Knihovny mohou toto chování kontrolovat pomocí třídního atributu \textit{ROBOT\_LIBRARY\_SCOPE}, který může nabývat následujících hodnot:
 
-\subsubsection{Class aptent taciti}
+\begin{itemize}
+    \item \textbf{TEST}, který vytvoří novou instanci knihovny pro každý test
+    \item \textbf{SUITE}, nová instance knihovny je vytvořena pro každou testovací sadu
+    \item \textbf{GLOBAL}, jedna instance pro všechny jednotlivé testy i sady testů
+\end{itemize}
+\cite{robotframeworkUserGuide}
 
-\begin{definition}[Optional label]
-Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{definition}
+\subsubsection{Rozhraní Listener}
 
-\begin{example}
-Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{example}
+Listener umí poslouchat události, které mohou nastat při exekuci testů a reagovat na ně. Jedná se o hook na test, který nám dovolí spustit námi definovaný kód v případě nastání specifické situace při testu. Tyto události mohou nastat při spuštění testu, ukončení testu, určitém typu zprávy, ...
 
-\paragraph{Nadpis 5. úrovně}
+Výhoda použití tohoto rozhraní oproti uživatelské knihovně je flexibilita. Rozhraní se dá zapínat a vypínat na každý test bez jakékoliv úpravy testů. Rozhraní poběží na pozadí a udělá svoji práci.
 
-\begin{theorem}
-Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{theorem}
+Rozhraní má 2 verze, verzi 2 a 3. Nastavit se dá pomocí třídního atributu \textit{ROBOT\_LISTENER\_API\_VERSION}. Rozdíly jsou následující.
 
-\begin{proof}
-Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{proof}
+\begin{itemize}
+    \item \textbf{v2} nám dovolí číst atributy testu, klíčového slova, ... Hlavním údělem je hlášení a kontrolování exekuce testu
+    \item \textbf{v3} nám dovoluje kromě čtení také úpravu atributů testu, klíčového slova, ... . Změny budou mít přímý efekt na exekuci testu. Je také možné použít na přeskočení testu, modifikaci testovacích dat, ... 
+\end{itemize}
+\cite{robotframeworkListener}
 
-\paragraph{Level 5 heading}
+\subsubsection{Další nastavení}
 
-\begin{corollary}
-Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{corollary}
+Dekorátor \texttt{@library} je anotace, kterou můžeme dát nad definici třídy, která představuje knihovnu. Nastavit se zde dají \textit{scope}, \textit{version}, \textit{converter}, \textit{doc\_format} a \textit{listener}. Knihovna má defaultně zapnutou automatickou detekci klíčových slov, takže veškeré veřejné metody třídy budou automaticky brány jakožto klíčová slova knihovny. Toto chování se dá vypnout pomocí nastavení \textit{auto\_keywords} na hodnotu \texttt{False}. Poté musíme použít dekorátory nad metodami \texttt{@keyword} a \texttt{@not\_keyword} pro označení klíčových slov.
 
-\begin{proposition}
-Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{proposition}
+Můžeme chtít nastavit klíčovému slovu vlastní jméno, které není derivované z jména python metody. To lze jednoduše pomocí nastavení atributu \textit{name} v konstruktoru dekorátoru pro označení klíčového slova.\cite{robotframeworkUserGuide}
 
-\begin{note}
-Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{note}
+\section{Existující řešení}
 
-\begin{remark}
-Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{remark}
+Robot Framework je mezi komunitou rozšířený framework, ke kterému existuje mnoho rozšíření a knihoven. V této části rozeberu již existující řešení a uvedu důvody, proč tato řešení nejsou ideální pro automatizované testování.
 
-\begin{lemma}
-Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos hymenaeos. Fusce suscipit libero eget elit. Etiam dui sem, fermentum vitae, sagittis id, malesuada in, quam. Aliquam id dolor. Curabitur bibendum justo non orci.
-\end{lemma}
+\subsection{RPA Framework}
 
-\lipsum[1-2]
+Jak již zmíněno v předchozí sekci \ref{sec:RF}, RPA je velkou součástí frameworku samotného, která se zaměřuje na automatizaci procesu.\cite{RPADocs} \cite{RPAGH} Jedná se o velkou kolekci open-source knihoven, mezi které patří i knihovna \textit{Excel.Files}.\cite{RPAFiles} Použití pouze této knihovny pro práci s tabulkovými soubory vyžaduje instalaci celého frameworku.
 
-% \subsection{Class aptent taciti sociosqu}
-% 
-% \lipsum[4-5]
+Jelikož celá kolekce je zaměřená na  automatizaci procesů a ne testování, jinak tomu není ani v této knihovně zaměřující se na zápis a manipulaci tabulkových souborů. Knihovna podporuje dva formáty souborů, .xls a .xlsx. Rozsah knihovny je \textit{GLOBAL}, což znamená že pro všechny potencionální testovací scénáře bude použita jedna instance knihovny. To implikuje sdílený kontext mezi jednotlivými testy, což se při testování nežádoucí. Ačkoliv knihovna podporuje explicitní zapnutí streamovacího módu přes argumenty předané pro inicializaci, které jsou následně předané knihovnám, které se soubory opravdu pracují, nikde není kontrolován správný přístup a použití takto inicializovaných objektů. Zároveň hrozí neuvolnění paměti, kdy jednotlivé soubory nejsou implicitně uvolňovány a hrozí únik paměti. Ždrojový kód pro knihovnu je čistý monolit bez větší architektury napsaný celý v jednom souboru, což stěžuje jeho flexibilitu a potenciální rozvoj.
 
-\section{}
+\subsection{ExcelSage}
+
+Moderní knihovna zaměřená na testování a datovou analýzu, která podporuje pouze formát .xlsx. Knihovna obsahuje jak klíčová slova pro čtení a zápis, tak také pokročilé možnosti pro úpravu souboru.\cite{ExcelSageGH}
+
+Knihovna je vysoce integrovaná a závislá na využití pandas, která ji umožňuje dělat efektivní úpravy v celém souboru, rychlý export do formátu .csv, což je hlavně užitečné pro formátování reportů.
+
+Díky závislosti na pandas sice knihovna efektivně pracuje s modifikovatelnými operacemi a je schopná vykonávat rychlé vyhledávací operace, to však přináší velkou paměťovou zátěž, jak zmíněno dále \ref{subsubsec:pandas}.
+
+Dále, jak bylo již zmíněno, je podporován pouze jeden formát, .xlsx. Rozšíření knihovny může být komplikované, díky chybějící pokročilé architektuře a faktu, že celá knihovna je napsána v jednom souboru. \cite{ExcelSageGH} \cite{ExcelSagePyPI}
+
+\subsection{DataDriver}
+
+Jedná se o knihovnu pro vytvoření DDT\footnote{Data-Driven Tests} s Robot Framework.\cite{DataDriver} Knihovna není určená pro validaci ani modifikaci dat uložených v samotných tabulkových souborech. Striktně odděluje testovací logiku od testovacích dat pomocí parametrizace. Knihovna řeší jiný problém a může být použita v kombinaci řešením vyvinutým v této práci.
+
+\subsection{excellibrary}
+\label{subsec:excellibrary}
+
+Historické řešení, které je napsáno na staré verzi pythonu 2.*.*. Knihovna pracuje pouze ze starými .xls soubory a dnes už je zastaralá. \cite{excellibrary}
+
+\subsection{excel10library}
+
+Řešení, které je závislé na historické excellibray \ref{subsec:excellibrary}. Je závislá na knihovně xlwings, která požaduje pro běh operační systém Windows 10, tím se stává pro běh automatických testů v kontajnerizovaných prostředích absolutně nevyhovující. Jedná se také o jiný přístup, kdy knihovna v pozadí používá běžící nainstalovaný program MS Excel. \cite{excel10library}
+
+\subsection{excelutil}
+
+Jednoduchý knihovna zaobalující základní funkčnosti pro soubory formátu .xlsx. Jedná se o jednoduchou knihovnu s minimel funkcionalit a minimální dokumentací. \cite{excelutil}
+
+% \begin{table}\centering
+% \begin{tabular}{l|l|c|c}
+% 	Typ		& Prostředí		& \LaTeX{}ovská zkratka	& \TeX{}ovská zkratka	\tabularnewline \hline 
+%  	Text		& \verb|math|		& \verb|\(...\)|	& \verb|$...$|	\tabularnewline \hline
+%  	Displayed	& \verb|displaymath|	& \verb|\[...\]|	& \verb|$$...$$|	\tabularnewline 
+% \end{tabular}
+% \caption[Příklad tabulky]{Zadávání matematiky}
+% \label{tab:matematika}
+% \end{table}
 
 %---------------------------------------------------------------
 \chapter{Návrh}
 %---------------------------------------------------------------
 
-V této kapitole je popsán návrh aplikace. Popíšeme architekturu celé aplikace, poté také jednotlivé komponenty, jak a k čemu slouží. Dále jsou tu také uvedeny technologie, které pro tento projekt byly zvoleny.
+V této kapitole je popsán návrh aplikace. Je zde popsána architektura celé aplikace, poté také jednotlivé komponenty, jak a k čemu slouží. Dále jsou tu také uvedeny technologie, které pro tento projekt byly zvoleny.
 
 \section{Technologie}
 
@@ -357,21 +432,31 @@ V této sekci jsou probrány vybrané technologie a jejich alternativy. Je zde z
 
 Technologie v této sekci byly použity pro implementaci knihovny. Jsou zde zdůvodněny hlavní důvody pro použití a jejich popis.
 
-\subsubsection{Robot Framework}
-
 \subsubsection{Python}
+
+Python je interpretovaný, objektově orientovaný, vysokoúrovňový jazyk s dynamickým typováním. Je známy jednoduchou, dobře čitelnou syntaxí, podporuje moduly a balíčky, což vybízí uživatele k psaní znovupoužitelného modulárního kódu.\cite{WhyPython}
+
+I přesto, že rozšíření do Robot Framework se dají psát i v jiném jazyce, přes XML-RPC\footnote{Specifikace a množina implementací, která umožňuje běh softwaru na rozdílných operačních systémech, v jiných prostředích, pomocí volání do sítě} protokol se dají přes serverovou komunikaci implementovat knihovny i v jiných jazycích, Python je volba nejjednodušší a nejpřímočařejší.\cite{robotframeworkUserGuide}
 
 \subsubsection{Openpyxl}
 
-Knihovna pro zpracování dat v jazyce Python, navržená specificky pro práci s ekosystémem Office Open XML (.xlsx, .xlsm). Zjednodušuje vytváření, úpravy a parsování tabulkových souborů pomocí vysokoúrovňového python rozhraní. Abstrahuje složité vnitřní XML\footnote{Extensible Markup Language} struktury a poskytuje podporu pro mnoho operací s tabulkami, jakožto extrakci surových dat, formátování, stylování, manipulace se vzorci.
+Knihovna pro zpracování dat v jazyce Python, navržená specificky pro práci s ekosystémem Office Open XML (.xlsx, .xlsm).\cite{Openpyxl} Zjednodušuje vytváření, úpravy a parsování tabulkových souborů pomocí vysokoúrovňového python rozhraní. Abstrahuje složité vnitřní XML\footnote{Extensible Markup Language} struktury a poskytuje podporu pro mnoho operací s tabulkami, jakožto extrakci surových dat, formátování, stylování, manipulace se vzorci.
 
-Důležité pro tento projekt je možnost použití optimalizované streamovací architektury, která umožňuje pracovat s obrovskými soubory s konstatní pamětí v read-only režimu. Spotřeba paměti může být naopak vyšší u zpracování v klasickém módu, kdy je celý soubor načten jakožto DOM\footnote{Document Object Model} do operační paměti. Jelikož je psána v pythonu, výkon je nižší než u knihoven psaných v kompilovaných jazycích, jako například \ref{sec:calamine}
+Důležité pro tento projekt je možnost použití optimalizované streamovací architektury, která umožňuje pracovat s obrovskými soubory s konstantní pamětí v read-only režimu. Spotřeba paměti může být naopak vyšší u zpracování v klasickém módu, kdy je celý soubor načten jakožto DOM\footnote{Document Object Model} do operační paměti. Jelikož je psána v pythonu, výkon je nižší než u knihoven psaných v kompilovaných jazycích, jako například \ref{sec:calamine}
 
 \subsubsection{Xlrd}
 
+Jedná se o legacy python knihovnu na čtení historického formátu .xls.\cite{xlrdDocs} Abstrahuje od parsování struktury BIFF8\footnote{Binary Interchange File Format version 8}, která byla použita v Excel 97-2003 aplikacích.\cite{xlsFormat} Od verze 2.0.0 se knihovna odstranila podporu pro veškeré ostatní formáty kromě .xls. Knihovna je stále udržována a je možné ji používat v moderním pythonu. \cite{xlrdChanges} 
+
 \subsubsection{Csv module - python}
 
+Pro práci s .csv soubory byla zvolena nejjednodušší cesta, použít již existující řešení v build-in python knihovně.\cite{CsvDocs} Podporuje jak čtení, tak zápis. Nadále podporuje iterátory a streamování souboru, takže není třeba číst celý soubor najednou. Umožňuje číst i zapisovat řádky jakožto sequence, popřípadě je schopná parsovat také slovníky.
+
 \subsubsection{Pytest}
+
+Standart pro testování python softwaru. Pytest je framework, se kterým je jednoduché napsat od malých, jednoduše čitelných testů až po komplexní testy celých aplikací a knihoven.\cite{Pytest} Obsahuje také velice jednoduchou integraci s IDE\footnote{Integrated Development Enviroment} 
+
+Pytest používá k testování asserty, což zjednodušuje debugování testovacích scénářů. Také jsou zde zavedené fixtures, jakožto možnost jak v testech zadefinovat konzistentní kontext pro testy. Další funkcionalita je možnost psaní parametrizovaných testů, která eliminuje nutnost psát více stejných typů testů pro různé scénáře. \cite{PytestFixtures}
 
 \subsection{Nepoužité alternativy}
 
@@ -379,53 +464,125 @@ Zmíněné technologie v této sekci nebyly použity v projektu, ale byly uvažo
 
 \subsubsection{Pyexcel}
 
-Zdánlivě idealní volba, knihovna, která podporuje více fomátů (.xslx, .xls, .ods, .csv, ...). Knihovna má však několik problémů, kvuli kterým nakonec nebyla využita.
+Zdánlivě idealní volba, knihovna, která podporuje více fomátů (.xslx, .xls, .ods, .csv, ...). Knihovna má však několik problémů, kvůli kterým nakonec nebyla využita.\cite{Pyexcel}
 
-Prvním problémem je memory management. I když knihovna nabízí streaming pomocí iterátorů, zpočátku je celý XML soubor, který reprezentuje jednotlivé excel soubory, naparsován do paměti najendou. Tomu jsem se chtěl v mojí knihovně vyhnout.
+Prvním problémem je správa paměti. I když knihovna nabízí streaming pomocí iterátorů, zpočátku je celý XML soubor, který reprezentuje jednotlivé excel soubory, naparsován do paměti najendou. Tomu jsem se chtěl v mojí knihovně vyhnout.
 
 Dalším problémem je, že knihovna je pouze generický wrapper nad nízkoúrovňovějšími knihovnami, není to engine. Použitím knihovny akorát ztrácíme kontrolu nad informacemi z knihoven, které tato knihovna používá.
 
-V poslední řadě také omezené operace a datové typy, které knihovna podporuje. Pro .xlsx není podporováno formátování ani makra, jelikož knihovna je čistě datová. V této práci se sice také zaměřuji čistě na data, ale potenciálně v budoucnu je tam možnost přidat i tyto možnosti. Chybí kontrola nad vrácenými datovými typy, kdy nevíme, jak je s daty na pozadí naloženo a jak se transformují.\cite{Pyexcel}
+V poslední řadě také omezené operace a datové typy, které knihovna podporuje. Pro .xlsx není podporováno formátování ani makra, jelikož knihovna je čistě datová. V této práci se sice také zaměřuji čistě na data, ale potenciálně v budoucnu je tam možnost přidat i tyto možnosti. Chybí kontrola nad vrácenými datovými typy, kdy nevíme, jak je s daty na pozadí naloženo a jak se transformují.
 
 \subsubsection{Python-calamine} \label{sec:calamine}
 
-Knihovna napsaná v rustu, která má pouze python wrapper. Tím, že je napsána v rustu, je násobně rychlejší než její konkurenti, kteří jsou napsáni v čistém pythonu. Také podporuje formáty .xlsx, .xls, .ods. Je také paměťově úsporná, nenačítá celý soubor do paměti.
+Knihovna napsaná v rustu, která má pouze python wrapper.\cite{Python-calamine} Tím, že je napsána v rustu, je násobně rychlejší než její konkurenti, kteří jsou napsáni v čistém pythonu. Také podporuje formáty .xlsx, .xls, .ods. Je také paměťově úsporná, nenačítá celý soubor do paměti.
 
-Tato knihovna ovšem také nakonec použita nebyla. Knihovna je read-only, což znamená znemožnění psaní do načtených souborů. Dále je nutnost mít nainstalován rust. Jelikož automatické testy jsou často spostěny v github-actions, je nutnost mít nainstalovaný rust, což je pouze kvůli testům nevyžadující. Tím, že je knihovna optimalizovaná na výkon, extrahuje pouze čisté hodnoty, tím ztrácíme jakékoliv další informace, které pomocí jiných knihoven jsme schopni získat.
+Tato knihovna ovšem také nakonec použita nebyla. Knihovna je read-only, což znamená znemožnění psaní do načtených souborů. Dále je nutnost mít nainstalován rust. Jelikož automatické testy jsou často spouštěny v github-actions, je nutnost mít nainstalovaný rust, což je pouze kvůli testům nevyžadující. Tím, že je knihovna optimalizovaná na výkon, extrahuje pouze čisté hodnoty, tím ztrácíme jakékoliv další informace, které pomocí jiných knihoven jsme schopni získat.
 
-I přes všechny nevýhody zmíněné výše se dá do budoucna uvažovat o použití této knihovny v režimu streamování díky vysoké rychlosti a paměťové úspornosti. \cite{Python-calamine}
+I přes všechny nevýhody zmíněné výše se dá do budoucna uvažovat o použití této knihovny v režimu streamování díky vysoké rychlosti a paměťové úspornosti.
 
 \subsubsection{Xlwt}
 
-Knihovna pro zapisování do souborů v .xls formátu. Jelikož tento projekt se zaměřuje hlavně na testování, knihovna nakonec nebyla použita. Zápis do starých souborů v aplikaci už nedává smysl. Zároveň knihovna již není dále vyvíjena, pouze udržována, podle autora už nemá být používána, pokud není vysloveně nutno.\cite{xlwtEnd} \cite{xlwt}
+Knihovna pro zapisování do souborů v .xls formátu.\cite{xlwt} Jelikož tento projekt se zaměřuje hlavně na testování, knihovna nakonec nebyla použita. Zápis do starých souborů v aplikaci už nedává smysl. Zároveň knihovna již není dále vyvíjena, pouze udržována, podle autora už nemá být používána, pokud není vysloveně nutno.\cite{xlwtEnd}
 
 \subsubsection{Pandas}
+\label{subsubsec:pandas}
 
-Knihovna používána hlavně in-memory datavou analýzu. Hlavním problémem je nutnost načíst celý soubor do DF\footnote{DataFrame}. Sice je možné práci s většími soubory trochu zeefktivnit z ohledu paměti, ale pro tento projekt jsem se rozhodl tyto metody neimplementovat.\cite{PandasScale} \cite{Pandas}
+Knihovna používána hlavně in-memory datavou analýzu.\cite{Pandas} Hlavním problémem je nutnost načíst celý soubor do DF\footnote{DataFrame}. Sice je možné práci s většími soubory trochu zefektivnit z ohledu paměti, ale pro tento projekt jsem se rozhodl tyto metody neimplementovat.\cite{PandasScale}
 
-\section{Donec odio tempus molestie}
+\section{Architektura knihovny}
 
-\lipsum[2]~\cite{def:1, def:2}
+Důležitou částí knihovny je její architektura. Speciálně u knihoven je nutné, aby byly dobře navržené a flexibilní pro budoucí vývoj, v tomto případě se může jednat o přidání nových klíčových slov, podpora dalšího formátu, optimalizace, nebo například i výměna knihoven, kterou tato knihovna používá pro práci s jednotlivými formáty.
 
-\subsection{Class aptent taciti}
+\subsection{Rozvržení knihovny}
 
-\lipsum[2-3]
+Z dostupných možností\ref{internal architectures}, byla nakonec vybrána architektura vrstvená.
 
-\begin{description}
-\item[Kapitola 1] Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Curabitur sagittis hendrerit ante. Class aptent taciti sociosqu ad litora tor\-quent per conubia nostra, per inceptos hymenaeos. Cras pede libero, dapibus nec, pretium sit amet, tempor quis.
+Jedná se architekturu, která jasně rozděluje, co která vrstva dělá, zároveň je z vyjmenovaných nejjednodušší na napsání, zajišťuje jednoduchou rozšiřitelnost a testovatelnost. Rozdělení na vrstvy by se dalo popsat následovně:
 
-\item[Kapitola 2] Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Curabitur sagittis hendrerit ante. Class aptent taciti sociosqu ad litora tor\-quent per conubia nostra, per inceptos hymenaeos. Cras pede libero, dapibus nec, pretium sit amet, tempor quis.
+\begin{itemize}
+    \item API, které bude vystavené uživatelům knihovny \ref{User API}
+    \item Jádro aplikace, které se bude starat o hlavní funkcionality knihovny \ref{Application core}
+    \item Komunikace s jednotlivými knihovnami pro práci se soubory a způsob jejich komunikace \ref{Components}
+\end{itemize}
 
-\item[Kapitola 3] Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Curabitur sagittis hendrerit ante. Class aptent taciti sociosqu ad litora tor\-quent per conubia nostra, per inceptos hymenaeos. Cras pede libero, dapibus nec, pretium sit amet, tempor quis.
+Zároveň je do návrhu nutno zahrnout model\ref{model}, což jsou objekty, které umožňují jednoduchou komunikaci mezi Jádrem aplikace a jednotlivými komponentami.
 
-\item[Kapitola 4] Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Curabitur sagittis hendrerit ante. Class aptent taciti sociosqu ad litora tor\-quent per conubia nostra, per inceptos hymenaeos. Cras pede libero, dapibus nec, pretium sit amet, tempor quis.~\cite{jakZiskatAcko}
-\end{description}
+\subsection{Vystavené rozhraní}
+\label{User API}
 
-\lipsum[2]
+Velice důležitá část celé knihovny. Vystavené rozhraní by se mělo měnit co nejméně, mělo by být konzistentní. Zároveň je není dobré v rozhraní určeném pro uživatele vystavovat mnoho věcí i interním fungovaní knihovny. Pro rozhraní byla vybrána následující architektura:
 
-\section{Lorem ipsum dolor sit amet}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/API.png}
+    \caption{Architektura rozhraní}
+    \label{fig:architecture}
+\end{figure}
 
-\lipsum[3-5]
+Pro implementaci rozhraní byl zvolena fasáda\ref{facade}, která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory}\ref{factory}, která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel} a je následně uloženo ve \textit{workbook}.
+
+\subsection{Jádro aplikace}
+\label{Application core}
+
+O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vnitřní část architektury knihovny:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Core.png}
+    \caption{Jádro aplikace}
+    \label{fig:placeholder}
+\end{figure}
+
+Třída \texttt{RFExcel} implementuje rozhraní 2 tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a jsou deklarované v uživatelském rozhraní aplikace.\ref{User API} Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, její použití je vysvětleno v kapitole implementace.\ref{FUTURE REFERENCE}
+
+\texttt{RFExcel} využívá principu kompozice\ref{Composition}, pro definování funkčností, které knihovna umožňuje. Jedná se o rozhraní, které pak jednotlivé implementace musí splňovat a \texttt{RFExcel} je může používat bez jakékoliv znalosti toho, jaký přesný typ třídy zrovna dostane.
+
+\subsection{Model}
+\label{model}
+
+Aplikace pracuje s několika různými souborovými typy, kdy každý může vracet data jinak interpretované. Pro sjednocení logiky a vyhnutí se kontrolování, s jakým zdrojem aplikace zrovna aplikace, jsou použity následující modely:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Model.png}
+    \caption{Modely}
+    \label{fig:placeholder}
+\end{figure}
+
+Tento návrh respektuje návrhový vzor Most\ref{bridge}, kdy máme pro 2 modely 2 různé rozhraní, která jsou potom implementována pro jednotlivé souborové typy. Všechny komponenty \ref{Components} tedy vrací tyto modely, pro získání unifikovaných informací pak aplikace pouze volá metody společného rozhraní a je jí jedno, se kterým typem souboru zrovna pracuje. Také je zde vidět použití nulového objektu\ref{null object}, který reprezentuje prázdnou informaci.
+
+\subsection{Komponenty}
+\label{Components}
+
+Jako komponenty jsou brány jednotlivé rozhraní která jsou součástí \texttt{RFExcel} instance pomocí kompozice. Jedná se tedy o rozhraní \texttt{IReader}, \texttt{IMetadata}, \texttt{IStyle}, \texttt{IResource} a \texttt{IWriter}. Pro jednoduchost je níže ukázán pouze jeden příklad, \texttt{IResource}, ostatní fungují na stejném principu:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Components.png}
+    \caption{Komponenta \texttt{IResource}}
+    \label{fig:placeholder}
+\end{figure}
+
+\texttt{IResource} je tedy rozhraní, které používá třída \texttt{RFExcel}. Pro jednotlivé druhy souborů a typy práce se soubory (editační a streamovací mód) poté existuje třída, která rozhraní implementuje.
+
+\subsection{Vytvoření komponent}
+
+Na obrázku \ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje 2 věci, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializována pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí instanci \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny \ref{factory}, kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
+
+\subsection{Logování}
+
+Robot Framework hojně využívá systém logování, který ovlivňuje zobrazení výsledků jednotlivých testů. Pro logování byla vybrána následující architektura:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{images/Logovani.png}
+    \caption{Architektura logování}
+    \label{fig:placeholder}
+\end{figure}
+
+\texttt{ILogger} je rozhraní, které musí každý logger splňovat. Každá stávající (potenciálně budoucí) je pak singleton \ref{singleton}, který implementuje jednotlivé loggery. Instance \texttt{RobotLogger} a \texttt{DefaultLogger} jsou vlastně jen adaptéry \ref{adapter}, které mění rozhraní původních loggerů na rozhraní \texttt{ILogger} pro jednodušší unifikované použití ve zbytku kódu. 
+
+\texttt{LibraryLogger} je poté taky singleton a hlavní logger, který se používá ve zbytku aplikace. Obsahuje odkaz na \texttt{ILogger}, na který deleguje veškerou svojí práci.
 
 \chapter{Implementace}
 
