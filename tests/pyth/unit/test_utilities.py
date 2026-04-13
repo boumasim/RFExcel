@@ -6,16 +6,20 @@ from openpyxl import Workbook
 
 from rfexcel.exception.library_exceptions import InvalidCellNameException
 from rfexcel.utils.types import *
-from rfexcel.utils.utilities import (convert_string_to_dict_row_data,
-                                     convert_xls_to_xlsx,
-                                     headers_to_header_map,
-                                     parse_cell_coordinate,
-                                     safe_str_to_type_cast, search_in_row)
+from rfexcel.utils.utilities import (
+    convert_string_to_dict_row_data,
+    convert_xls_to_xlsx,
+    headers_to_header_map,
+    parse_cell_coordinate,
+    safe_str_to_type_cast,
+    search_in_row,
+)
 from tests.pyth.conftest import XLS_FILE
 
 # ---------------------------------------------------------------------------
 # safe_str_to_type_cast
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     ("value", "expected"),
@@ -38,10 +42,12 @@ from tests.pyth.conftest import XLS_FILE
         ("true", True),
         ("True", True),
         ("False", False),
-        ("FaLse", "FaLse")
+        ("FaLse", "FaLse"),
     ],
 )
-def test_safe_str_to_type_cast_value(value: str, expected: str | int | float | bool) -> None:
+def test_safe_str_to_type_cast_value(
+    value: str, expected: str | int | float | bool
+) -> None:
     assert safe_str_to_type_cast(value) == expected
 
 
@@ -49,26 +55,24 @@ def test_safe_str_to_type_cast_value(value: str, expected: str | int | float | b
     ("value", "expected_type"),
     [
         ("42", int),
-
         ("3.14", float),
-        
         # conversion of float to int
         ("3.0", int),
-
         ("hello", str),
-
         ("", str),
         ("True", bool),
         ("FALSE", bool),
-        ("FaLse", str)
+        ("FaLse", str),
     ],
 )
 def test_safe_str_to_type_cast_type(value: str, expected_type: type) -> None:
     assert type(safe_str_to_type_cast(value)) is expected_type
 
+
 # ---------------------------------------------------------------------------
 # search_in_row
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     ("source_row", "search_criteria", "partial_match", "expected"),
@@ -76,28 +80,24 @@ def test_safe_str_to_type_cast_type(value: str, expected_type: type) -> None:
         ({"name": "Alice"}, {}, False, True),
         ({"name": "Alice"}, {}, True, True),
         ({}, {}, False, True),
-
         ({"name": "Alice", "age": "30"}, {"name": "Alice"}, False, True),
         ({"name": "Alice", "age": "30"}, {"name": "Alice", "age": "30"}, False, True),
-
         ({"name": "Alice"}, {"name": "Bob"}, False, False),
-
         ({"name": "Alice"}, {"city": "NY"}, False, False),
         ({"name": "Alice"}, {"city": "NY"}, True, False),
-
         ({"name": "Alice"}, {"name": "lic"}, True, True),
         ({"name": "Alice"}, {"name": "Alice"}, True, True),
-
         ({"name": "Alice"}, {"name": "Bob"}, True, False),
-
         ({"name": "Alice", "city": "NY"}, {"name": "Alice", "city": "NY"}, False, True),
-        ({"name": "Alice", "city": "NY"}, {"name": "Alice", "city": "LA"}, False, False),
-
+        (
+            {"name": "Alice", "city": "NY"},
+            {"name": "Alice", "city": "LA"},
+            False,
+            False,
+        ),
         # source row converted to int, not normalized
         ({"count": 1.0}, {"count": "1"}, False, False),
         ({"count": 1.0}, {"count": "1"}, True, True),
-
-
         ({"count": 42}, {"count": "42"}, False, True),
         # source_row treated as string, not normalized
         ({"count": 42}, {"count": "2"}, True, True),
@@ -118,6 +118,7 @@ def test_search_in_row(
 # headers_to_header_map
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("headers", "expected"),
     [
@@ -125,19 +126,17 @@ def test_search_in_row(
         (["A", "B", "C"], {"A": 1, "B": 2, "C": 3}),
         (["Name"], {"Name": 1}),
         ([], {}),
-
         # empty-string names excluded
         (["A", "", "C"], {"A": 1, "C": 3}),
         (["", "B", ""], {"B": 2}),
         (["", "", ""], {}),
-
         # dict form returned as-is
         ({"X": 5, "Y": 10}, {"X": 5, "Y": 10}),
         ({"Name": 1, "Age": 3}, {"Name": 1, "Age": 3}),
         ({}, {}),
     ],
 )
-def test_headers_to_header_map(headers: HeaderMap , expected: dict[str, int]) -> None:
+def test_headers_to_header_map(headers: HeaderMap, expected: dict[str, int]) -> None:
     assert headers_to_header_map(headers) == expected
 
 
@@ -145,36 +144,28 @@ def test_headers_to_header_map(headers: HeaderMap , expected: dict[str, int]) ->
 # convert_string_to_dict_row_data
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("data", "delimiter", "expected"),
     [
         # basic key=value pairs with default delimiter
         ("animal=cat;person=Ted", ";", {"animal": "cat", "person": "Ted"}),
-
         # single pair
         ("key=value", ";", {"key": "value"}),
-
         # value that itself contains = (e.g. a URL)
         ("url=http://a.com/b=1", ";", {"url": "http://a.com/b=1"}),
-
         # empty value
         ("key=", ";", {"key": ""}),
-
         # custom delimiter
         ("a=1|b=2", "|", {"a": "1", "b": "2"}),
-
         # segments without = are silently ignored
         ("a=1;garbage;b=2", ";", {"a": "1", "b": "2"}),
-
         # key whitespace stripped; value leading space are also stripped
         ("key= value", ";", {"key": "value"}),
-
         # empty string → empty dict
         ("", ";", {}),
-
         # only delimiter → all segments empty/no = → empty dict
         (";;;", ";", {}),
-
         # dict input returned as a copy (not the same object)
         ({"x": "1", "y": "2"}, ";", {"x": "1", "y": "2"}),
     ],
@@ -199,6 +190,7 @@ def test_convert_string_to_dict_row_data_dict_input_is_a_copy() -> None:
 # parse_cell_coordinate
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("coordinate", "zero_based", "expected"),
     [
@@ -208,8 +200,7 @@ def test_convert_string_to_dict_row_data_dict_input_is_a_copy() -> None:
         ("C3", False, (3, 3)),
         ("A10", False, (10, 1)),
         ("Z1", False, (1, 26)),
-        ("AA1", False, (1, 27)),    # column 27 = AA
-
+        ("AA1", False, (1, 27)),  # column 27 = AA
         # zero-based
         ("A1", True, (0, 0)),
         ("B2", True, (1, 1)),
@@ -234,6 +225,7 @@ def test_parse_cell_coordinate_raises_invalid_cell_name(coordinate: str) -> None
 # ---------------------------------------------------------------------------
 # convert_xls_to_xlsx
 # ---------------------------------------------------------------------------
+
 
 def test_convert_xls_to_xlsx_returns_workbook() -> None:
     """Result must be a valid openpyxl Workbook with at least one sheet."""

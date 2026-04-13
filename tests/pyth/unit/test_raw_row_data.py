@@ -13,7 +13,6 @@ from rfexcel.model.raw_data.xlsx_raw_row_data import XlsxRawRowData
 
 RawFactory: TypeAlias = Callable[[list[Any]], IRawRowData]
 
-
 # ---------------------------------------------------------------------------
 # Factories - normalise a conceptual value list to each format's storage type
 # ---------------------------------------------------------------------------

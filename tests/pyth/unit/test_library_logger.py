@@ -12,7 +12,9 @@ def test_logger_creates_instance_on_first_call(logger_class: LoggerProtocol) -> 
 
 
 @pytest.mark.parametrize("logger_class", SINGLETON_LOGGERS)
-def test_logger_reuses_instance_on_subsequent_calls(logger_class: LoggerProtocol) -> None:
+def test_logger_reuses_instance_on_subsequent_calls(
+    logger_class: LoggerProtocol,
+) -> None:
     first = logger_class()
     second = logger_class()
     assert first is second
