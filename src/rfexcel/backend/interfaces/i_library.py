@@ -156,8 +156,8 @@ class IExcel(ABC):
 		pass
 
 class ISetExcel(ABC):
-    @abstractmethod
-    def xls_to_xlsx(self):
+	@abstractmethod
+	def xls_to_xlsx(self):
 		"""Converts an XLS file to XLSX format, returning a new IExcel instance representing the converted file."""
 		pass
 
@@ -165,4 +165,4 @@ class ISetExcel(ABC):
 	@abstractmethod
 	def writer(self) -> IWriter:
 		"""Provides access to the writer component responsible for writing data to the tabular file, with support for format conversion if necessary."""
-        pass
+		pass

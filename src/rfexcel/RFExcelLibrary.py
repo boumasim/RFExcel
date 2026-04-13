@@ -26,6 +26,7 @@ class RFExcelLibrary:
 
 	= Modes =
 
+
 	- *Edit mode* (``read_only=False``, default): Loads the full file into memory.
 	  Supports reading and writing.
 	- *Streaming mode* (``read_only=True``): Memory-efficient, read-only.
