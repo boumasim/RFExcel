@@ -2,9 +2,9 @@ from typing import override
 
 from xlrd.sheet import Cell
 
+from rfexcel.model.common_model import norm_xls_value
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.utils.types import DictRowData, HeaderMap, ListRowData
-from rfexcel.model.common_model import norm_xls_value
 
 
 class XlsRawRowData(IRawRowData):
