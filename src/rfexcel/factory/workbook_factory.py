@@ -15,23 +15,21 @@ from rfexcel.backend.reader.xls_on_demand_reader import XlsOnDemandReader
 from rfexcel.backend.reader.xls_standard_reader import XlsStandardReader
 from rfexcel.backend.reader.xlsx_edit_reader import XlsxEditReader
 from rfexcel.backend.reader.xlsx_stream_reader import XlsxStreamReader
-from rfexcel.backend.resource.csv_resource import (CsvEditResource,
-                                                   CsvStreamResource)
-from rfexcel.backend.resource.xls_resource import (XlsEditResource,
-                                                   XlsStreamResource)
-from rfexcel.backend.resource.xlsx_resource import (XlsxEditResource,
-                                                    XlsxStreamResource)
+from rfexcel.backend.resource.csv_resource import CsvEditResource, CsvStreamResource
+from rfexcel.backend.resource.xls_resource import XlsEditResource, XlsStreamResource
+from rfexcel.backend.resource.xlsx_resource import XlsxEditResource, XlsxStreamResource
 from rfexcel.backend.style.xls_style import XlsStyle
 from rfexcel.backend.style.xlsx_style import XlsxStyle
 from rfexcel.backend.writer.csv_writer import CsvWriter
 from rfexcel.backend.writer.xls_writer import XlsWriter
 from rfexcel.backend.writer.xlsx_writer import XlsxWriter
 from rfexcel.exception.library_exceptions import (
-    FileAlreadyExistsException, FileDoesNotExistException,
-    FileFormatNotSupportedException)
+	FileAlreadyExistsException,
+	FileDoesNotExistException,
+	FileFormatNotSupportedException,
+)
 from rfexcel.RFExcel import RFExcel
-from rfexcel.rfexcel_constants import (CSV_SUFFIX, VALID_SUFFIXES, XLS_SUFFIX,
-                                       XLSX_SUFFIX)
+from rfexcel.rfexcel_constants import CSV_SUFFIX, VALID_SUFFIXES, XLS_SUFFIX, XLSX_SUFFIX
 
 
 class WorkbookFactory:
