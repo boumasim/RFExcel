@@ -10,7 +10,7 @@ from tests.pyth.test_data import (CSV_EDIT, CSV_STREAM, XLS_EDIT,
 
 SUPPORTED_BACKENDS = [XLSX_EDIT, XLSX_STREAM, XLS_EDIT, XLS_ON_DEMAND]
 CSV_BACKENDS = [CSV_EDIT, CSV_STREAM]
-STREAMING_BACKENDS = [XLSX_STREAM, XLS_ON_DEMAND]
+CELL_STREAMING_BACKENDS = [XLSX_STREAM, XLS_ON_DEMAND]
 
 
 @pytest.mark.parametrize("backend_name", SUPPORTED_BACKENDS, ids=SUPPORTED_BACKENDS)
@@ -21,10 +21,7 @@ def test_get_cell_returns_expected_value_for_supported_backends(
 	open_backend(lib, backend_name)
 
 	assert lib.get_cell("A2") == "P-200"
-	if backend_name in [XLSX_STREAM, XLS_ON_DEMAND]:
-		assert lib.get_cell("C3") == 89.99
-	else:
-		assert lib.get_cell("C2") == 25.5
+	assert lib.get_cell("C3") == 89.99
 	assert lib.get_cell("C4") == 150
 
 
@@ -59,7 +56,7 @@ def test_get_cell_raises_for_invalid_coordinate_on_supported_backends(
 	with pytest.raises(InvalidCellNameException):
 		lib.get_cell("not-a-cell")
 
-@pytest.mark.parametrize("backend_name", STREAMING_BACKENDS, ids=STREAMING_BACKENDS)
+@pytest.mark.parametrize("backend_name", CELL_STREAMING_BACKENDS, ids=CELL_STREAMING_BACKENDS)
 def test_get_cell_raises_when_revisiting_same_row_in_xlsx_stream_mode(
 	lib: RFExcelLibrary,
 	backend_name: str,

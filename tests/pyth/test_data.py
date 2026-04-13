@@ -1,11 +1,20 @@
 import shutil
+from pathlib import Path
 from typing import Any
 
 from rfexcel.RFExcelLibrary import RFExcelLibrary
-from tests.pyth.conftest import CSV_FILE, XLS_FILE, XLSX_FILE, Path
 
 RowData = dict[str, Any]
 RowsData = list[RowData]
+
+# ---------------------------------------------------------------------------
+# File data
+# ---------------------------------------------------------------------------
+_RESOURCES = Path(__file__).parent.parent / "resources"
+XLSX_FILE  = str(_RESOURCES / "data.xlsx")
+XLSX2_FILE = str(_RESOURCES / "data2.xlsx")
+CSV_FILE   = str(_RESOURCES / "data.csv")
+XLS_FILE   = str(_RESOURCES / "example.xls")
 
 # ---------------------------------------------------------------------------
 # Constants
