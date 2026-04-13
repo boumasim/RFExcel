@@ -4,6 +4,7 @@ from rfexcel.backend.resource.i_resource import IResource
 from rfexcel.exception.library_exceptions import StreamingViolationException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.null_raw_row_data import NullRawRowData
+
 from .i_reader import IReader
 
 

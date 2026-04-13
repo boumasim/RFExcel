@@ -6,6 +6,7 @@ from rfexcel.exception.library_exceptions import StreamingViolationException
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
 from rfexcel.model.raw_data.null_raw_row_data import NullRawRowData
 
+
 class CsvStreamReader(IReader):
     def __init__(self):
         pass
