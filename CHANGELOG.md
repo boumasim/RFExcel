@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/boumasim/RFExcel/compare/v0.8.1...v0.8.2) (2026-04-13)
+
+
+### Documentation
+
+* **app:** api docs change and interfaces docs ([#30](https://github.com/boumasim/RFExcel/issues/30)) ([99b8474](https://github.com/boumasim/RFExcel/commit/99b84742028299e6e8f10a722957463a9cc622a8))
+
 ## [0.8.1](https://github.com/boumasim/RFExcel/compare/v0.8.0...v0.8.1) (2026-04-13)
 
 
