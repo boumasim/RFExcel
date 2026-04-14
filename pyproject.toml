@@ -31,5 +31,6 @@ ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
-indent-style = "tab"
+indent-style = "space"
+indent-width = 4
 line-ending = "lf"
