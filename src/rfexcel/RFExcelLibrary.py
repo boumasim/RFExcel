@@ -99,6 +99,13 @@ class RFExcelLibrary:
 		"""The currently active workbook instance, or ``None`` if no workbook is open."""
 		return self._active_workbook
 
+	@property
+	def _workbook(self) -> IExcel:
+		"""Returns the active workbook, raising ``WorkbookNotOpenException`` if none is open."""
+		if self._active_workbook is None:
+			raise WorkbookNotOpenException()
+		return self._active_workbook
+
 	@not_keyword  # pyright: ignore[reportUntypedFunctionDecorator]
 	def _wrap_public_result(self, value: Any) -> Any:
 		"""Recursively converts dictionaries to Robot Framework DotDicts."""
@@ -247,17 +254,14 @@ class RFExcelLibrary:
 		| ${rows} =     | Get Rows            | search_criteria=${dict}                 |                    |
 		| ${rows} =     | Get Rows            | header_row=2                            |                    |
 		"""
-		if self._active_workbook:
-			result = self._active_workbook.get_rows(
-				header_row=header_row,
-				search_criteria=search_criteria,
-				partial_match=partial_match,
-				one_row=one_row,
-				**kwargs,
-			)
-			return self._wrap_public_result(result)
-		else:
-			raise WorkbookNotOpenException()
+		result = self._workbook.get_rows(
+			header_row=header_row,
+			search_criteria=search_criteria,
+			partial_match=partial_match,
+			one_row=one_row,
+			**kwargs,
+		)
+		return self._wrap_public_result(result)
 
 	@overload
 	def get_row(self, row: int, headers: None = ..., **kwargs: Any) -> list[NativeType]: ...
@@ -301,11 +305,8 @@ class RFExcelLibrary:
 		| ${row} =       | Get Row             | 2    | headers=${hmap}           |               |
 		"""
 		resolved: HeaderSpec = headers if headers is not None else []
-		if self._active_workbook:
-			result = self._active_workbook.get_row(row=row, headers=resolved, **kwargs)
-			return self._wrap_public_result(result)
-		else:
-			raise WorkbookNotOpenException()
+		result = self._workbook.get_row(row=row, headers=resolved, **kwargs)
+		return self._wrap_public_result(result)
 
 	@keyword("Get Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def get_cell(self, cell_name: str) -> NativeType:
@@ -334,9 +335,7 @@ class RFExcelLibrary:
 		| Load Workbook | ${CURDIR}/data.xls  |
 		| ${value} =    | Get Cell            | C3 |
 		"""
-		if self._active_workbook:
-			return self._active_workbook.get_cell(cell_name=cell_name)
-		raise WorkbookNotOpenException()
+		return self._workbook.get_cell(cell_name=cell_name)
 
 	@keyword("Set Cell")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
@@ -367,10 +366,7 @@ class RFExcelLibrary:
 		| Set Cell      | C3                  | ${3.14} |       |
 		| Save Workbook | ${OUTPUT_DIR}${/}result.xlsx  |       |
 		"""
-		if self._active_workbook:
-			self._active_workbook.set_cell(cell_name=cell_name, value=value)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.set_cell(cell_name=cell_name, value=value)
 
 	@keyword("List Sheet Names")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def list_sheet_names(self) -> list[str]:
@@ -392,10 +388,7 @@ class RFExcelLibrary:
 		| Load Workbook       | ${CURDIR}/data.xls   |
 		| ${sheets} =         | List Sheet Names     |
 		"""
-		if self._active_workbook:
-			return self._active_workbook.list_sheet_names()
-		else:
-			raise WorkbookNotOpenException()
+		return self._workbook.list_sheet_names()
 
 	@keyword("Switch Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def switch_sheet(self, name: str) -> None:
@@ -422,10 +415,7 @@ class RFExcelLibrary:
 		| Load Workbook  | ${CURDIR}/data.xls  |        |
 		| Switch Sheet   | Second              |        |
 		"""
-		if self._active_workbook:
-			self._active_workbook.switch_sheet(name)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.switch_sheet(name)
 
 	@keyword("Add Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def add_sheet(self, name: str) -> None:
@@ -451,10 +441,7 @@ class RFExcelLibrary:
 		| ${sheets} =    | List Sheet Names    |          |
 		| Should Contain | ${sheets}           | NewSheet |
 		"""
-		if self._active_workbook:
-			self._active_workbook.add_sheet(name)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.add_sheet(name)
 
 	@keyword("Delete Sheet")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def delete_sheet(self, name: str) -> None:
@@ -481,10 +468,7 @@ class RFExcelLibrary:
 		| ${sheets} =        | List Sheet Names    |          |
 		| Should Not Contain | ${sheets}           | OldSheet |
 		"""
-		if self._active_workbook:
-			self._active_workbook.delete_sheet(name)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.delete_sheet(name)
 
 	@keyword("Save Workbook")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def save_workbook(self, path: str | None = None) -> None:
@@ -516,11 +500,8 @@ class RFExcelLibrary:
 		| Add Sheet      | NewSheet                     |                              |
 		| Save Workbook  | ${OUTPUT_DIR}${/}result.xlsx |                              |
 		"""
-		if self._active_workbook:
-			self._active_workbook.save_workbook(path=path)
-			logger.info("Workbook successfully saved")
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.save_workbook(path=path)
+		logger.info("Workbook successfully saved")
 
 	@keyword("Append Row")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def append_row(self, row_data: dict[str, InsertNativeType], header_row: int = 1) -> None:
@@ -552,10 +533,7 @@ class RFExcelLibrary:
 		| Append Row    | ${{{"Product ID": "P-100", "Price": "1.00"}}}           |              |
 		| Save Workbook |                     |                                     |              |
 		"""
-		if self._active_workbook:
-			self._active_workbook.append_row(row_data=row_data, header_row=header_row)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.append_row(row_data=row_data, header_row=header_row)
 
 	@keyword("Append Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def append_rows(self, rows: list[dict[str, InsertNativeType]], header_row: int = 1) -> None:
@@ -581,10 +559,7 @@ class RFExcelLibrary:
 		| Append Rows   | ${[${row1}, ${row2}]} |                                                               |
 		| Save Workbook |                     |                                                                         |
 		"""
-		if self._active_workbook:
-			self._active_workbook.append_rows(rows=rows, header_row=header_row)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.append_rows(rows=rows, header_row=header_row)
 
 	@keyword("Insert Row")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def insert_row(self, row_data: dict[str, InsertNativeType], row: int, header_row: int = 1) -> None:
@@ -620,10 +595,7 @@ class RFExcelLibrary:
 		| Insert Row    | ${{{"Product ID": "P-020", "Price": "2.00"}}}                        | 3 |
 		| Save Workbook |                     |                                                                       |
 		"""
-		if self._active_workbook:
-			self._active_workbook.insert_row(row_data=row_data, row=row, header_row=header_row)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.insert_row(row_data=row_data, row=row, header_row=header_row)
 
 	@keyword("Update Values")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def update_values(self, search_criteria: dict[str, str] | str, values: dict[str, InsertNativeType], header_row: int = 1, partial_match: bool = False, first_only: bool = False) -> int:
@@ -659,16 +631,13 @@ class RFExcelLibrary:
 		| Update Values  | Location=Online     | ${{{'Price': '0.00'}}}       | partial_match=True | first_only=True |
 		| Save Workbook  |                     |                                                    |                    |
 		"""
-		if self._active_workbook:
-			return self._active_workbook.update_values(
-				search_criteria=search_criteria,
-				values=values,
-				header_row=header_row,
-				partial_match=partial_match,
-				first_only=first_only,
-			)
-		else:
-			raise WorkbookNotOpenException()
+		return self._workbook.update_values(
+			search_criteria=search_criteria,
+			values=values,
+			header_row=header_row,
+			partial_match=partial_match,
+			first_only=first_only,
+		)
 
 	@keyword("Delete Rows")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def delete_rows(self, search_criteria: dict[str, str] | str, header_row: int = 1, partial_match: bool = False, one_row: bool = False) -> int:
@@ -699,15 +668,12 @@ class RFExcelLibrary:
 		| Delete Rows    | Location=Online     | partial_match=True | one_row=True |
 		| Save Workbook  |                     |                                    |                 |
 		"""
-		if self._active_workbook:
-			return self._active_workbook.delete_rows(
-				search_criteria=search_criteria,
-				header_row=header_row,
-				partial_match=partial_match,
-				first_only=one_row,
-			)
-		else:
-			raise WorkbookNotOpenException()
+		return self._workbook.delete_rows(
+			search_criteria=search_criteria,
+			header_row=header_row,
+			partial_match=partial_match,
+			first_only=one_row,
+		)
 
 	@keyword("Delete Row")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def delete_row(self, row_number: int) -> None:
@@ -735,10 +701,7 @@ class RFExcelLibrary:
 		| Delete Row     | 2                   |   |
 		| Save Workbook  |                     |   |
 		"""
-		if self._active_workbook:
-			self._active_workbook.delete_row(row_number=row_number)
-		else:
-			raise WorkbookNotOpenException()
+		self._workbook.delete_row(row_number=row_number)
 
 	@keyword("Switch Source")  # pyright: ignore[reportUntypedFunctionDecorator]
 	def switch_source(self, path: str, read_only: bool = False, **kwargs: Any) -> None:
@@ -825,25 +788,23 @@ class RFExcelLibrary:
 		| ${diffs} =       | Compare Data To       | ${CURDIR}/source.xlsx |                               |
 		| ${diffs} =       | Compare Data To       | ${CURDIR}/target.xlsx | source_header_row=2 | target_header_row=3 |
 		"""
-		if self._active_workbook:
-			if target_path is None:
-				target_path_p = self._active_workbook.resource.path.resolve()
-			else:
-				target_path_p = Path(target_path).resolve()
-			same_file = target_path is None or target_path_p == self._active_workbook.resource.path.resolve()
-			if same_file and not self._active_workbook.read_only:
-				target: IExcel = self._active_workbook
-			else:
-				target = self._factory.load_workbook(path=str(target_path_p), read_only=True)
-
-			result = self._active_workbook.compare_data_to(
-				target=target,
-				source_header_row=source_header_row,
-				target_header_row=target_header_row,
-				target_sheet=target_sheet,
-				headers=headers,
-				fail_on_diff=fail_on_diff,
-			)
-			return self._wrap_public_result(result)
+		wb = self._workbook
+		if target_path is None:
+			target_path_p = wb.resource.path.resolve()
 		else:
-			raise WorkbookNotOpenException()
+			target_path_p = Path(target_path).resolve()
+		same_file = target_path is None or target_path_p == wb.resource.path.resolve()
+		if same_file and not wb.read_only:
+			target: IExcel = wb
+		else:
+			target = self._factory.load_workbook(path=str(target_path_p), read_only=True)
+
+		result = wb.compare_data_to(
+			target=target,
+			source_header_row=source_header_row,
+			target_header_row=target_header_row,
+			target_sheet=target_sheet,
+			headers=headers,
+			fail_on_diff=fail_on_diff,
+		)
+		return self._wrap_public_result(result)
