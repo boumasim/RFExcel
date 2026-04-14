@@ -7,6 +7,7 @@ from rfexcel.exception.library_exceptions import (
     FileSaveException,
     NotSupportedInReadOnlyMode,
     OperationNotSupportedForFormat,
+    StreamingViolationException,
 )
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
@@ -174,8 +175,8 @@ class CsvStreamResource(IResource):
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if row_index <= self._last_read_row_index:
-            raise OperationNotSupportedForFormat(
-                f"Cannot fetch row {row_index} after fetching row {self._last_read_row_index} in streaming mode"
+            raise StreamingViolationException(
+                row_index=row_index, last_read=self._last_read_row_index
             )
         while self._last_read_row_index < row_index - 1:
             next(self._reader)
