@@ -13,6 +13,8 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     if: github.actor != 'github-actions[bot]'
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       - uses: googleapis/release-please-action@v4
         with:
