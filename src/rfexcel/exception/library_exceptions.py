@@ -4,43 +4,56 @@ class RFExcelException(Exception):
     def __init__(self, msg: str):
         super().__init__(msg)
 
+
 class FileFormatNotSupportedException(RFExcelException):
     def __init__(self, msg: str = "File format not supported in this library"):
         super().__init__(msg)
+
 
 class FileAlreadyExistsException(RFExcelException):
     def __init__(self, msg: str = "File with same name already exists"):
         super().__init__(msg)
 
+
 class FileDoesNotExistException(RFExcelException):
     def __init__(self, path: str):
         super().__init__(f"File {path} does not exist")
 
+
 class LibraryException(RFExcelException):
     """Exception for invalid operations on library objects"""
+
     def __init__(self, msg: str):
         super().__init__(msg)
 
+
 class InvalidCellNameException(RFExcelException):
     """Exception raised when a cell name cannot be parsed as an Excel coordinate"""
+
     def __init__(self, cell_name: str):
         super().__init__(f"Invalid cell name: {cell_name}")
 
+
 class NullComponentException(RFExcelException):
     """Raised when a Null Object method is called."""
+
     def __init__(self):
         super().__init__("Library uses null component for this operation.")
 
+
 class RowIndexOutOfBoundsException(RFExcelException):
     """Exception when row index is out of valid range"""
+
     def __init__(self, row_index: int, msg: str | None = None):
         if msg is not None:
             super().__init__(msg)
         else:
             super().__init__(f"Row index {row_index} is out of bounds")
 
+
 class StreamingViolationException(RFExcelException):
     """Exception when trying to read backwards in streaming mode"""
+
     def __init__(self, row_index: int, last_read: int):
         super().__init__(
             f"Cannot read row {row_index} in streaming mode. "
@@ -48,30 +61,42 @@ class StreamingViolationException(RFExcelException):
             f"Streaming only supports forward-only sequential access."
         )
 
+
 class OperationNotSupportedForFormat(RFExcelException):
     """Exception raised when an operation is not supported for a specific file format"""
-    def __init__(self, msg: str = "This operation is not supported for the current file format"):
+
+    def __init__(
+        self, msg: str = "This operation is not supported for the current file format"
+    ):
         super().__init__(msg)
-        
+
+
 class NotSupportedInReadOnlyMode(RFExcelException):
     """Exception raised when trying to perform a write operation in read-only mode"""
+
     def __init__(self, msg: str = "This operation is not supported in read-only mode"):
         super().__init__(msg)
 
+
 class HeadersNotDeterminedException(RFExcelException):
     """Exception raised when the header row cannot be read or is empty"""
+
     def __init__(self, header_row: int):
         super().__init__(
             f"Cannot determine headers: header row {header_row} is out of range or empty"
         )
 
+
 class FileSaveException(RFExcelException):
     """Exception raised when a workbook cannot be saved to the given path"""
+
     def __init__(self, path: str, reason: str):
         super().__init__(f"Cannot save workbook to '{path}': {reason}")
 
+
 class NotMatchingColumns(RFExcelException):
     """Exception raised when specified headers are missing in source or target during comparison"""
+
     def __init__(self, missing_in_source: list[str], missing_in_target: list[str]):
         parts: list[str] = []
         if missing_in_target:
@@ -81,12 +106,16 @@ class NotMatchingColumns(RFExcelException):
         detail = f" - {', '.join(parts)}" if parts else ""
         super().__init__(f"Column mismatch{detail}")
 
+
 class WorkbookNotOpenException(RFExcelException):
     """Exception raised when trying to operate on a workbook that is not open"""
+
     def __init__(self, msg: str = "No workbook is currently open"):
         super().__init__(msg)
 
+
 class SheetDoesNotExistException(RFExcelException):
     """Exception raised when a requested sheet name does not exist in the workbook"""
+
     def __init__(self, sheet_name: str):
         super().__init__(f"Sheet with this name: {sheet_name} does not exist")

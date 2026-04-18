@@ -7,7 +7,13 @@ from openpyxl.cell.read_only import EmptyCell
 from openpyxl.chartsheet import Chartsheet
 from openpyxl.worksheet.worksheet import Worksheet
 
-from rfexcel.exception.library_exceptions import FileSaveException, LibraryException, NotSupportedInReadOnlyMode, SheetDoesNotExistException, StreamingViolationException
+from rfexcel.exception.library_exceptions import (
+    FileSaveException,
+    LibraryException,
+    NotSupportedInReadOnlyMode,
+    SheetDoesNotExistException,
+    StreamingViolationException,
+)
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.cell_data.xlsx_raw_cell_data import XlsxRawCellData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
@@ -23,13 +29,15 @@ class XlsxEditResource(IResource):
     def __init__(self, wb: Workbook, path: Path):
         super().__init__(path)
         self._wb: Workbook = wb
-        self._active_sheet: Worksheet | None = wb.worksheets[0] if wb.worksheets else None
+        self._active_sheet: Worksheet | None = (
+            wb.worksheets[0] if wb.worksheets else None
+        )
 
     @property
     @override
     def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
-    
+
     @property
     @override
     def current_sheet(self) -> str:
@@ -50,7 +58,9 @@ class XlsxEditResource(IResource):
         if row_index > max_rows or row_index < 1:
             raise StopIteration()
         row_values = next(
-            self._active_sheet.iter_rows(min_row=row_index, max_row=row_index, values_only=False)
+            self._active_sheet.iter_rows(
+                min_row=row_index, max_row=row_index, values_only=False
+            )
         )
         return XlsxRawRowData(row_values)
 
@@ -59,7 +69,9 @@ class XlsxEditResource(IResource):
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         row_index, col_index = parse_cell_coordinate(cell_name)
-        return XlsxRawCellData(self._active_sheet.cell(row=row_index, column=col_index), cell_name)
+        return XlsxRawCellData(
+            self._active_sheet.cell(row=row_index, column=col_index), cell_name
+        )
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -86,7 +98,7 @@ class XlsxEditResource(IResource):
     @override
     def save(self, path: Path | None = None) -> None:
         target = path or self._path
-        if target.suffix.lower() == '.xls':
+        if target.suffix.lower() == ".xls":
             logger.warn(
                 f"Saving xlsx content to '{target.name}' with a .xls extension. "
                 "Consider providing a .xlsx path."
@@ -147,7 +159,7 @@ class XlsxStreamResource(IResource):
         self._row_generator: Iterator[tuple[Any, ...]] | None = None
         self._last_read_row_index = 0
 
-    def _get_generator(self) -> Iterator[tuple[Any, ...]]  :
+    def _get_generator(self) -> Iterator[tuple[Any, ...]]:
         if self._row_generator is None:
             self._row_generator = (
                 self._active_sheet.iter_rows(values_only=False)
@@ -160,27 +172,29 @@ class XlsxStreamResource(IResource):
     @override
     def active_sheets(self) -> Worksheet | Chartsheet | None:
         return self._active_sheet
-    
+
     @property
     @override
     def current_sheet(self) -> str:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         return self._active_sheet.title
-    
+
     @property
     @override
     def last_read_row_index(self) -> int:
         return self._last_read_row_index
-    
+
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
         if not self._active_sheet:
             raise LibraryException("No active worksheet")
         if row_index <= self._last_read_row_index:
-            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
+            raise StreamingViolationException(
+                row_index=row_index, last_read=self._last_read_row_index
+            )
         gen = self._get_generator()
-        while(self._last_read_row_index < row_index - 1):
+        while self._last_read_row_index < row_index - 1:
             next(gen)
             self._last_read_row_index += 1
         row_data = next(gen)
@@ -193,7 +207,9 @@ class XlsxStreamResource(IResource):
             raise LibraryException("No active worksheet")
         row_index, col_index = parse_cell_coordinate(cell_name)
         if row_index <= self._last_read_row_index:
-            raise StreamingViolationException(row_index=row_index, last_read=self._last_read_row_index)
+            raise StreamingViolationException(
+                row_index=row_index, last_read=self._last_read_row_index
+            )
         gen = self._get_generator()
         while self._last_read_row_index < row_index - 1:
             try:
@@ -218,35 +234,45 @@ class XlsxStreamResource(IResource):
     def switch_sheet(self, name: str) -> None:
         if name not in self._wb.sheetnames:
             raise SheetDoesNotExistException(name)
-        if self._row_generator is not None:
-            self._row_generator.close()  # type: ignore[attr-defined]
         self._active_sheet = self._wb[name]
         self._row_generator = None
         self._last_read_row_index = 0
 
     @override
     def add_sheet(self, name: str) -> None:
-        raise NotSupportedInReadOnlyMode("Adding sheets is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Adding sheets is not supported in streaming mode"
+        )
 
     @override
     def delete_sheet(self, name: str) -> None:
-        raise NotSupportedInReadOnlyMode("Deleting sheets is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Deleting sheets is not supported in streaming mode"
+        )
 
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Appending rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Appending rows is not supported in streaming mode"
+        )
 
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Updating rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Updating rows is not supported in streaming mode"
+        )
 
     @override
     def delete_row(self, row_index: int) -> None:
-        raise NotSupportedInReadOnlyMode("Deleting rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Deleting rows is not supported in streaming mode"
+        )
 
     @override
     def insert_row(self, row_index: int, cell_data: ColumnValues) -> None:
-        raise NotSupportedInReadOnlyMode("Inserting rows is not supported in streaming mode")
+        raise NotSupportedInReadOnlyMode(
+            "Inserting rows is not supported in streaming mode"
+        )
 
     @override
     def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
@@ -254,11 +280,10 @@ class XlsxStreamResource(IResource):
 
     @override
     def save(self, path: Path | None = None) -> None:
-        raise NotSupportedInReadOnlyMode("Saving is not supported in streaming (read-only) mode")
+        raise NotSupportedInReadOnlyMode(
+            "Saving is not supported in streaming (read-only) mode"
+        )
 
     @override
     def close(self):
-        if self._row_generator is not None:
-            self._row_generator.close()  # type: ignore[attr-defined]
-            self._row_generator = None
         self._wb.close()

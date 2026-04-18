@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable, Literal, TypeAlias, cast
 
 import pytest
 import xlrd
@@ -24,7 +24,7 @@ def _make_csv(values: list[Any]) -> IRawRowData:
 
 def _xlrd_cell(ctype: int, value: Any) -> xlrd.sheet.Cell:
     """Build an xlrd Cell while keeping test intent explicit."""
-    return xlrd.sheet.Cell(ctype, value)
+    return xlrd.sheet.Cell(cast(Literal[0, 1, 2, 3, 4, 5, 6], ctype), value)
 
 
 def _make_xls(values: list[Any]) -> IRawRowData:
@@ -67,7 +67,6 @@ _IDS = ["csv", "xls", "xlsx_cell_mode"]
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
-    """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
     result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
     assert result["invalid_col"] == ""
@@ -76,14 +75,12 @@ def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_none_or_empty_column(factory: RawFactory) -> None:
-    """A blank/None cell in a header row must not produce a phantom key."""
     row = factory(["Name", None, "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_whitespace_only_column(factory: RawFactory) -> None:
-    """A whitespace-only cell must be excluded from the header map."""
     row = factory(["Name", "   ", "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
@@ -161,9 +158,6 @@ def test_null_get_list_row_data_warns_about_row_data() -> None:
 def test_boolean_get_list_row_data_returns_bool_not_int(
     factory: RawFactory, bool_value: bool, expected: bool
 ) -> None:
-    """
-    Every backend must produce a strict bool from get_list_row_data()
-    """
     row = factory([bool_value])
     result = row.get_list_row_data()
     assert result == [expected]
