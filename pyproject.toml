@@ -9,7 +9,7 @@ description = "A Robot Framework library for reading, writing, and manipulating 
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
-    { name = "Simon Bouma", email = "boumasim@users.noreply.github.com" }
+    { name = "boumasim" }
 ]
 requires-python = ">=3.10"
 keywords = [
