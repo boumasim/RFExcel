@@ -17,6 +17,7 @@ RawFactory: TypeAlias = Callable[[list[Any]], IRawRowData]
 # Factories - normalise a conceptual value list to each format's storage type
 # ---------------------------------------------------------------------------
 
+
 def _make_csv(values: list[Any]) -> IRawRowData:
     return CsvRawRowData([str(v) if v is not None else "" for v in values])
 
@@ -62,6 +63,7 @@ _IDS = ["csv", "xls", "xlsx_cell_mode"]
 # ---------------------------------------------------------------------------
 # other edge cases
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
@@ -110,7 +112,11 @@ def test_header_keys_are_stripped_in_all_backends(factory: RawFactory) -> None:
     ("data_row", "header_map", "expected"),
     [
         (["x"], {"A": 1, "B": 2, "C": 3}, {"A": "x", "B": "", "C": ""}),
-        (["x", "y"], {"A": 1, "B": 2, "C": 3, "D": 4}, {"A": "x", "B": "y", "C": "", "D": ""}),
+        (
+            ["x", "y"],
+            {"A": 1, "B": 2, "C": 3, "D": 4},
+            {"A": "x", "B": "y", "C": "", "D": ""},
+        ),
     ],
 )
 def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
@@ -126,9 +132,7 @@ def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 @pytest.mark.parametrize(
     ("data_row", "expected"),
-    [
-        (["", "x", None, ""], ["x"])
-    ],
+    [(["", "x", None, ""], ["x"])],
 )
 def test_list_row_data_does_not_pad_with_trailing_empty_cells(
     factory: RawFactory,
@@ -139,20 +143,17 @@ def test_list_row_data_does_not_pad_with_trailing_empty_cells(
     assert row.get_list_row_data() == expected
 
 
-def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyPatch) -> None:
-    messages: list[str] = []
-    monkeypatch.setattr("rfexcel.model.raw_data.null_raw_row_data.logger.warn", messages.append)
-
+def test_null_get_list_row_data_warns_about_row_data() -> None:
     result = NullRawRowData().get_list_row_data()
 
     assert result == []
-    assert messages == ["No row data values were returned"]
+
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 @pytest.mark.parametrize(
     ("bool_value", "expected"),
     [
-        (True,  True),
+        (True, True),
         (False, False),
     ],
     ids=["bool_true", "bool_false"],

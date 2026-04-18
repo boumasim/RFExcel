@@ -336,8 +336,8 @@ class RFExcel(IExcel, ISetExcel):
 				differences: ColumnDifference = {}
 
 				for h in compare_headers:
-					s_val = src_dict.get(h)
-					t_val = tgt_dict.get(h)
+					s_val: NativeType = src_dict.get(h, "")
+					t_val: NativeType = tgt_dict.get(h, "")
 
 					if s_val != t_val:
 						differences[h] = {"source": s_val, "target": t_val}

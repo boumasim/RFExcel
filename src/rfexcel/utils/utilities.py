@@ -12,12 +12,13 @@ _NUMBER_REGEX = re.compile(r"^-?\d+(?:\.\d+)?$")
 _TRUE_VALUES = frozenset({"true", "True", "TRUE"})
 _FALSE_VALUES = frozenset({"false", "False", "FALSE"})
 
+
 def safe_str_to_type_cast(value: str) -> str | int | float | bool:
     """
     Transforms string to either float, int, bool or keeps it as a string.
     """
     cleaned = value.strip()
-    
+
     if _NUMBER_REGEX.match(cleaned):
         num = float(cleaned)
         if num.is_integer():
@@ -29,7 +30,10 @@ def safe_str_to_type_cast(value: str) -> str | int | float | bool:
         return False
     return cleaned
 
-def search_in_row(source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool) -> bool:
+
+def search_in_row(
+    source_row: DictRowData, search_criteria: dict[str, str], partial_match: bool
+) -> bool:
     """Returns True if ALL rules in search_criteria match source_row (AND logic).
 
     Each key-value pair in search_criteria is one rule. A rule matches when:
@@ -69,7 +73,9 @@ def headers_to_header_map(headers: HeaderSpec) -> HeaderMap:
     return {name: i + 1 for i, name in enumerate(headers) if name}
 
 
-def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str = ';') -> dict[str, str]:
+def convert_string_to_dict_row_data(
+    data: dict[str, str] | str, delimiter: str = ";"
+) -> dict[str, str]:
     """Converts a string like ``animal=cat;person=Ted`` into a dict[str, str].
 
     Each segment separated by ``delimiter`` must contain ``=``. Everything
@@ -83,11 +89,12 @@ def convert_string_to_dict_row_data(data: dict[str, str] | str, delimiter: str =
     result: dict[str, str] = {}
     for segment in data.split(delimiter):
         segment = segment.strip()
-        if '=' not in segment:
+        if "=" not in segment:
             continue
-        key, _, value = segment.partition('=')
+        key, _, value = segment.partition("=")
         result[key.strip()] = value.strip()
     return result
+
 
 def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
     """
@@ -98,21 +105,22 @@ def convert_xls_to_xlsx(xls_path: Path) -> Workbook:
         xlsx_book = Workbook()
         if xlsx_book.active:
             xlsx_book.remove(xlsx_book.active)
-                
+
         for sheet_idx in range(xls_book.nsheets):
             xls_sheet = xls_book.sheet_by_index(sheet_idx)
             xlsx_sheet = xlsx_book.create_sheet(title=xls_sheet.name)
-                
+
             for row_idx in range(xls_sheet.nrows):
                 for col_idx in range(xls_sheet.ncols):
                     xlsx_sheet.cell(
                         row=row_idx + 1,
                         column=col_idx + 1,
-                        value=xls_sheet.cell_value(row_idx, col_idx)
+                        value=xls_sheet.cell_value(row_idx, col_idx),
                     )
     finally:
         xls_book.release_resources()
     return xlsx_book
+
 
 def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[int, int]:
     """
@@ -120,7 +128,7 @@ def parse_cell_coordinate(coordinate: str, zero_based: bool = False) -> tuple[in
     If zero_based is True, returns zero-based indices; otherwise, returns one-based.
     Xlrd is 0-based, openpyxl is 1-based, so this function can be used to convert coordinates accordingly.
     """
-    
+
     try:
         row, col = coordinate_to_tuple(coordinate)
     except (TypeError, ValueError, UnboundLocalError) as exc:
