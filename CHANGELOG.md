@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/boumasim/RFExcel/compare/v0.8.2...v0.9.0) (2026-04-18)
+
+
+### Features
+
+* **release:** PyPI release ([72679be](https://github.com/boumasim/RFExcel/commit/72679be726e2a6f5d9e818f64c2c01c8c725a874))
+
 ## [0.8.2](https://github.com/boumasim/RFExcel/compare/v0.8.1...v0.8.2) (2026-04-13)
 
 
