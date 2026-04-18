@@ -92,6 +92,24 @@ class RFExcel(IExcel, ISetExcel):
 		except StopIteration:
 			raise HeadersNotDeterminedException(header_row)
 
+	@staticmethod
+	def _iter_rows(
+		reader: IReader,
+		resource: IResource,
+		header_map: HeaderMap,
+		start_idx: int,
+		**kwargs: Any,
+	) -> Iterator[tuple[int, DictRowData]]:
+		"""Yields (1-based row index, row dict) for every data row from start_idx onward."""
+		idx = start_idx
+		while True:
+			try:
+				row = reader.get_row(row_idx=idx, resource=resource, **kwargs)
+				yield idx, row.get_dict_row_data(header_map)
+				idx += 1
+			except StopIteration:
+				return
+
 	@override
 	def close(self):
 		self._resource.close()
@@ -113,23 +131,16 @@ class RFExcel(IExcel, ISetExcel):
 			raise HeadersNotDeterminedException(header_row)
 
 		result: list[DictRowData] = []
-		row_index = header_row + 1
 
-		while True:
-			try:
-				row = self._reader.get_row(row_idx=row_index, resource=self._resource, **kwargs)
-				row_dict = row.get_dict_row_data(header_map)
-				if not search_criteria_dict or search_in_row(
-					source_row=row_dict,
-					search_criteria=search_criteria_dict,
-					partial_match=partial_match,
-				):
-					result.append(row_dict)
-					if one_row:
-						break
-				row_index += 1
-			except StopIteration:
-				break
+		for _, row_dict in self._iter_rows(self._reader, self._resource, header_map, header_row + 1, **kwargs):
+			if not search_criteria_dict or search_in_row(
+				source_row=row_dict,
+				search_criteria=search_criteria_dict,
+				partial_match=partial_match,
+			):
+				result.append(row_dict)
+				if one_row:
+					break
 
 		return result if not one_row else (result[0] if result else {})
 
@@ -222,22 +233,16 @@ class RFExcel(IExcel, ISetExcel):
 		if not header_map:
 			raise HeadersNotDeterminedException(header_row)
 		matches: list[int] = []
-		row_index = header_row + 1
-		while True:
-			try:
-				row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-				row_dict = row.get_dict_row_data(header_map)
-				if search_in_row(
-					source_row=row_dict,
-					search_criteria=search_criteria_dict,
-					partial_match=partial_match,
-				):
-					matches.append(row_index)
-					if first_only:
-						break
-				row_index += 1
-			except StopIteration:
-				break
+
+		for row_index, row_dict in self._iter_rows(self._reader, self._resource, header_map, header_row + 1):
+			if search_in_row(
+				source_row=row_dict,
+				search_criteria=search_criteria_dict,
+				partial_match=partial_match,
+			):
+				matches.append(row_index)
+				if first_only:
+					break
 		for idx in reversed(matches):
 			self._writer.delete_row(idx, self._resource)
 		return len(matches)
@@ -267,23 +272,18 @@ class RFExcel(IExcel, ISetExcel):
 			raise HeadersNotDeterminedException(header_row)
 		update_cell_data: ColumnValues = {col: values[name] for name, col in header_map.items() if name in values}
 		updated = 0
-		row_index = header_row + 1
-		while True:
-			try:
-				row = self._reader.get_row(row_idx=row_index, resource=self._resource)
-				row_dict = row.get_dict_row_data(header_map)
-				if search_in_row(
-					source_row=row_dict,
-					search_criteria=search_criteria_dict,
-					partial_match=partial_match,
-				):
-					self._writer.update_row(row_index, update_cell_data, self._resource)
-					updated += 1
-					if first_only:
-						break
-				row_index += 1
-			except StopIteration:
-				break
+
+		for row_index, row_dict in self._iter_rows(self._reader, self._resource, header_map, header_row + 1):
+			if search_in_row(
+				source_row=row_dict,
+				search_criteria=search_criteria_dict,
+				partial_match=partial_match,
+			):
+				self._writer.update_row(row_index, update_cell_data, self._resource)
+				updated += 1
+				if first_only:
+					break
+
 		return updated
 
 	@override
@@ -318,24 +318,9 @@ class RFExcel(IExcel, ISetExcel):
 						missing_in_target=missing_in_target,
 					)
 
-			def iter_rows(
-				reader: IReader,
-				resource: IResource,
-				header_map: HeaderMap,
-				start_idx: int,
-			) -> Iterator[tuple[int, DictRowData]]:
-				idx = start_idx
-				while True:
-					try:
-						row = reader.get_row(row_idx=idx, resource=resource)
-						yield idx, row.get_dict_row_data(header_map)
-						idx += 1
-					except StopIteration:
-						break
-
 			result: list[RowDifference] = []
-			src_gen = iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
-			tgt_gen = iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
+			src_gen = self._iter_rows(self._reader, self._resource, source_header_map, source_header_row + 1)
+			tgt_gen = self._iter_rows(target.reader, target.resource, target_header_map, target_header_row + 1)
 
 			_fill: tuple[None, DictRowData] = (None, {})
 			for src_data, tgt_data in zip_longest(src_gen, tgt_gen, fillvalue=_fill):
@@ -351,8 +336,8 @@ class RFExcel(IExcel, ISetExcel):
 				differences: ColumnDifference = {}
 
 				for h in compare_headers:
-					s_val = src_dict.get(h)
-					t_val = tgt_dict.get(h)
+					s_val: NativeType = src_dict.get(h, "")
+					t_val: NativeType = tgt_dict.get(h, "")
 
 					if s_val != t_val:
 						differences[h] = {"source": s_val, "target": t_val}

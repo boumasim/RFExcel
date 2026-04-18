@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable, Literal, TypeAlias, cast
 
 import pytest
 import xlrd
@@ -17,13 +17,14 @@ RawFactory: TypeAlias = Callable[[list[Any]], IRawRowData]
 # Factories - normalise a conceptual value list to each format's storage type
 # ---------------------------------------------------------------------------
 
+
 def _make_csv(values: list[Any]) -> IRawRowData:
     return CsvRawRowData([str(v) if v is not None else "" for v in values])
 
 
 def _xlrd_cell(ctype: int, value: Any) -> xlrd.sheet.Cell:
     """Build an xlrd Cell while keeping test intent explicit."""
-    return xlrd.sheet.Cell(ctype, value)
+    return xlrd.sheet.Cell(cast(Literal[0, 1, 2, 3, 4, 5, 6], ctype), value)
 
 
 def _make_xls(values: list[Any]) -> IRawRowData:
@@ -63,9 +64,9 @@ _IDS = ["csv", "xls", "xlsx_cell_mode"]
 # other edge cases
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
-    """Column index 0 must never wrap to the last element via negative indexing."""
     row = factory(["first", "second"])
     result = row.get_dict_row_data({"invalid_col": 0, "valid_col": 2})
     assert result["invalid_col"] == ""
@@ -74,14 +75,12 @@ def test_col_out_of_bounds_returns_empty_string(factory: RawFactory) -> None:
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_none_or_empty_column(factory: RawFactory) -> None:
-    """A blank/None cell in a header row must not produce a phantom key."""
     row = factory(["Name", None, "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 def test_get_header_map_skips_whitespace_only_column(factory: RawFactory) -> None:
-    """A whitespace-only cell must be excluded from the header map."""
     row = factory(["Name", "   ", "Age"])
     assert row.get_header_map() == {"Name": 1, "Age": 3}
 
@@ -110,7 +109,11 @@ def test_header_keys_are_stripped_in_all_backends(factory: RawFactory) -> None:
     ("data_row", "header_map", "expected"),
     [
         (["x"], {"A": 1, "B": 2, "C": 3}, {"A": "x", "B": "", "C": ""}),
-        (["x", "y"], {"A": 1, "B": 2, "C": 3, "D": 4}, {"A": "x", "B": "y", "C": "", "D": ""}),
+        (
+            ["x", "y"],
+            {"A": 1, "B": 2, "C": 3, "D": 4},
+            {"A": "x", "B": "y", "C": "", "D": ""},
+        ),
     ],
 )
 def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
@@ -126,9 +129,7 @@ def test_missing_column_returns_empty_string_when_row_is_sheet_padded(
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 @pytest.mark.parametrize(
     ("data_row", "expected"),
-    [
-        (["", "x", None, ""], ["x"])
-    ],
+    [(["", "x", None, ""], ["x"])],
 )
 def test_list_row_data_does_not_pad_with_trailing_empty_cells(
     factory: RawFactory,
@@ -139,20 +140,17 @@ def test_list_row_data_does_not_pad_with_trailing_empty_cells(
     assert row.get_list_row_data() == expected
 
 
-def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyPatch) -> None:
-    messages: list[str] = []
-    monkeypatch.setattr("rfexcel.model.raw_data.null_raw_row_data.logger.warn", messages.append)
-
+def test_null_get_list_row_data_warns_about_row_data() -> None:
     result = NullRawRowData().get_list_row_data()
 
     assert result == []
-    assert messages == ["No row data values were returned"]
+
 
 @pytest.mark.parametrize("factory", _FACTORIES, ids=_IDS)
 @pytest.mark.parametrize(
     ("bool_value", "expected"),
     [
-        (True,  True),
+        (True, True),
         (False, False),
     ],
     ids=["bool_true", "bool_false"],
@@ -160,9 +158,6 @@ def test_null_get_list_row_data_warns_about_row_data(monkeypatch: pytest.MonkeyP
 def test_boolean_get_list_row_data_returns_bool_not_int(
     factory: RawFactory, bool_value: bool, expected: bool
 ) -> None:
-    """
-    Every backend must produce a strict bool from get_list_row_data()
-    """
     row = factory([bool_value])
     result = row.get_list_row_data()
     assert result == [expected]

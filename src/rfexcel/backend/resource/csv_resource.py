@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import Any, override
 
 from rfexcel.backend.resource.i_resource import IResource
-from rfexcel.exception.library_exceptions import FileSaveException, NotSupportedInReadOnlyMode, OperationNotSupportedForFormat
+from rfexcel.exception.library_exceptions import (
+    FileSaveException,
+    NotSupportedInReadOnlyMode,
+    OperationNotSupportedForFormat,
+    StreamingViolationException,
+)
 from rfexcel.model.cell_data.i_raw_cell_data import IRawCellData
 from rfexcel.model.raw_data.csv_raw_row_data import CsvRawRowData
 from rfexcel.model.raw_data.i_raw_row_data import IRawRowData
@@ -13,23 +18,33 @@ from rfexcel.utils.types import ColumnValues, InsertNativeType
 
 
 class CsvEditResource(IResource):
-    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
+    def __init__(
+        self,
+        path: Path,
+        dialect: str = BASE_DIALECT,
+        encoding: str = BASE_ENCODING,
+        **kwargs: Any,
+    ):
         super().__init__(path)
         self._encoding = encoding
         self._dialect = dialect
 
-        with open(path, mode='r', newline='', encoding=encoding) as f:
-            self._all_rows: list[list[str]] = list(csv.reader(f, dialect=dialect, **kwargs))
+        with open(path, mode="r", newline="", encoding=encoding) as f:
+            self._all_rows: list[list[str]] = list(
+                csv.reader(f, dialect=dialect, **kwargs)
+            )
 
     @property
     @override
     def active_sheets(self) -> None:
         return None
-    
+
     @property
     @override
     def current_sheet(self) -> str:
-        raise OperationNotSupportedForFormat("CSV files do not have sheets; current_sheet is not applicable")
+        raise OperationNotSupportedForFormat(
+            "CSV files do not have sheets; current_sheet is not applicable"
+        )
 
     @property
     @override
@@ -47,7 +62,9 @@ class CsvEditResource(IResource):
 
     @override
     def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
-        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
+        raise OperationNotSupportedForFormat(
+            "Get Cell is supported only for .xlsx and .xls files"
+        )
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -55,7 +72,9 @@ class CsvEditResource(IResource):
 
     @override
     def switch_sheet(self, name: str) -> None:
-        raise OperationNotSupportedForFormat("This operation is not supported for CSV files")
+        raise OperationNotSupportedForFormat(
+            "This operation is not supported for CSV files"
+        )
 
     @override
     def add_sheet(self, name: str) -> None:
@@ -69,7 +88,7 @@ class CsvEditResource(IResource):
     def save(self, path: Path | None = None) -> None:
         target = path or self._path
         try:
-            with open(target, mode='w', newline='', encoding=self._encoding) as f:
+            with open(target, mode="w", newline="", encoding=self._encoding) as f:
                 writer = csv.writer(f, dialect=self._dialect)
                 writer.writerows(self._all_rows)
         except Exception as e:
@@ -116,7 +135,9 @@ class CsvEditResource(IResource):
 
     @override
     def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
-        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
+        raise OperationNotSupportedForFormat(
+            "Set Cell is supported only for .xlsx and .xls files"
+        )
 
     @override
     def close(self):
@@ -124,9 +145,15 @@ class CsvEditResource(IResource):
 
 
 class CsvStreamResource(IResource):
-    def __init__(self, path: Path, dialect: str = BASE_DIALECT, encoding: str = BASE_ENCODING, **kwargs: Any):
+    def __init__(
+        self,
+        path: Path,
+        dialect: str = BASE_DIALECT,
+        encoding: str = BASE_ENCODING,
+        **kwargs: Any,
+    ):
         super().__init__(path)
-        self._handle = open(path, mode='r', newline='', encoding=encoding)
+        self._handle = open(path, mode="r", newline="", encoding=encoding)
         self._reader = csv.reader(self._handle, dialect=dialect, **kwargs)
         self._last_read_row_index: int = 0
 
@@ -147,6 +174,10 @@ class CsvStreamResource(IResource):
 
     @override
     def fetch_row(self, row_index: int, **kwargs: Any) -> IRawRowData:
+        if row_index <= self._last_read_row_index:
+            raise StreamingViolationException(
+                row_index=row_index, last_read=self._last_read_row_index
+            )
         while self._last_read_row_index < row_index - 1:
             next(self._reader)
             self._last_read_row_index += 1
@@ -156,7 +187,7 @@ class CsvStreamResource(IResource):
 
     @override
     def fetch_cell(self, cell_name: str, **kwargs: Any) -> IRawCellData:
-        raise OperationNotSupportedForFormat("Get Cell is supported only for .xlsx and .xls files")
+        raise OperationNotSupportedForFormat()
 
     @override
     def get_sheet_names(self) -> list[str]:
@@ -181,9 +212,11 @@ class CsvStreamResource(IResource):
     @override
     def append_row(self, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode()
+
     @override
     def update_row(self, row_index: int, cell_data: ColumnValues) -> None:
         raise NotSupportedInReadOnlyMode()
+
     @override
     def delete_row(self, row_index: int) -> None:
         raise NotSupportedInReadOnlyMode()
@@ -194,7 +227,9 @@ class CsvStreamResource(IResource):
 
     @override
     def set_cell(self, cell_name: str, value: InsertNativeType) -> None:
-        raise OperationNotSupportedForFormat("Set Cell is supported only for .xlsx and .xls files")
+        raise OperationNotSupportedForFormat(
+            "Set Cell is supported only for .xlsx and .xls files"
+        )
 
     @override
     def close(self):
