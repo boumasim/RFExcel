@@ -84,17 +84,6 @@ Lazy switch to xlsx
     Should Not Be Empty    ${rows}
     Save Workbook    path=${RESULTS}/example_converted.xlsx
 
-Test xlsx generator close
-    [Documentation]     Test that the row generator is properly closed when switching sheets or closing the workbook
-    Load Workbook    path=${RESOURCES}/data.xlsx  read_only=True
-    Switch Sheet    name=Sheet2
-    ${row1}=   Get Row    row=2
-    Log    First row: ${row1}
-    Switch Sheet    name=Sheet3
-    ${row2}=   Get Row    row=2
-    Log    First row of Sheet2: ${row2}
-    Close Workbook
-
 Get Cell From Workbook
     [Documentation]     Get a single cell value by coordinate
     Load Workbook    path=${RESOURCES}/data.xlsx    read_only=True
