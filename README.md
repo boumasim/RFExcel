@@ -10,6 +10,10 @@ A [Robot Framework](https://robotframework.org/) library for reading, writing, a
 
 RFExcel provides Robot Framework keywords for verifying and manipulating spreadsheet data in `.xlsx`, `.xls`, and `.csv` formats. It preserves native Python types (`int`, `float`, `bool`, `datetime`) rather than coercing everything to strings, making data assertions precise and reliable.
 
+For full keyword reference see [API documentation](https://boumasim.github.io/RFExcel/RFExcel.html).
+
+Library mainly supports table like operations. For example of such a file, see tests/resources
+
 ## Features
 
 - **Multi-format support** — `.xlsx`, `.xls` (read/write), and `.csv`
@@ -44,55 +48,21 @@ pip install RFExcel
 Library    rfexcel.RFExcelLibrary
 
 *** Test Cases ***
-Read Rows From Excel
-    Load Workbook    path=data.xlsx    read_only=True
-    ${rows}=    Get Rows
-    Length Should Be    ${rows}    4
-    Should Be Equal    ${rows}[0][Product ID]    P-200
+Create New CSV File
+    [Documentation]    Create a new CSV file from scratch
+    Create Workbook    path=${RESULTS}/test_created.csv
+    Close Workbook
 
-Filter Rows By Criteria
-    Load Workbook    path=data.xlsx    read_only=True
-    ${matching}=    Get Rows    search_criteria=Product ID=P-201;Price=89.99
-    Length Should Be    ${matching}    1
-
-Append And Save
-    Load Workbook    path=data.xlsx
-    ${row}=    Create Dictionary    Product ID=P-999    Description=New Item    Price=9.99
-    Append Row    row_data=${row}
-    Save Workbook    path=output.xlsx
-
-Compare Two Files
-    Load Workbook    path=baseline.xlsx
-    ${differences}=    Compare Data To    target_path=updated.xlsx
-    Should Be Empty    ${differences}
+Get Rows from Workbook
+    [Documentation]     Get rows from workbook and verify data structure
+    Load Workbook    path=${RESOURCES}/data.csv      read_only=true
+    ${rows}=    Get Rows  one_row=true
+    Log    ${rows}
+    Should Not Be Empty    ${rows}
+    Dictionary Should Contain Key    ${rows}    Product ID
 ```
 
-## Keywords
-
-| Keyword | Description |
-|---------|-------------|
-| `Load Workbook` | Open an existing file in edit or streaming mode |
-| `Create Workbook` | Create a new empty workbook |
-| `Save Workbook` | Persist changes to disk |
-| `Close Workbook` | Close the active workbook (done automatically at test end) |
-| `Switch Source` | Swap the active file without closing first |
-| `Get Rows` | Return all (or filtered) rows as a list of dicts |
-| `Get Row` | Return a single row by row number |
-| `Append Row` | Add a row at the end of the sheet |
-| `Append Rows` | Add multiple rows at once |
-| `Insert Row` | Insert a row at a specific position |
-| `Delete Row` | Delete a row by its row number |
-| `Delete Rows` | Delete all rows matching a search criterion |
-| `Update Values` | Update column values in all matching rows |
-| `Get Cell` | Get a single cell value by coordinate (e.g. `A1`) |
-| `Set Cell` | Set a single cell value by coordinate |
-| `Compare Data To` | Diff the active workbook against another file |
-| `Switch Sheet` | Set the active sheet by name |
-| `List Sheet Names` | Return all sheet names |
-| `Add Sheet` | Add a new sheet |
-| `Delete Sheet` | Remove a sheet by name |
-
-For the full keyword reference and argument details see the [API documentation](https://boumasim.github.io/RFExcel/RFExcel.html).
+More examples in /tests/robot/example.robot
 
 ## Search Criteria
 
@@ -124,11 +94,13 @@ Cell values are returned as native Python types:
 
 > **Note:** Because types are preserved, use type-aware assertions — e.g. `Should Be Equal As Numbers` for numeric cells rather than plain `Should Be Equal`.
 
+> **Note:** Comparison for Date and Time values differ across formats, yet to be implemented
+
 ## Modes
 
 **Edit mode** (`read_only=False`, default) — loads the full file into memory, supports reading and writing.
 
-**Streaming mode** (`read_only=True`) — memory-efficient, read-only, strictly forward-only. Calling a read keyword twice on the same open workbook raises `StreamingViolationException`.
+**Streaming mode** (`read_only=True`) — memory-efficient, read-only, strictly forward-only. Each row can be read only once, forward only reading supported.
 
 ## License
 
