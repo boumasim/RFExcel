@@ -23,7 +23,7 @@ V této kapitole se budeme věnovat teoretické části bakalářské práce. Pr
 \section{Druhy vnitřní architektury}
 \label{internal architectures}
 
-Jedním z prvním, a zároveň nejdůležitějším rozhodnutích ve vývoji softwaru je jeho architektura~\cite{Architecture}~\cite{Monolitic}. Architektur je mnoho, všechny mají za cíl jednu hlavní věc: oddělení odpovědnosti jednotlivých částí softwaru. Tohoto oddělení dosahují jednotlivé architektury pomocí rozdělení na vrstvy.
+Jedním z prvních, a zároveň nejdůležitějších rozhodnutí ve vývoji softwaru je jeho architektura~\cite{Architecture}~\cite{Monolitic}. Architektur je mnoho, všechny mají za cíl jednu hlavní věc: oddělení odpovědnosti jednotlivých částí softwaru. Tohoto oddělení dosahují jednotlivé architektury pomocí rozdělení na vrstvy.
 
 Tímto rozdělením jsme u architektur schopni docílit následujících věcí:
 
@@ -38,19 +38,19 @@ Celý program je napsán v jednom repozitáři, není potřeba žádná další 
 \subsection{Vrstvená architektura}
 \label{layered architecture}
 
-Vrstvená (layered) architektura~\cite{Layer1}~\cite{LayeredBook} jedna z nejběžnějších architektur pro vývoj softwaru.  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části, které spolu úzce souvisí, poté většinou leží na stejné vrstvě.
+Vrstvená (layered) architektura~\cite{Layer1}~\cite{LayeredBook} je jedna z nejběžnějších architektur pro vývoj softwaru.  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části, které spolu úzce souvisí, poté většinou leží na stejné vrstvě.
 
 Základním rysem této architektury je, že vrstvy zásadně komunikují pouze s vrstvami, které jsou zasazené pod nimi. Architektura také zajišťuje izolaci. Změny v jednotlivých vrstvách by neměly mít vliv na vrstvy ostatní. Každá vrstva by měla mít jasně stanovenou odpovědnost. Rozdělení může vypadat následovně:
 
 \begin{itemize}
-    \item Prezenční vrstva, která je zodpovědná za komunikaci softwaru s uživatelem
+    \item Prezentační vrstva, která je zodpovědná za komunikaci softwaru s uživatelem
     \item Vrstva, která provádí aplikační požadavky aplikace
     \item Doménová vrstva, která se stará o algoritmy, komponenty
     \item Perzistentní vrstva, která se stará o data, komunikaci s databází
 \end{itemize}
 
-Tato architektura je jedna z nejznámějších a nejvíce používaných. Dobře se udržuje díky rozdělení na jednotlivé vrstvy, které se neovlivňují. Díky tomu je také jednoduší testování, kde jednotkové testy dobře otestují pouze funkčnost dané vrstvy, integrační zase komunikaci s nižšími vrstvami.
-Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Další problémem jsou vrstvy, které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern)\cite{Layer2}, který vede k~větší komplexitě a ztrátě efektivnosti.
+Tato architektura je jedna z nejznámějších a nejvíce používaných. Dobře se udržuje díky rozdělení na jednotlivé vrstvy, které se neovlivňují. Díky tomu je také jednodušší testování, kde jednotkové testy dobře otestují pouze funkčnost dané vrstvy, integrační zase komunikaci s nižšími vrstvami.
+Mezi nevýhody patří horší škálovatelnost, kdy architektura vyžaduje hodně potřebného kódu pro napsání nové funkčnosti. Dalším problémem jsou vrstvy, které občas mohou působit jako pouhý průtok informací (Sinkhole Anti Pattern)\cite{Layer2}, který vede k~větší komplexitě a ztrátě efektivnosti.
 
 \subsection{Hexagonální architektura}
 
@@ -67,11 +67,11 @@ Tato architektura rozlišuje dvě strany komunikace:
 
 Tato struktura vynucuje DIP (Dependency Inversion Principle~\cite{DIP}). Jádro aplikace určuje striktní pravidla skrz abstraktní rozhraní (Porty). Externí technologie (Adaptéry) jsou nuceny se jádru přizpůsobit, spíše než aby toto přizpůsobení dělalo jádro oproti různým externím technologiím.
 
-Toto způsobí, je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testování to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje.
+Toto způsobí, že je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testování to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje.
 
-\subsection{Mikrokernel Architectura}
+\subsection{Mikrokernel architektura}
 
-Mikrokernel architektura~\cite{Microkernel}, také známa jako „Plug-in", je ideální pro aplikace, u kterých chceme více rámcově více integrací na externí entity, u kterých přesně nevíme, jak budou vypadat. Skládá se ze dvou hlavních komponent: jádro a~přípojné komponenty. 
+Mikrokernel architektura~\cite{Microkernel}, také známa jako „Plug-in", je ideální pro aplikace, u kterých chceme rámcově více integrací na externí entity, u kterých přesně nevíme, jak budou vypadat. Skládá se ze dvou hlavních komponent: jádro a~přípojné komponenty. 
 
 V jádru se udržuje minimální funkcionalita nutná pro běh aplikace. Při změně jádra se na rozdíl od ostatních aplikací nic ve zbytku aplikace nezmění, jelikož jednotlivá pravidla a funkcionality aplikace jsou izolovány v přípojných komponentách, které jsou navzájem nezávislé.
 
@@ -104,7 +104,7 @@ Jak kompozice, tak dědičnost řeší podobný problém, jak přepoužít kód,
     \item \textbf{Slabá vazba}. Komponenty mohou být vyvíjeny a upravovány nezávisle, s~minimálním dopadem na odkazující třídu.
     \item \textbf{Runtime flexibilita}. Dovoluje změnu chování za běhu programu. Je možné mít více variací objektu bez nutnosti upravovat hierarchii tříd.
     \item \textbf{Větší zapouzdření}. Implementační detaily jsou schovány před rozhraním, vnitřní změny nemají dopad na rozhraní a uživatelský kód.
-    \item \textbf{Testovatelnost}. Komponenty se dají testovat odděleně, jednoduší jednotkové testy.
+    \item \textbf{Testovatelnost}. Komponenty se dají testovat odděleně, jednodušší jednotkové testy.
     \item \textbf{Počet tříd}. Je obecně nižší než při použití dědičnosti. Hierarchie má menší komplexitu a kód je jednodušší na udržitelnost.
 \end{enumerate}
 
@@ -116,7 +116,7 @@ Návrhové vzory (Design patterns)~\cite{DesignPatterns} jsou typická řešení
 
 \begin{itemize}
     \item Creational design patterns, které slouží jako mechanismy pro vytváření objektů s důrazem na flexibilitu a přepoužití kódu
-    \item Structual desing pattens sloužící pro složení objektů a tříd do velkých struktur, kdy zároveň zachováváme flexibilitu a efektivnost
+    \item Structural design patterns sloužící pro složení objektů a tříd do velkých struktur, kdy zároveň zachováváme flexibilitu a efektivnost
     \item Behavioral design patterns, zaměřující se na algoritmy a rozdělení odpovědnosti mezi objekty
 \end{itemize}
 
@@ -125,9 +125,9 @@ Dále vysvětlím a definuji vzory, které poté budou použity v implementaci.
 \subsection{Fasáda}
 \label{facade}
 
-Fasáda (Facade)~\cite{Fasade} je strukturální návrhový vzor, který poskytuje jednoduchý high-level interface pro knihovny, frameworky nebo komplexní množiny tříd. Při práci s takovými aplikacemi často musíme spravovat mnoho různých objektů, inicializovat je ve specifickém pořadí a řešit závislosti. To vede k provázání business logiky interních detailů implementace s externími aplikacemi, čímž se stěžuje vývoj i údržba.
+Fasáda (Facade)~\cite{Fasade} je strukturální návrhový vzor, který poskytuje jednoduchý high-level interface pro knihovny, frameworky nebo komplexní množiny tříd. Při práci s takovými aplikacemi často musíme spravovat mnoho různých objektů, inicializovat je ve specifickém pořadí a řešit závislosti. To vede k provázání business logiky interních detailů implementace s externími aplikacemi, čímž se ztěžuje vývoj i údržba.
 
-Tento návrhový vzor řeší problém pomocí zaobalení aplikace do jedné třídy (fasády), která bude mít jasně definované rozhraní. To je sice více limitující z hlediska funkcionality, která lze použít, než kdybychom aplikaci integrovali napřímo do vnitřního systému, dovolí nám to ale vybrat pouze části, které chceme vystavit externím uživatelům.
+Tento návrhový vzor řeší problém pomocí zaobalení aplikace do jedné třídy (fasády), která bude mít jasně definované rozhraní. To je sice více limitující z hlediska funkcionality, kterou lze použít, než kdybychom aplikaci integrovali napřímo do vnitřního systému, dovolí nám to ale vybrat pouze části, které chceme vystavit externím uživatelům.
 
 Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fasádě vůbec neví a interně komunikuje dále beze změny. Naopak to platí stejně, při změnách v jádru aplikace uživatel nepozná změnu, jelikož je odstíněn od detailů pomocí vystaveného rozhraní.
 
@@ -143,9 +143,9 @@ Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fas
 
 Most (Bridge)~\cite{Bridge} je strukturální návrhový vzor, který nám dovoluje rozdělit velkou třídu nebo množinu sobě podobných tříd do více hierarchií, abstrakcí a~implementací, které můžou být vyvíjeny nezávisle na sobě.
 
-Jako příklad si vezmeme geometrický objekt \texttt{Shape}. \texttt{Shape} má dvě podtřídy, \texttt{Circle} a \texttt{Square}. Tuto hierarchie chceme rozšířit o barvy, náš \texttt{Shape} zvolíme jako \texttt{Blue} a \texttt{Red}. Pomocí klasického dědění nebudou muset vzniknout třídy dvě, ale rovnou čtyři: \texttt{BlueCircle}, \texttt{RedCircle}, \texttt{BlueSquare}, \texttt{RedSquare}. Kvůli přidání dalších vlastností třídy \texttt{Shape} nám bude náročnost hierarchie růst exponenciálně. S rostoucí velikostí projektu bude udržování této architektury stále těžší a těžší.
+Jako příklad si vezmeme geometrický objekt \texttt{Shape}. \texttt{Shape} má dvě podtřídy, \texttt{Circle} a \texttt{Square}. Tuto hierarchii chceme rozšířit o barvy, náš \texttt{Shape} zvolíme jako \texttt{Blue} a \texttt{Red}. Pomocí klasického dědění nebudou muset vzniknout třídy dvě, ale rovnou čtyři: \texttt{BlueCircle}, \texttt{RedCircle}, \texttt{BlueSquare}, \texttt{RedSquare}. Kvůli přidání dalších vlastností třídy \texttt{Shape} nám bude náročnost hierarchie růst exponenciálně. S rostoucí velikostí projektu bude udržování této architektury stále těžší a těžší.
 
-Problém nastává, protože se snažíme \texttt{Shape} rozšiřovat do dvou více různých dimenzí najednou, tedy formy a barvy. Most tento problém řeší změnou z dědění na kompozici objektů. Tím dimenzi extrahujeme do separátní hierarchie, na kterou originální třída bude odkazovat místo toho, aby jí obsahovala ve své hierarchii. 
+Problém nastává, protože se snažíme \texttt{Shape} rozšiřovat do dvou více různých dimenzí najednou, tedy formy a barvy. Most tento problém řeší změnou z dědění na kompozici objektů. Tím dimenzi extrahujeme do separátní hierarchie, na kterou originální třída bude odkazovat místo toho, aby ji obsahovala ve své hierarchii. 
 
 S tímto přístupem tedy rozdělíme formu a barvy do separátních hierarchií, které pak původní třída \texttt{Shape} bude odkazovat. Pro \texttt{Blue} a \texttt{Red} vznikne tedy rozhraní \texttt{Color}, ze kterého budou dědit \texttt{Red} a \texttt{Blue}. Tím vzniká první hierarchie, podobně vznikne i hierarchie \texttt{Form} pro \texttt{Circle} a \texttt{Square}. \texttt{Square} tedy nově odkazuje pouze \texttt{Color} a \texttt{Form}, detaily jsou pro něj nezajímavé a práci deleguje na tato rozhraní. Přidání další barvy nebo formy nově nevynucuje změny v \texttt{Shape}.
 
@@ -218,7 +218,7 @@ Tímto způsobem objekt volající adaptér nemá žádnou informaci o tom, že~
 
 \subsection{Dekorátor}
 
-Dekorátor (Decorator)~\cite{Decorator} je strukturální návrhový vzor, jinak známý také jako „Wrapper", který funguje na principu zaobalení stávajícího objektu a přidáním funkcionality tomuto objektu. Tímto způsobem přidáváme objektu další chování.
+Dekorátor (Decorator)~\cite{Decorator} je strukturální návrhový vzor, jinak známý také jako „Wrapper", který funguje na principu zaobalení stávajícího objektu a~přidáním funkcionality tomuto objektu. Tímto způsobem přidáváme objektu další chování.
 
 Pracujme na knihovně, která posílá notifikace. Knihovna má hlavní třídu \texttt{Notifier}, která obsahuje pár atributů a metodu \textit{send}. Třída přijímá od klienta jako argument pole řetězců, které reprezentují emaily, kam má upozornění poslat. Později se knihovna rozšiřuje, přidají se notifikace pro Facebook, Instagram a Slack pomocí klasického dědění. Poté ale budeme dále chtít také kombinované notifikace, například Facebook a Slack. Pokud bychom tímto způsobem vytvořili všechny možné kombinace, počet tříd poroste exponenciálně.
 
@@ -227,12 +227,12 @@ Dekorátor je objekt, který zaobaluje původní objekt a udržuje si na něj re
 \subsection{Nulový objekt}
 \label{null object}
 
-Nulový objekt (Null object)~\cite{NullObject} je pouhé nahrazení návratové hodnoty null objektem, který má defaultně prázdné chování. Díky tomuto zmizí potřeba mít všude kontroly null hodnot, což mírně zjednoduší kód. Na druhou stranu vznikne potřeba vytvořit novou třídu, která bude nulový objekt reprezentovat.
+Nulový objekt (Null object)~\cite{NullObject} je pouhé nahrazení návratové hodnoty \textit{null} objektem, který má defaultně prázdné chování. Díky tomuto zmizí potřeba mít všude kontroly null hodnot, což mírně zjednoduší kód. Na druhou stranu vznikne potřeba vytvořit novou třídu, která bude nulový objekt reprezentovat.
 
 \subsection{Singleton}
 \label{singleton}
 
-Singleton~\cite{Singleton} je návrhový vzor pro výtváření objektů, který zajišťuje, že třída má pouze jednu instanci a poskytuje k ní globální přístup.
+Singleton~\cite{Singleton} je návrhový vzor pro vytváření objektů, který zajišťuje, že třída má pouze jednu instanci a poskytuje k ní globální přístup.
 
 Vzor se používá nejčastěji v situacích, kdy potřebujeme přístup ke sdílenému zdroji (databáze, soubor, apod.).
 
@@ -245,13 +245,13 @@ RF je nezávislý na operačním systému a aplikaci. Je implementován v~jazyce
 
 \subsection{Přehled frameworku}
 
-V této se zaměříme pouze na část frameworku, která se věnuje automatickému testování, jelikož pro tuto část byla napsána knihovna. RPA (Robot Process Automation) nebude dále diskutována.
+V této podsekci se zaměříme pouze na část frameworku, která se věnuje automatickému testování, jelikož pro tuto část byla napsána knihovna. RPA (Robot Process Automation) nebude dále diskutována.
 
 Celé použití frameworku sestává z použití nebo vývoje knihoven, které jsou poté podle potřeb používány v testování. Níže uvedeme případy a jejich užití z oficiálních stránek~\cite{robotframeworkOverview}: 
 
 \begin{itemize}
     \item \textbf{Browser Library}, knihovna zaměřená na testování UI a webových aplikací. Knihovna se zaměřuje na rychlost, spolehlivost a viditelnost. Je poháněna systémem Playwright. \footnote{Framework pro automatizaci webů a jejich testů běží na Chromium, Firefox a WebKit přes sdílené API.~\cite{PlaywrightGH}}
-    \item \textbf{Request Library}, která se zaměřuje na HTTP (HyperText Transfer Protocol) API (Aplication Programing Interface) testování. Jedná se o zaobalení populární Python Request Library
+    \item \textbf{Request Library}, která se zaměřuje na HTTP (HyperText Transfer Protocol) API (Application Programming Interface) testování. Jedná se o zaobalení populární Python Request Library
     \item \textbf{Standard Library} pro vypořádání se s logováním, souborovým systémem, operačním systémem, procesy, ...
 \end{itemize}
 
@@ -388,7 +388,7 @@ Jelikož celá kolekce je zaměřená na  automatizaci procesů a ne testování
 
 Knihovna podporuje dva formáty souborů, XLS a XLSX. Rozsah knihovny je \textit{GLOBAL}, což znamená že pro všechny potencionální testovací scénáře bude použita jedna instance knihovny. To implikuje sdílený kontext mezi jednotlivými testy, což je při testování nežádoucí. Ačkoliv knihovna podporuje explicitní zapnutí streamovacího módu přes argumenty předané pro inicializaci, které jsou následně předané knihovnám, jež se soubory opravdu pracují, nikde není kontrolován správný přístup a použití takto inicializovaných objektů. Zároveň hrozí únik paměti, neboť jednotlivé soubory nejsou implicitně uvolňovány. 
 
-Knihovna má monolitickou architekturu a veškerý zdrojový kód se nachází v jednom souboru, což stěžuje jeho flexibilitu a potenciální rozvoj.
+Knihovna má monolitickou architekturu a veškerý zdrojový kód se nachází v jednom souboru, což ztěžuje jeho flexibilitu a potenciální rozvoj.
 
 \subsection{ExcelSage}
 
@@ -411,7 +411,7 @@ Historické řešení, které je napsáno na staré verzi Pythonu 2.*.*. Knihovn
 
 \subsection{excel10library}
 
-Řešení, které je závislé na historické excellibray (viz.~\ref{subsec:excellibrary}). Je závislé na knihovně xlwings, která požaduje pro běh operační systém Windows 10, tím se stává pro běh automatických testů v kontejnerizovaných prostředích absolutně nevyhovující. Jedná se také o jiný přístup, kdy knihovna v pozadí používá běžící nainstalovaný program MS Excel.~\cite{excel10library}
+Řešení, které je závislé na historické excellibrary (viz.~\ref{subsec:excellibrary}). Je závislé na knihovně xlwings, která požaduje pro běh operační systém Windows 10, tím se stává pro běh automatických testů v kontejnerizovaných prostředích absolutně nevyhovující. Jedná se také o jiný přístup, kdy knihovna v pozadí používá běžící nainstalovaný program MS Excel.~\cite{excel10library}
 
 \subsection{excelutil}
 
@@ -468,7 +468,7 @@ Pro práci s CSV soubory byla zvolena nejjednodušší cesta: použít již exis
 \subsubsection{Pytest}
 \label{Pytest}
 
-Standard pro testování Python softwaru. Pytest~\cite{Pytest} je framework, se kterým je jednoduché napsat testy od malých, jednoduše čitelných, až po komplexní testy celých aplikací a knihoven. Obsahuje také velice jednoduchou integraci s~IDE (Integrated Development Enviroment).
+Standard pro testování Python softwaru. Pytest~\cite{Pytest} je framework, se kterým je jednoduché napsat testy od malých, jednoduše čitelných, až po komplexní testy celých aplikací a knihoven. Obsahuje také velice jednoduchou integraci s~IDE (Integrated Development Environment).
 
 Pytest používá k testování asserty, což zjednodušuje debugování testovacích scénářů. Také jsou zde zavedené fixtures~\cite{PytestFixtures} jako možnost jak v testech zadefinovat konzistentní kontext pro testy. Další funkcionalita je možnost psaní parametrizovaných testů, která eliminuje nutnost psát více stejných typů testů pro různé scénáře.
 
@@ -491,7 +491,7 @@ V poslední řadě jsou také omezené operace a datové typy, které jsou kniho
 
 Jde o knihovnu~\cite{Python-calamine} napsanou v jazyce Rust, která má pouze Python wrapper. Protože je napsána v Rustu, je násobně rychlejší než její konkurenti, kteří jsou napsáni v čistém Pythonu. Také podporuje formáty XLSX, XLS a ODS. Je také paměťově úsporná, nenačítá celý soubor do paměti.
 
-Tato knihovna nakonec také nakonec použita nebyla. Knihovna je pouze pro čtení, což znemožňuje psaní do načtených souborů. Dále je nutnost mít nainstalován Rust. Automatické testy jsou často spouštěny v kontejnerizovaném prostředí. Použitím této knihovny nutíme uživatele instalovat do prostředí Rust, což je pouze pro spuštění testu neoptimální. Tím, že je knihovna optimalizovaná na výkon, extrahuje pouze čisté hodnoty, čímž ztrácíme jakékoliv další informace, které jsme pomocí jiných knihoven schopni získat.
+Tato knihovna nakonec také použita nebyla. Knihovna je pouze pro čtení, což znemožňuje psaní do načtených souborů. Dále je nutnost mít nainstalován Rust. Automatické testy jsou často spouštěny v kontejnerizovaném prostředí. Použitím této knihovny nutíme uživatele instalovat do prostředí Rust, což je pouze pro spuštění testu neoptimální. Tím, že je knihovna optimalizovaná na výkon, extrahuje pouze čisté hodnoty, čímž ztrácíme jakékoliv další informace, které jsme pomocí jiných knihoven schopni získat.
 
 I přes všechny nevýhody zmíněné výše se dá do budoucna uvažovat o použití této knihovny v režimu streamování díky vysoké rychlosti a paměťové úspornosti.
 
@@ -503,7 +503,7 @@ Knihovna~\cite{xlwt} pro zapisování do souborů v XLS formátu. Jelikož tento
 \subsubsection{Pandas}
 \label{subsubsec:pandas}
 
-Knihovna~\cite{Pandas} používána hlavně na in-memory datavou analýzu. Hlavním problémem je nutnost načíst celý soubor do DF (DataFrame). Sice je možné práci s většími soubory trochu zefektivnit s ohledem na využívanou paměť, ale pro tento projekt jsem se rozhodl tyto metody neimplementovat.~\cite{PandasScale}
+Knihovna~\cite{Pandas} je používána hlavně na in-memory datovou analýzu. Hlavním problémem je nutnost načíst celý soubor do DF (DataFrame). Sice je možné práci s většími soubory trochu zefektivnit s ohledem na využívanou paměť, ale pro tento projekt jsem se rozhodl tyto metody neimplementovat.~\cite{PandasScale}
 
 \section{Architektura knihovny}
 
@@ -535,7 +535,7 @@ Důležitá část knihovny hlavně z hlediska uživatele. Vystavené rozhraní 
     \label{fig:architecture}
 \end{figure}
 
-Pro implementaci rozhraní byl zvolena fasáda (viz.~\ref{facade}), která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory} (viz.~\ref{factory}), která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel}, které je následně uloženo ve \textit{workbook}.
+Pro implementaci rozhraní byla zvolena fasáda (viz.~\ref{facade}), která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory} (viz.~\ref{factory}), která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel}, které je následně uloženo ve \textit{workbook}.
 
 \subsection{Jádro knihovny}
 \label{Application core}
@@ -549,14 +549,14 @@ O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vni
     \label{fig:placeholder}
 \end{figure}
 
-Třída \texttt{RFExcel} implementuje rozhraní dvou tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a která jsou deklarované v uživatelském rozhraní aplikace~(viz~\ref{User API}). Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, jejíž použití je vysvětleno v kapitole implementace~\ref{laze transform}.
+Třída \texttt{RFExcel} implementuje rozhraní dvou tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a které jsou deklarovány v uživatelském rozhraní aplikace~(viz~\ref{User API}). Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, jejíž použití je vysvětleno v kapitole implementace~\ref{laze transform}.
 
 \texttt{RFExcel} využívá principu kompozice~(viz.~\ref{Composition}) pro definování funkčností, které knihovna umožňuje. Jedná se o rozhraní, které pak jednotlivé implementace musí splňovat a \texttt{RFExcel} je může používat bez jakékoliv znalosti toho, jaký přesný typ třídy zrovna dostane. Toto je využití návrhového vzoru most~\ref{bridge}.
 
 \subsection{Model}
 \label{model}
 
-Aplikace pracuje s několika různými souborovými typy, kdy každý může vracet data jinak interpretovaná. Pro sjednocení logiky a vyhnutí se kontrolování, s jakým zdrojem aplikace zrovna aplikace pracuje, jsou použity následující modely:
+Aplikace pracuje s několika různými souborovými typy, kdy každý může vracet data jinak interpretovaná. Pro sjednocení logiky a vyhnutí se kontrolování, s jakým zdrojem aplikace zrovna pracuje, jsou použity následující modely:
 
 \begin{figure}[H]
     \centering
@@ -570,7 +570,7 @@ Tento návrh respektuje návrhový vzor Most~(viz.~\ref{bridge}), kdy máme pro 
 \subsection{Komponenty}
 \label{Components}
 
-Jako komponenty jsou brány jednotlivá rozhraní, která jsou součástí \texttt{RFExcel} instance pomocí kompozice. Jedná se tedy o rozhraní \texttt{IReader}, \texttt{IMetadata}, \texttt{IStyle}, \texttt{IResource} a \texttt{IWriter}. Pro jednoduchost je níže ukázán pouze jeden příklad, \texttt{IResource}, ostatní fungují na stejném principu:
+Jako komponenty jsou brána jednotlivá rozhraní, která jsou součástí \texttt{RFExcel} instance pomocí kompozice. Jedná se tedy o rozhraní \texttt{IReader}, \texttt{IMetadata}, \texttt{IStyle}, \texttt{IResource} a \texttt{IWriter}. Pro jednoduchost je níže ukázán pouze jeden příklad, \texttt{IResource}, ostatní fungují na stejném principu:
 
 \begin{figure}[H]
     \centering
@@ -583,7 +583,7 @@ Jako komponenty jsou brány jednotlivá rozhraní, která jsou součástí \text
 
 \subsection{Vytvoření komponent}
 
-Na obrázku~\ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje dvě reference, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializována pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny~(viz.~\ref{factory}), kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
+Na obrázku~\ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje dvě reference, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializován pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny~(viz.~\ref{factory}), kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
 
 \subsection{Logování}
 
@@ -751,7 +751,7 @@ class IWriter(ABC):
 
 \section{Model}
 
-Data získána z jednotlivých souborů mohou být různého typu, přičemž je nutné tato data unifikovaně předávat skrze celou aplikaci. K tomu slouží model, který má jasně vydefinované rozhraní funkcí a návratových hodnot. S těmi poté pracuje zbytek aplikace. Díky tomu není aplikace ovlivněna specifickými formáty.
+Data získaná z jednotlivých souborů mohou být různého typu, přičemž je nutné tato data unifikovaně předávat skrze celou aplikaci. K tomu slouží model, který má jasně vydefinované rozhraní funkcí a návratových hodnot. S těmi poté pracuje zbytek aplikace. Díky tomu není aplikace ovlivněna specifickými formáty.
 
 Pro příklad je uvedeno rozhraní \texttt{IRawRowData}, které ukazuje práci s řádkem souboru.
 
@@ -782,7 +782,7 @@ class IRawRowData(ABC):
 
 Jak již vysvětluje kapitola~\ref{xlwt}, ani další nalezené, aktivně podporované knihovny, neumožňují zápis do souboru ve formátu XLS. Proto jsem se pro tento projekt rozhodl použít postup lazy transformace. Pokud se uživatel pokusí provést změny v souboru formátu XLS, data z původního souboru budou přesunuta do nového souboru ve formátu XLSX. Veškeré změny jsou provedeny na tomto souboru. Důležité je, že původní soubor není zničen ani nijak poškozen, zůstane vždy beze změny zachován.
 
-Pro tuto funkčnost byl potřeba upravit \texttt{IWriter} následově:
+Pro tuto funkčnost bylo potřeba upravit \texttt{IWriter} následovně:
 
 \begin{listing}[H]
     \begin{minted}[
@@ -815,7 +815,7 @@ Třída rozbíjí princip  vrstvení tím, že drží odkaz na třídu \texttt{R
 
 Lazy transformace proběhne při zavolání každé implementované funkce rozhraní IWriter, které jsou označeny anotací \texttt{@auto\_convert\_xls\_to\_xlsx}. Anotace v Pythonu jsou dekorátory, kódy definované funkcí, které implementují logiku anotace. Tyto části kódu proběhnou před zavoláním kódu původně zavolané funkce.
 
-Impementace tohoto dekorátoru, který je definován ve složce \texttt{advice} v~souboru \texttt{interceptors.py}, poté pouze zavolá metodu \texttt{xls\_to\_xlsx}, Ta je definována v \texttt{ISetExcel} a \texttt{RFExcel} ji implementuje.
+Implementace tohoto dekorátoru, který je definován ve složce \texttt{advice} v~souboru \texttt{interceptors.py}, poté pouze zavolá metodu \texttt{xls\_to\_xlsx}. Ta je definována v \texttt{ISetExcel} a \texttt{RFExcel} ji implementuje.
 
 Tato funkce pak zajistí bezpečné překopírování dat do nového formátu a~provede zapisující operaci. Zároveň provede kompletní výměnu všech komponent v \texttt{RFExcel}, jelikož už pracujeme s novým formátem a je potřeba, aby tomu odpovídaly i všechny komponenty.
 
@@ -829,9 +829,9 @@ Důležitou částí práce je možnost otevřít soubory pouze pro čtení. Ten
     \item Řádky souboru je možné číst pouze v dopředném pořadí.
 \end{enumerate}
 
-Při testování i jiných aktivitách je občas nutné číst obrovské soubory. Bez read-only módu jsme nutni do paměti načítat celý soubor, což není vždy žádoucí. Tento mód je sice restriktivní z hlediska nemožnosti soubor upravovat a~způsobu, jakým lze soubor zpracovávat, paměťové výhody však často převažují. Zmíněná omezení jsou navíc často irelevantní. 
+Při testování i jiných aktivitách je občas nutné číst obrovské soubory. Bez read-only módu jsme nuceni do paměti načítat celý soubor, což není vždy žádoucí. Tento mód je sice restriktivní z hlediska nemožnosti soubor upravovat a~způsobu, jakým lze soubor zpracovávat, paměťové výhody však často převažují. Zmíněná omezení jsou navíc často irelevantní. 
 
-U souborů XLSX a CSV je dosaženo streamování pomocí generátorů. Soubor není načten celý, je přes něj pouze postupně iterováno. Tento způsob nebyl možný u formátu XLS kvůli knihovně Xlrd~(viz.~\ref{xlrd}), která podporuje pouze \textit{on-demand} mód. Ten ale nenačte celý soubor, pouze celý list, a to na vyžádání. To však není takový problém, jelikož formát XLS má maximalní kapacitu listu, kterou nemůže překročit. Tento limit je 65~536 řádek na jeden list nebo 2GB v hlavní paměti.~\cite{xlsLimit, XlsLimit2}
+U souborů XLSX a CSV je dosaženo streamování pomocí generátorů. Soubor není načten celý, je přes něj pouze postupně iterováno. Tento způsob nebyl možný u formátu XLS kvůli knihovně Xlrd~(viz.~\ref{xlrd}), která podporuje pouze \textit{on-demand} mód. Ten ale nenačte celý soubor, pouze celý list, a to na vyžádání. To však není takový problém, jelikož formát XLS má maximalní kapacitu listu, kterou nemůže překročit. Tento limit je 65~536 řádků na jeden list nebo 2GB v hlavní paměti.~\cite{xlsLimit, XlsLimit2}
 
 \section{Klíčová slova}
 
@@ -849,7 +849,7 @@ V následujících podsekcích jsou zmíněna některá implementovaná klíčov
 Klíčové slovo \texttt{Create Workbook} umožňuje vytvořit nový prázdný workbook. Funguje pro formáty XLSX a CSV. Formát XLS není pro zápis podporován, není tudíž možnost takový soubor vytvořit. Soubor se automaticky otevře v~editovacím formátu.
 
 \subsection{Load Workbook}
-Funkcionalita umožňuje otevření souboru všech podporovaných formátů. Dle přípony souboru automaticky detekuje, o jaký formát se jedná. Soubor je možné otrevřít v módech read-only nebo edit. Podle toho se pak odvíjí chování dalších klíčových slov.
+Funkcionalita umožňuje otevření souboru všech podporovaných formátů. Dle přípony souboru automaticky detekuje, o jaký formát se jedná. Soubor je možné otevřít v módech read-only nebo edit. Podle toho se pak odvíjí chování dalších klíčových slov.
 
 \subsection{Close Workbook}
 Klíčové slovo pro uzavření otevřeného souboru. Tato funkcionalita se stará hlavně o uvolnění všech otevřených zdrojů, které byly udržovány při práci se souborem. Jelikož v některých případech by při nepoužití této funkce nedošlo k uvolnění paměti, je toto klíčové slovo voláno implicitně na konci každého testu.
@@ -876,7 +876,7 @@ Porovnávat lze ve dvou módech: kompletní porovnání nebo porovnání do prvn
 Soubor, který je argumentem volání této funkce, je otevřený v read-only módu pro co nejmenší paměťovou zátěž. Soubor již otevřený při volání této funkce může být otevřený v módu libovolném.
 
 \subsection{Set Cell a Get Cell}
-Ačkoliv knihovna pracuje zejména s celými tabulkami, klíčová slova \texttt{Set Cell} a \texttt{Get Cell} umožňují interakci s jednotlivými buňkami. Tato funkcionalita není dostupná pro formát CSV díky neexistenci pojmenovaných buňek, které najdeme ve formátech XLS a XLSX.
+Ačkoliv knihovna pracuje zejména s celými tabulkami, klíčová slova \texttt{Set Cell} a \texttt{Get Cell} umožňují interakci s jednotlivými buňkami. Tato funkcionalita není dostupná pro formát CSV díky neexistenci pojmenovaných buněk, které najdeme ve formátech XLS a XLSX.
 
 \chapter{Testování, dokumentace a nasazení}
 
@@ -918,7 +918,7 @@ Jelikož hlavním cílem aplikace je umožnit unifikovanou práci s různými fo
 
 V souboru \texttt{test\_data.py} jsou definovány testovací data a konstanty, které jsou použity napříč všemi testy v adresáři \texttt{tests/pyth}.
 
-Soubor \texttt{confest.py} definuje funcionalitu testů, která bude společná pro všechny testy. V našem případě jsou zde definovány \textit{fixtures}, které slouží pro konzistentní testovací třídy pro všechny testy. V našem případě takto v testech získáváme konzistentní instanci knihovny:
+Soubor \texttt{confest.py} definuje funkcionalitu testů, která bude společná pro všechny testy. V našem případě jsou zde definovány \textit{fixtures}, které slouží pro konzistentní testovací třídy pro všechny testy. V našem případě takto v testech získáváme konzistentní instanci knihovny:
 
 \begin{listing}[H]
     \begin{minted}[
@@ -980,7 +980,7 @@ Hlavním cílem práce bylo implementovat knihovnu pro práci s tabulkovými sou
 
 V analytické části jsme se zaměřili na analýzu problémové domény, rešerši existujících řešení a nezbytný teoretický základ. Probrány byly druhy architektur aplikací, jejich přednosti a úskalí. Vysvětlen byl rozdíl mezi dědičností a kompozicí, jejich využití při vývoji softwaru a proč bychom měli preferovat kompozici před dědičnosti. Popsány i s příklady byly poté návrhové vzory, které byly využity v návrhové a implementační části. Proběhla zevrubná analýza Robot Frameworku, který tato knihovna rozšiřuje. Prodiskutovány byly poté již existující řešení, včetně jejich výhod a nevýhod. Zmíněny jsou také důvody, proč tato řešení nejsou vyhovující.
 
-Návrhová část se zabývala použitými technologiemi a návrhem knihovny pro implementaci. V kapitole jsou postupně popsány všechny části aplikace. U technologií byly popsány jak použité technologie pro tento projekt, tak jeho alternativy a jejich irelevance.
+Návrhová část se zabývala použitými technologiemi a návrhem knihovny pro implementaci. V kapitole jsou postupně popsány všechny části aplikace. U technologií byly popsány jak použité technologie pro tento projekt, tak jejich alternativy a důvody, proč nebyly vybrány.
 
 V implementační části byl už podrobněji popsán vývoj aplikace. Zaměření bylo na celkovou strukturu, potom na nástroje použité pro vývoj a podpůrné pluginy, které práci ulehčovaly. Také byly uvedeny části kódu, které nastiňovaly implementaci představenou v návrhové části. V neposlední řadě jsou zde vysvětleny hlavní implementační problémy, a to streamovací mód a lazy transformace formátu.
 
