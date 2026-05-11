@@ -38,13 +38,13 @@ Celý program je napsán v jednom repozitáři, není potřeba žádná další 
 \subsection{Vrstvená architektura}
 \label{layered architecture}
 
-Vrstvená (layered) architektura~\cite{Layer1} jedna z nejběžnějších architektur pro vývoj softwaru.  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části, které spolu úzce souvisí, poté většinou leží na stejné vrstvě.
+Vrstvená (layered) architektura~\cite{Layer1}~\cite{LayeredBook} jedna z nejběžnějších architektur pro vývoj softwaru.  Jedná se o návrh, kdy se software skládá z několika na sobě posazených oddělených vrstev, které spolu komunikují. Části, které spolu úzce souvisí, poté většinou leží na stejné vrstvě.
 
 Základním rysem této architektury je, že vrstvy zásadně komunikují pouze s vrstvami, které jsou zasazené pod nimi. Architektura také zajišťuje izolaci. Změny v jednotlivých vrstvách by neměly mít vliv na vrstvy ostatní. Každá vrstva by měla mít jasně stanovenou odpovědnost. Rozdělení může vypadat následovně:
 
 \begin{itemize}
     \item Prezenční vrstva, která je zodpovědná za komunikaci softwaru s uživatelem
-    \item Vrstva aplikační logiky, která provádí aplikační požadavky aplikace
+    \item Vrstva, která provádí aplikační požadavky aplikace
     \item Doménová vrstva, která se stará o algoritmy, komponenty
     \item Perzistentní vrstva, která se stará o data, komunikaci s databází
 \end{itemize}
@@ -65,7 +65,7 @@ Tato architektura rozlišuje dvě strany komunikace:
     \item Vedlejší aktor, tedy externí systémy, které aplikace používá nebo s nimi komunikuje
 \end{itemize}
 
-Tato struktura vynucuje DIP (Dependency Inversion Principle). Jádro aplikace určuje striktní pravidla skrz abstraktní rozhraní (Porty). Externí technologie (Adaptéry) jsou nuceny se jádru přizpůsobit, spíše než aby toto přizpůsobení dělalo jádro oproti různým externím technologiím.
+Tato struktura vynucuje DIP (Dependency Inversion Principle~\cite{DIP}). Jádro aplikace určuje striktní pravidla skrz abstraktní rozhraní (Porty). Externí technologie (Adaptéry) jsou nuceny se jádru přizpůsobit, spíše než aby toto přizpůsobení dělalo jádro oproti různým externím technologiím.
 
 Toto způsobí, je možné vyměnit adaptéry bez jakéhokoliv zásahu do logiky jádra programu. Pro testování to znamená, že můžeme napsat vlastní testovací adaptér, který funkcionalitu jádra otestuje.
 
@@ -112,7 +112,7 @@ Dědičnost má své místo v objektově orientovaném programování, a v někt
 
 \section{Návrhové vzory}
 
-Návrhové vzory (Design patterns)~\cite{DesignPatterns} jsou typická řešení pro běžné problémy, se kterými se v programování setkáváme. Jsou to předělaná obecná řešení, která řeší stále dokola se vyskytující problémy při návrhu aplikací. Návrhové vzory dělíme na následující:
+Návrhové vzory (Design patterns)~\cite{DesignPatterns} jsou typická řešení pro běžné problémy, se kterými se v programování setkáváme. Návrhové vzory dělíme na následující:
 
 \begin{itemize}
     \item Creational design patterns, které slouží jako mechanismy pro vytváření objektů s důrazem na flexibilitu a přepoužití kódu
@@ -134,7 +134,7 @@ Uživatel tedy komunikuje výhradně s fasádou. Samotná aplikace přitom o fas
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/facade.png}
-    \caption{Diagram fasády~\cite{Fasade}}
+    \caption{Diagram návrhového vzoru fasáda~\cite{Fasade}}
     \label{fig:placeholder}
 \end{figure}
 
@@ -152,7 +152,7 @@ S tímto přístupem tedy rozdělíme formu a barvy do separátních hierarchií
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/bridge.png}
-    \caption{Diagram mostu~\cite{Bridge}}
+    \caption{Diagram návrhového vzoru most~\cite{Bridge}}
     \label{fig:placeholder}
 \end{figure}
 
@@ -168,7 +168,7 @@ Strategie navrhuje extrahování rodiny algoritmů, které dělají specifický 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.7\linewidth]{images/strategie.png}
-    \caption{Diagram strategie~\cite{Strategy}}
+    \caption{Diagram návrhového vzoru strategie~\cite{Strategy}}
     \label{fig:placeholder}
 \end{figure}
 
@@ -218,7 +218,7 @@ Tímto způsobem objekt volající adaptér nemá žádnou informaci o tom, že~
 
 \subsection{Dekorátor}
 
-Dekorátor (Decorator)~\cite{Decorator} je strukturální návrhový vzor, jinak také „Wrapper", který funguje na principu zaobalení stávajícího objektu a přidáním funkcionality tomuto objektu. Tímto způsobem přidáváme objektu další chování.
+Dekorátor (Decorator)~\cite{Decorator} je strukturální návrhový vzor, jinak známý také jako „Wrapper", který funguje na principu zaobalení stávajícího objektu a přidáním funkcionality tomuto objektu. Tímto způsobem přidáváme objektu další chování.
 
 Pracujme na knihovně, která posílá notifikace. Knihovna má hlavní třídu \texttt{Notifier}, která obsahuje pár atributů a metodu \textit{send}. Třída přijímá od klienta jako argument pole řetězců, které reprezentují emaily, kam má upozornění poslat. Později se knihovna rozšiřuje, přidají se notifikace pro Facebook, Instagram a Slack pomocí klasického dědění. Poté ale budeme dále chtít také kombinované notifikace, například Facebook a Slack. Pokud bychom tímto způsobem vytvořili všechny možné kombinace, počet tříd poroste exponenciálně.
 
@@ -239,7 +239,7 @@ Vzor se používá nejčastěji v situacích, kdy potřebujeme přístup ke sdí
 \section{Robot Framework}
 \label{sec:RF}
 
-Robot Framework~\cite{robotframeworkGH} (dále používáno i jako pouze RF) je obecný open-source automatizační framework pro akceptační testy, vývoj řízený akceptačními testy a robotickou automatizaci procesů (RPA). Má jednoduchý zápis a jednoduše se rozšiřuje z obecných i vlastních knihoven.
+Robot Framework~\cite{robotframeworkGH} (dále zkracováno na RF) je obecný open-source automatizační framework pro akceptační testy, vývoj řízený akceptačními testy a robotickou automatizaci procesů (RPA). Má jednoduchý zápis a jednoduše se rozšiřuje z obecných i vlastních knihoven.
 
 RF je nezávislý na operačním systému a aplikaci. Je implementován v~jazyce Python, který je zároveň hlavní jazyk pro napsání jeho rozšíření. Jako většinu pythonových projektů je možné ho stáhnout na PyPI (Python Package Index)
 
@@ -274,7 +274,7 @@ Obrázek níže \ref{rf:testcode} ukazuje příklad napsání testu ve framework
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.75\linewidth]{images/RFTest.png}
+    \includegraphics[width=1\linewidth]{images/RFTest.png}
     \caption{Test napsán v RF~\cite{robotframeworkUserGuide}}
     \label{rf:testcode}
 \end{figure}
@@ -349,7 +349,7 @@ Knihovna~\cite{robotframeworkUserGuide} má vnitřní stav, který lze nastavit 
 
 Defaultně se framework snaží jednotlivé testy držet na sobě nezávislé. Ne vždy je toto chování žádoucí. Jednotlivé testy mohou příležitostně sdílet společný stav. Některé knihovny nemusí mít stav vůbec, a vytváření jejich instance tedy není nutné.
 
-Knihovny mohou toto chování kontrolovat pomocí třídního atributu \textit{ROBOT\_LIBRARY\_SCOPE}, který může nabývat následujících hodnot:
+Knihovny mohou toto chování explicitně definovat pomocí speciálního třídního atributu \textit{ROBOT\_LIBRARY\_SCOPE}, který může nabývat následujících hodnot:
 
 \begin{itemize}
     \item \textbf{TEST}, který vytvoří novou instanci knihovny pro každý test
@@ -382,19 +382,19 @@ Robot Framework je v komunitě poměrně rozšířený framework, ke kterému ex
 
 \subsection{RPA Framework}
 
-Jak bylo zmíněno v předchozí sekci~\ref{sec:RF}, RPA~\cite{RPADocs}~\cite{RPAGH} je velkou součástí frameworku samotného, která se zaměřuje na automatizaci procesu. Jedná se o velkou kolekci open-source knihoven, mezi které patří i knihovna \textit{Excel.Files}.~\cite{RPAFiles} Použití pouze této knihovny pro práci s tabulkovými soubory vyžaduje instalaci celého frameworku.
+Jak bylo zmíněno v předchozí sekci~\ref{sec:RF}, RPA~\cite{RPADocs}~\cite{RPAGH} je velkou součástí frameworku samotného, která se zaměřuje na automatizaci procesů. Jedná se o kolekci open-source knihoven, mezi které patří i knihovna \textit{Excel.Files}.~\cite{RPAFiles} Použití pouze této knihovny pro práci s tabulkovými soubory vyžaduje instalaci celého frameworku.
 
 Jelikož celá kolekce je zaměřená na  automatizaci procesů a ne testování, jinak tomu není ani v této knihovně zaměřující se na zápis a manipulaci tabulkových souborů. 
 
 Knihovna podporuje dva formáty souborů, XLS a XLSX. Rozsah knihovny je \textit{GLOBAL}, což znamená že pro všechny potencionální testovací scénáře bude použita jedna instance knihovny. To implikuje sdílený kontext mezi jednotlivými testy, což je při testování nežádoucí. Ačkoliv knihovna podporuje explicitní zapnutí streamovacího módu přes argumenty předané pro inicializaci, které jsou následně předané knihovnám, jež se soubory opravdu pracují, nikde není kontrolován správný přístup a použití takto inicializovaných objektů. Zároveň hrozí únik paměti, neboť jednotlivé soubory nejsou implicitně uvolňovány. 
 
-Ždrojový kód pro knihovnu je čistý monolit bez větší architektury napsaný celý v jednom souboru, což stěžuje jeho flexibilitu a potenciální rozvoj.
+Knihovna má monolitickou architekturu a veškerý zdrojový kód se nachází v jednom souboru, což stěžuje jeho flexibilitu a potenciální rozvoj.
 
 \subsection{ExcelSage}
 
 Moderní knihovna~\cite{ExcelSageGH}~\cite{ExcelSagePyPI} zaměřená na testování a datovou analýzu, která podporuje pouze formát XLSX. Knihovna obsahuje jak klíčová slova pro čtení a zápis, tak také pokročilé možnosti pro úpravu souboru.
 
-Knihovna je vysoce integrovaná a závislá na využití Pandas, která jí umožňuje dělat efektivní úpravy v celém souboru, rychlý export do formátu CSV, což je užitečné zejména pro formátování reportů.
+Knihovna je vysoce integrovaná a závislá na využití Pandas (více~\ref{subsubsec:pandas}), která jí umožňuje dělat efektivní úpravy v celém souboru, rychlý export do formátu CSV, což je užitečné zejména pro formátování reportů.
 
 Díky závislosti na Pandas sice knihovna efektivně pracuje s modifikovatelnými operacemi a je schopná vykonávat rychlé vyhledávací operace, to však přináší velkou paměťovou zátěž (více v kapitole~\ref{subsubsec:pandas}).
 
@@ -407,15 +407,28 @@ Jedná se o knihovnu pro vytvoření DDT (Data-Driven Tests)~\cite{DataDriver} s
 \subsection{excellibrary}
 \label{subsec:excellibrary}
 
-Historické řešení, které je napsáno na staré verzi Pythonu 2.*.*. Knihovna pracuje pouze ze starými XLS soubory a dnes už je zastaralá.~\cite{excellibrary}
+Historické řešení, které je napsáno na staré verzi Pythonu 2.*.*. Knihovna pracuje pouze ze starými XLS soubory. Dnes už je zastaralá, dále nerozvíjená a neudržovaná.~\cite{excellibrary}
 
 \subsection{excel10library}
 
-Řešení, které je závislé na historické excellibray~\ref{subsec:excellibrary}. Je závislé na knihovně xlwings, která požaduje pro běh operační systém Windows 10, tím se stává pro běh automatických testů v kontejnerizovaných prostředích absolutně nevyhovující. Jedná se také o jiný přístup, kdy knihovna v pozadí používá běžící nainstalovaný program MS Excel.~\cite{excel10library}
+Řešení, které je závislé na historické excellibray (viz.~\ref{subsec:excellibrary}). Je závislé na knihovně xlwings, která požaduje pro běh operační systém Windows 10, tím se stává pro běh automatických testů v kontejnerizovaných prostředích absolutně nevyhovující. Jedná se také o jiný přístup, kdy knihovna v pozadí používá běžící nainstalovaný program MS Excel.~\cite{excel10library}
 
 \subsection{excelutil}
 
-Jednoduchá knihovna zaobalující základní funkčnosti pro soubory formátu XLSX. Jedná se o jednoduchou knihovnu s minimem funkcionalit a minimální dokumentací.~\cite{excelutil}
+Knihovna zaobalující základní funkčnosti pouze pro soubory formátu XLSX. Jedná se o jednoduchou knihovnu s minimem funkcionalit a minimální dokumentací. Poslední update proběhl roku 2021, knihovna již není nadále udržována ani rozvíjena.~\cite{excelutil}
+
+\subsection{Shrnutí existujících řešení}
+
+Ačkoliv pro RF existuje řada rozšíření pro práci s tabulkovými soubory, žádné plně nevyhovuje potřebám pro automatizované testování. Nedostatky již existujících knihoven jsou následující:
+
+\begin{itemize}
+    \item \textbf{Zastaralost a absence údržby.} Část řešení (například excellibrary, excelutil) je opuštěná, neudržovaná a technicky zastaralá.
+    \item \textbf{Omezená podpora formátů.} Většina řešení se zaobírá pouze jedním konkrétním formátem (XLSX nebo XLS).
+    \item \textbf{Monolitická architektura.} I moderní řešení jako ExcelSage má monolitický design, což ztěžuje budoucí vývoj a udržovatelnost.
+    \item \textbf{Paměťová efektivita.} Žádný z uvedených nástrojů nemá přímou podporu pro efektivní práci s pamětí, což dělá knihovny nevhodné pro testování velkých souborů.
+\end{itemize}
+
+Tato zjištění poukazují na absenci moderní knihovny, která se zaměřuje na testování a manipulaci tabulkových souborů různých formátů.
 
 %---------------------------------------------------------------
 \chapter{Návrh}
@@ -467,11 +480,11 @@ Zmíněné technologie v této sekci nebyly použity v projektu, ale byly uvažo
 
 Zdánlivě ideální volba. Knihovna~\cite{Pyexcel}, která podporuje více fomátů (XLSX, XLS, ODS, CSV, \dots). Knihovna má však několik problémů, kvůli kterým nakonec nebyla využita.
 
-Prvním problémem je správa paměti. I když knihovna nabízí streaming pomocí iterátorů, zpočátku je celý XML soubor, který reprezentuje jednotlivé excelové soubory, naparsován do paměti najendou. Je nutné mít možnost se tomuto v tomto projektu vyhnout.
+Prvním problémem je správa paměti. I když knihovna nabízí streaming pomocí iterátorů, zpočátku je celý XML soubor, který reprezentuje jednotlivé excelové soubory, naparsován do paměti najednou. Cílem tohoto projektu je implementovat knihovnu tak, aby bylo toto zahlcení paměti eliminováno.
 
-Dalším problémem je, že knihovna je pouze generický wrapper nad nízkoúrovňovějšími knihovnami, není to engine. Použitím knihovny pouze ztrácíme kontrolu nad informacemi z knihoven, které tato knihovna používá.
+Dalším problémem je, že knihovna je pouze generický wrapper nad knihovnami nižších úrovní. Použitím knihovny dostáváme ucelené rozhraní pro práci se soubory, ale bohužel pro nás je příliš abstraktní a neposkytuje některé podstatné informace o obsahu souborů.
 
-V poslední řadě jsou také omezené operace a datové typy, které knihovna podporuje. Pro XLSX není podporováno formátování ani makra, jelikož knihovna je čistě datová. V této práci se sice také zaměřuji čistě na data, v budoucnu by ale mohlo dojít k rozšíření projektu a přidání těchto možností. Chybí kontrola nad vrácenými datovými typy, kdy nevíme, jak je s daty na pozadí naloženo a jak se transformují.
+V poslední řadě jsou také omezené operace a datové typy, které jsou knihovnou podporovány. Pro XLSX není podporováno formátování ani makra, jelikož knihovna je čistě datová. V této práci se sice také zaměřuji čistě na data, v budoucnu by ale mohlo dojít k rozšíření projektu a přidání těchto možností. Chybí kontrola nad vrácenými datovými typy, kdy nevíme, jak je s daty na pozadí naloženo a jak se transformují.
 
 \subsubsection{Python-calamine} 
 \label{sec:calamine}
@@ -498,7 +511,7 @@ Důležitou částí knihovny je její architektura. Speciálně u knihoven je n
 
 \subsection{Rozvržení knihovny}
 
-Z dostupných možností~\ref{internal architectures} byla nakonec vybrána architektura vrstvená.
+Z dostupných možností (viz.~\ref{internal architectures}) byla nakonec vybrána architektura vrstvená.
 
 Jedná se o architekturu, která jasně rozděluje, co která vrstva dělá, zároveň je z vyjmenovaných nejjednodušší na napsání, zajišťuje jednoduchou rozšiřitelnost a testovatelnost. Rozdělení na vrstvy by se dalo popsat následovně:
 
@@ -508,7 +521,7 @@ Jedná se o architekturu, která jasně rozděluje, co která vrstva dělá, zá
     \item Komunikace s jednotlivými knihovnami pro práci se soubory.~\ref{Components}
 \end{itemize}
 
-Zároveň je do návrhu nutno zahrnout model~\ref{model}, což jsou objekty, které umožňují jednoduchou komunikaci mezi Jádrem aplikace a jednotlivými komponentami.
+Zároveň je do návrhu nutno zahrnout model (viz.~\ref{model}), což jsou objekty, které umožňují jednoduchou komunikaci mezi Jádrem aplikace a jednotlivými komponentami.
 
 \subsection{Vystavené rozhraní}
 \label{User API}
@@ -522,9 +535,9 @@ Důležitá část knihovny hlavně z hlediska uživatele. Vystavené rozhraní 
     \label{fig:architecture}
 \end{figure}
 
-Pro implementaci rozhraní byl zvolena fasáda~\ref{facade}, která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory}~\ref{factory}, která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel}, které je následně uloženo ve \textit{workbook}.
+Pro implementaci rozhraní byl zvolena fasáda (viz.~\ref{facade}), která přesně splňuje požadavky zmíněné výše. Třída \texttt{RFExcelLibrary} obsahuje pouze definice klíčových slov a minimální funkcionalitu. Obsahuje dva odkazy, jeden na \textit{factory} (viz.~\ref{factory}), která při zavolání její funkcionality vrátí instanci třídy, která provádí implementaci a splňuje rozhraní definované v \texttt{IExcel}, které je následně uloženo ve \textit{workbook}.
 
-\subsection{Jádro aplikace}
+\subsection{Jádro knihovny}
 \label{Application core}
 
 O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vnitřní část architektury knihovny:
@@ -532,13 +545,13 @@ O jádro aplikace se stará třída \texttt{RFExcel}, která propojuje celou vni
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/Core.png}
-    \caption{Jádro aplikace - vlastní tvorba}
+    \caption{Jádro knihovny - vlastní tvorba}
     \label{fig:placeholder}
 \end{figure}
 
-Třída \texttt{RFExcel} implementuje rozhraní dvou tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a která jsou deklarované v uživatelském rozhraní aplikace~\ref{User API}. Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, jejíž použití je vysvětleno v kapitole implementace.~\ref{laze transform}
+Třída \texttt{RFExcel} implementuje rozhraní dvou tříd. \texttt{IExcel} je rozhraní určující metody, které musí \texttt{RFExcel} implementovat a která jsou deklarované v uživatelském rozhraní aplikace~(viz~\ref{User API}). Rozhraní \texttt{ISetExcel} je rozhraní pro interní metody, které upravují funkčnost aplikace a nejsou určené k použití uživatelem. Jako příklad slouží metoda \textit{xls\_to\_xlsx}, jejíž použití je vysvětleno v kapitole implementace~\ref{laze transform}.
 
-\texttt{RFExcel} využívá principu kompozice~\ref{Composition} pro definování funkčností, které knihovna umožňuje. Jedná se o rozhraní, které pak jednotlivé implementace musí splňovat a \texttt{RFExcel} je může používat bez jakékoliv znalosti toho, jaký přesný typ třídy zrovna dostane. Toto je využití návrhového vzoru most~\ref{bridge}
+\texttt{RFExcel} využívá principu kompozice~(viz.~\ref{Composition}) pro definování funkčností, které knihovna umožňuje. Jedná se o rozhraní, které pak jednotlivé implementace musí splňovat a \texttt{RFExcel} je může používat bez jakékoliv znalosti toho, jaký přesný typ třídy zrovna dostane. Toto je využití návrhového vzoru most~\ref{bridge}.
 
 \subsection{Model}
 \label{model}
@@ -548,11 +561,11 @@ Aplikace pracuje s několika různými souborovými typy, kdy každý může vra
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\linewidth]{images/Model.png}
-    \caption{Modely - vlastní tvorba}
+    \caption{Model reprezentace buněk a řádků - vlastní tvorba}
     \label{fig:placeholder}
 \end{figure}
 
-Tento návrh respektuje návrhový vzor Most~\ref{bridge}, kdy máme pro dva modely dvě různá rozhraní, která jsou potom implementovány pro jednotlivé souborové typy. Všechny komponenty~\ref{Components} tedy vrací tyto modely, pro získání unifikovaných informací pak aplikace pouze volá metody společného rozhraní a je jí jedno, se kterým typem souboru zrovna pracuje. Také je zde vidět použití nulového objektu~\ref{null object}, který reprezentuje prázdnou informaci.
+Tento návrh respektuje návrhový vzor Most~(viz.~\ref{bridge}), kdy máme pro dva modely dvě různá rozhraní, která jsou potom implementovány pro jednotlivé souborové typy. Všechny komponenty~(viz.~\ref{Components}) tedy vrací tyto modely, pro získání unifikovaných informací pak aplikace pouze volá metody společného rozhraní a je jí jedno, se kterým typem souboru zrovna pracuje. Také je zde vidět použití nulového objektu~(viz.~\ref{null object}), který reprezentuje prázdnou informaci.
 
 \subsection{Komponenty}
 \label{Components}
@@ -566,11 +579,11 @@ Jako komponenty jsou brány jednotlivá rozhraní, která jsou součástí \text
     \label{fig:placeholder}
 \end{figure}
 
-\texttt{IResource} je tedy rozhraní, které používá třída \texttt{RFExcel}. Pro jednotlivé druhy souborů a typy práce se soubory (editační a streamovací mód) poté existuje třída, která rozhraní implementuje. To zajišťuje návrhový vzor strategie~\ref{strategy}.
+\texttt{IResource} je rozhraní, které používá třída \texttt{RFExcel}. Pro jednotlivé druhy souborů a typy práce se soubory (editační a streamovací mód) poté existuje třída, která rozhraní implementuje. To zajišťuje návrhový vzor strategie~\ref{strategy}.
 
 \subsection{Vytvoření komponent}
 
-Na obrázku~\ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje dvě reference, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializována pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny~\ref{factory}, kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
+Na obrázku~\ref{fig:architecture} je vidět, že třída RFExcelLibrary obsahuje dvě reference, \textit{factory} a \textit{workbook}. \textit{Workbook} je právě inicializována pomocí \textit{factory} a podle toho, které argumenty \textit{factory} dostane, vytvoří a vrátí \texttt{RFExcel} instanci, kterou si \texttt{RFExcelLibrary} následně uloží a nadále ji používá. Tento návrh je jednodušším provedením návrhového vzoru abstraktní továrny~(viz.~\ref{factory}), kdy továrna je rovnou instance, která vrací nainicializované obecné rozhraní \texttt{IExcel}.
 
 \subsection{Logování}
 
@@ -583,7 +596,7 @@ Robot Framework hojně využívá systém logování, který ovlivňuje zobrazen
     \label{fig:}
 \end{figure}
 
-\texttt{ILogger} je rozhraní, které musí každý logger splňovat. Každá stávající (potenciálně budoucí) implementace tohoto rozhraní je pak singleton~\ref{singleton}, který implementuje jednotlivé loggery. Instance \texttt{RobotLogger} a \texttt{DefaultLogger} jsou vlastně jen adaptéry~\ref{adapter}, které mění rozhraní původních loggerů na rozhraní \texttt{ILogger} pro jednodušší unifikované použití ve zbytku kódu. 
+\texttt{ILogger} je rozhraní, které musí každý logger splňovat. Každá stávající (potenciálně budoucí) implementace tohoto rozhraní je pak singleton~(viz.~\ref{singleton})~\footnote{Chceme mít po celou dobu běhu testů pouze jednu instanci loggeru, proto použítí Singletonu.}, který implementuje jednotlivé loggery. Instance \texttt{RobotLogger} a \texttt{DefaultLogger} jsou vlastně jen adaptéry~(viz.~\ref{adapter}), které mění rozhraní původních loggerů na rozhraní \texttt{ILogger} pro jednodušší unifikované použití ve zbytku kódu. 
 
 \texttt{LibraryLogger} je poté taky singleton a hlavní logger, který se používá ve zbytku aplikace. Obsahuje odkaz na \texttt{ILogger}, na který deleguje veškerou svojí práci.
 
@@ -612,7 +625,7 @@ V kořenovém adresáři najdeme následující strukturu aplikace:
     \label{fig:placeholder}
 \end{figure}
 
-Konfigurační soubor \texttt{pyproject.toml} obsahuje hlavně informace důležité pro uživatele knihovny. Jedná se o minimální podporované verze jak Pythonu, tak i knihoven jako openpyxl, xlrd, RF. Zároveň se zde vyskytují informace pro PyPI, které odsud bere soubor \texttt{README.md}, odkaz na dokumentaci, licence a další.
+Konfigurační soubor \texttt{pyproject.toml} obsahuje převážně informace důležité pro uživatele knihovny. Jedná se o minimální podporované verze jak Pythonu, tak i knihoven jako openpyxl, xlrd, RF. Zároveň se zde vyskytují informace pro PyPI, reference na soubor \texttt{README.md}, odkaz na dokumentaci, licence a další.
 
 Zásadní složkou je také \texttt{src/rfexcel}, kde se nachází logika celé knihovny.
 
@@ -640,7 +653,7 @@ Zásadní složkou je také \texttt{src/rfexcel}, kde se nachází logika celé 
     \label{fig:placeholder}
 \end{figure}
 
-Jednotlivé složky tvoří logické rozdělení aplikace. V kořenu tohoto adresáře jakožto implementační soubory zůstávají pouze \textit{RFExcelLibrary.py}, který představuje celé API vystavené uživatelům knihovny, a \textit{RFExcel.py}, který představuje hlavní implementaci klíčových slov definovaných v API.
+Jednotlivé složky tvoří logické rozdělení aplikace. V kořenu tohoto adresáře jakožto implementační soubory zůstávají pouze \texttt{RFExcelLibrary.py}, který představuje celé API vystavené uživatelům knihovny, a \textit{RFExcel.py}, který představuje hlavní implementaci klíčových slov definovaných v API.
 
 Ve složce \textit{backend} jsou poté definované jednotlivé komponenty, ze kterých se implementace skládá. V těchto jednotlivých složkách se nachází jak rozhraní dané komponenty, tak také implementace pro jednotlivé formáty, které knihovna podporuje.
 
@@ -658,7 +671,7 @@ Pro tento účel byl vybrán distribuovaný verzovací systém Git~\cite{Git}, k
 
 Pro zjednodušení vývoje byly použity GitHub Actions~\cite{githubActions}, které pomáhají automatizaci softwaru pomocí CI/CD (Continuous Integration and Continuous Deployment). Díky actions se dá zautomatizovat vydání aplikace a jeho verzí, testování a další činnosti.
 
-GitHub Actions byly vytvořeny pomocí umělé inteligence. Konkrétně se jedná o tyto čtyři soubory:
+GitHub Actions byly vytvořeny s asistencí umělé inteligence. Konkrétně se jedná o tyto čtyři soubory:
 
 \begin{itemize}
     \item \textbf{release-please.yml}\label{release-please}, který využívá Release-Please~\cite{ReleasePlease} \footnote{Rozhraní od Googlu, které generuje Changelog, vytváří GitHub release, a zároveň automaticky povyšuje verze projektů.}. Zároveň se soubor stará o vytvoření nové verze knihovny pro PyPI, a to pomocí balíčku Twine~\cite{twine}, který každou novou verzi automaticky nasadí na PyPI.
@@ -694,7 +707,7 @@ class RFExcelLibrary:
 
 \texttt{ROBOT\_LIBRARY\_SCOPE} nastavený na \textit{TEST CASE} udává, že každý jeden test bude mít vlastní instanci knihovny. Knihovna na tomto nastavení vysoce závisí, a to zejména v read-only módu, kdy se každá řádka dá přečíst právě jednou. Knihovna je navíc navržena tak, že jednotlivé testovací scénáře uživatelů by neměly být jakkoliv propojené.
 
-Nastavení \texttt{ROBOT\_LISTENER\_API\_VERSION = 2} udává verzi listenera, který je použit. Jelikož v knihovně není nic potřeba upravovat, ale pouze číst atributy jednotlivých klíčových slov nebo jednotlivých testů, je toto nastavení dostačující. \texttt{ROBOT\_LIBRARY\_LISTENER = "SELF"} pak pouze nastavuje \texttt{RFExcelLibrary.py} jako listener samotný, který bude reagovat na odchycené události.
+Nastavení \texttt{ROBOT\_LISTENER\_API\_VERSION = 2} udává verzi použitého listeneru. Jelikož v knihovně není nic potřeba upravovat, ale pouze číst atributy jednotlivých klíčových slov nebo jednotlivých testů, je toto nastavení dostačující. \texttt{ROBOT\_LIBRARY\_LISTENER = "SELF"} pak pouze nastavuje třídu \texttt{RFExcelLibrary.py} jako listener samotný, který bude reagovat na odchycené události.
 
 Nastavení \texttt{ROBOT\_AUTO\_KEYWORDS = False} pak vyžaduje explicitní vyjmenování klíčových slov, což přispívá k~vyšší transparentnosti a~lepší udržitelnosti zdrojového kódu knihovny.
 
@@ -706,11 +719,11 @@ Pro implementaci jednotlivých komunikací byl zvolen přístup kompozice. Půvo
 
 Třída si tedy drží odkazy na jednotlivé komponenty a používá jejich rozhraní bez jakékoliv znalosti nízkoúrovňových knihoven, které tyto komponenty používají.
 
-Soubor implementuje dvě rozhraní. Soubor implementuje dvě oddělená rozhraní. Prvním z~nich je \texttt{IExcel}, jež definuje veřejné funkce dostupné prostřednictvím API. Druhým je rozhraní \texttt{ISetExcel}, které není určeno pro koncové uživatele. Slouží výhradně pro vnitřní účely knihovny a~jeho funkcionalitu mohou využívat pouze interní komponenty, které k~němu mají přístup.
+Třída implementuje dvě rozhraní. Prvním z~nich je \texttt{IExcel}, jež definuje veřejné funkce dostupné prostřednictvím API. Druhým je rozhraní \texttt{ISetExcel}, které není určeno pro koncové uživatele. Slouží výhradně pro vnitřní účely knihovny a~jeho funkcionalitu mohou využívat pouze interní komponenty, které k~němu mají přístup.
 
 \section{Komponenty}
 
-Jednotlivé komponenty byly už rozebrány v~kapitole \ref{Components}. Příkladem rozhraní komponenty je IWriter.
+Jednotlivé komponenty byly už rozebrány v~kapitole \ref{Components}. Každá komponenta se zaměřuje na jeden druh funcionalit. \texttt{IWriter} je rozhraním pro zapisování do souborů, \texttt{IReader} pro jejich čtení, \texttt{IResource} je pak rozhraní pro interakci se soubory samotnými. Celý systém komponent je založen na využití kompozice~(viz.~\ref{Composition}). Rozhraní \texttt{IWriter} vypadá následovně:
 
 \begin{listing}[H]
     \begin{minted}[
@@ -767,7 +780,7 @@ class IRawRowData(ABC):
 \section{Lazy transformace}
 \label{laze transform}
 
-Jak vysvětluje kapitola~\ref{xlwt}, ani další nalezené, aktivně podporované knihovny, neumožňují zápis do souboru ve formátu XLS. Proto jsem se pro tento projekt rozhodl použít postup lazy transformace. Pokud se uživatel pokusí provést změny v souboru formátu XLS, data z původního souboru budou přesunuta do nového souboru ve formátu XLSX. Veškeré změny jsou provedeny na tomto souboru. Důležité je, že původní soubor není zničen ani nijak poškozen, zůstane vždy beze změny zachován.
+Jak již vysvětluje kapitola~\ref{xlwt}, ani další nalezené, aktivně podporované knihovny, neumožňují zápis do souboru ve formátu XLS. Proto jsem se pro tento projekt rozhodl použít postup lazy transformace. Pokud se uživatel pokusí provést změny v souboru formátu XLS, data z původního souboru budou přesunuta do nového souboru ve formátu XLSX. Veškeré změny jsou provedeny na tomto souboru. Důležité je, že původní soubor není zničen ani nijak poškozen, zůstane vždy beze změny zachován.
 
 Pro tuto funkčnost byl potřeba upravit \texttt{IWriter} následově:
 
@@ -818,11 +831,11 @@ Důležitou částí práce je možnost otevřít soubory pouze pro čtení. Ten
 
 Při testování i jiných aktivitách je občas nutné číst obrovské soubory. Bez read-only módu jsme nutni do paměti načítat celý soubor, což není vždy žádoucí. Tento mód je sice restriktivní z hlediska nemožnosti soubor upravovat a~způsobu, jakým lze soubor zpracovávat, paměťové výhody však často převažují. Zmíněná omezení jsou navíc často irelevantní. 
 
-U souborů XLSX a CSV je dosaženo streamování pomocí generátorů. Soubor není načten celý, je přes něj pouze postupně iterováno. Tento způsob nebyl možný u formátu XLS kvůli knihovně Xlrd~\ref{xlrd}, která podporuje pouze \textit{on-demand} mód. Ten ale nenačte celý soubor, pouze celý list, a to na vyžádání. To však není takový problém, jelikož formát XLS má maximalní kapacitu listu, kterou nemůže překročit. Tento limit je 65~536 řádek na jeden list nebo 2GB v hlavní paměti.~\cite{xlsLimit}~\cite{XlsLimit2}
+U souborů XLSX a CSV je dosaženo streamování pomocí generátorů. Soubor není načten celý, je přes něj pouze postupně iterováno. Tento způsob nebyl možný u formátu XLS kvůli knihovně Xlrd~(viz.~\ref{xlrd}), která podporuje pouze \textit{on-demand} mód. Ten ale nenačte celý soubor, pouze celý list, a to na vyžádání. To však není takový problém, jelikož formát XLS má maximalní kapacitu listu, kterou nemůže překročit. Tento limit je 65~536 řádek na jeden list nebo 2GB v hlavní paměti.~\cite{xlsLimit, XlsLimit2}
 
 \section{Klíčová slova}
 
-Klíčová slova jsou definovaná v rozhraní knihovny a představují jediný vstupní bod do aplikace. 
+Klíčová slova jsou definovaná v rozhraní knihovny a představují jediný vstupní bod pro interakci s knihovnou. 
 
 Dobře definovaná klíčová slova mohou být použita univerzálně pro každý podporovaný formát souboru. Ne všechny operace jsou však povoleny pro všechny formáty a pro všechny módy, ve kterých je soubor otevřen. Tyto skutečnosti jsou vysvětlené v dokumentaci aplikace. Nesprávné použití navíc vyústí ve vyhození předem definovaných výjimek.
 
@@ -842,10 +855,10 @@ Funkcionalita umožňuje otevření souboru všech podporovaných formátů. Dle
 Klíčové slovo pro uzavření otevřeného souboru. Tato funkcionalita se stará hlavně o uvolnění všech otevřených zdrojů, které byly udržovány při práci se souborem. Jelikož v některých případech by při nepoužití této funkce nedošlo k uvolnění paměti, je toto klíčové slovo voláno implicitně na konci každého testu.
 
 \subsection{Save Workbook}
-Klíčové slovo , které umožňuje uložit provedené změny. Všechny změny v souborech jsou prováděny in-memory, pouze po použití tohoto klíčového slova jsou změny permanentně uloženy na disk. Pro použití je nutné být v editovacím režimu. Funkcionalita není volána implicitně na konci každého testu. Soubor je možné přepsat, tedy uložit místo původního souboru, nebo uložit na nové separátní místo.
+Klíčové slovo, které umožňuje uložit provedené změny. Všechny změny v souborech jsou prováděny in-memory, pouze po použití tohoto klíčového slova jsou změny permanentně uloženy na disk. Pro použití je nutné být v editovacím režimu. Funkcionalita není volána implicitně na konci každého testu. Soubor je možné přepsat, tedy uložit místo původního souboru, nebo uložit na nové separátní místo.
 
 \subsection{Switch Source a Switch Sheet}
-\texttt{Switch Source} slouží ke změně zdroje souboru. Při kombinaci s \texttt{Close Workbook} slouží k bezpečnému uvolnění zdrojů původního souboru.
+\texttt{Switch Source} slouží ke změně zdroje souboru. V kombinaci s \texttt{Close Workbook} slouží k bezpečnému uvolnění zdrojů původního souboru.
 
 \texttt{Switch Sheet} je klíčové slovo sloužící pouze pro změnu listu v excelových souborech. Protože formát CSV nepodporuje existenci více listů, tato funkcionalita pro něj není podporována.
 
@@ -871,11 +884,9 @@ Testování a dokumentace představují zásadní součást vývoje knihovny. Te
 
 Dokumentace slouží jako hlavní zdroj informací pro uživatele programů a~napomáhá jeho správnému pochopení. Je taky důležitá pro další rozvoj, ať už pro autora samotného, nebo další potenciální vývojáře, kteří se v budoucnu na~vývoji mohou podílet.
 
-Knihovna je určena pro kohokoliv, je tedy důležité udělat tento proces pro uživatele co nejjednodušší a nejpříjemnější.
-
 \section{Testování}
 
-Jak už bylo řečeno výše, k testování byla použita knihovna Pytest~\ref{Pytest}, která je standardem pro testování softwaru napsaném v jazyce Python.
+Jak už bylo řečeno výše, k testování byla použita knihovna Pytest~(viz.~\ref{Pytest}), která je standardem pro testování softwaru napsaném v jazyce Python.
 
 Jelikož hlavním cílem aplikace je umožnit unifikovanou práci s různými formáty souborů, hlavními testy v aplikaci jsou integrační testy. Ty se týkají jednotlivých klíčových slov, které nabízí API.
 
@@ -959,7 +970,7 @@ Dokumentace k celému projektu je dostupná v souboru \texttt{README.md}, který
 
 K vydání knihovny byl použit PyPI, který slouží pro celý ekosystém Python jako hlavní zdroj pro stahování a publikování externích knihoven.
 
-Vydávání nových verzí je automatizováno pomocí workflow nástroje GitHub Actions definovaného v~souboru \texttt{release-please.yml}~\ref{release-please}. Při vytvoření nové verze tento skript zajišťuje rovněž automatickou publikaci balíčku do~registru PyPI.
+Vydávání nových verzí je realizováno pomocí workflow nástroje GitHub Actions definovaného v~souboru \texttt{release-please.yml}~(viz.~\ref{release-please}). Při vytvoření nové verze tento skript zajišťuje rovněž automatickou publikaci balíčku do~registru PyPI.
 
 Veškerá nastavení pro stáhnutí knihovny (například minimální nutné verze knihoven, podporované verze Pythonu a další) z PyPI jsou nastaveny v souboru \texttt{pyproject.toml}. Zde je nastavený i popis projektu na webu PyPI, který odkazuje na \texttt{README.md} v kořenovém adresáři.
 
@@ -967,12 +978,12 @@ Veškerá nastavení pro stáhnutí knihovny (například minimální nutné ver
 
 Hlavním cílem práce bylo implementovat knihovnu pro práci s tabulkovými soubory v Robot Frameworku, která bude jednoduše rozšiřitelná, a to jak o~nové funkcionality, tak o~podporu nových formátů. Záměrem bylo také vytvořit read-only mód, který je užitečný zejména při testování velkých souborů.
 
-V analytické části byla vysvětlena převážně teorie. Probrány byly druhy architektur aplikací, jejich přednosti a úskalí. Vysvětlen byl rozdíl mezi dědičností a kompozicí, jejich využití při vývoji softwaru a proč bychom měli preferovat kompozici před dědičnosti. Popsány i s příklady byly poté návrhové vzory, které byly využity v návrhové a implementační části. Uvedena byla hlavní teorie ohledně Robot Frameworku, který tato knihovna rozšiřuje. Prodiskutovány byly poté již existující řešení, včetně jejich výhod a nevýhod. Zmíněny jsou také důvody, proč tato řešení nejsou vyhovující.
+V analytické části jsme se zaměřili na analýzu problémové domény, rešerši existujících řešení a nezbytný teoretický základ. Probrány byly druhy architektur aplikací, jejich přednosti a úskalí. Vysvětlen byl rozdíl mezi dědičností a kompozicí, jejich využití při vývoji softwaru a proč bychom měli preferovat kompozici před dědičnosti. Popsány i s příklady byly poté návrhové vzory, které byly využity v návrhové a implementační části. Proběhla zevrubná analýza Robot Frameworku, který tato knihovna rozšiřuje. Prodiskutovány byly poté již existující řešení, včetně jejich výhod a nevýhod. Zmíněny jsou také důvody, proč tato řešení nejsou vyhovující.
 
 Návrhová část se zabývala použitými technologiemi a návrhem knihovny pro implementaci. V kapitole jsou postupně popsány všechny části aplikace. U technologií byly popsány jak použité technologie pro tento projekt, tak jeho alternativy a jejich irelevance.
 
 V implementační části byl už podrobněji popsán vývoj aplikace. Zaměření bylo na celkovou strukturu, potom na nástroje použité pro vývoj a podpůrné pluginy, které práci ulehčovaly. Také byly uvedeny části kódu, které nastiňovaly implementaci představenou v návrhové části. V neposlední řadě jsou zde vysvětleny hlavní implementační problémy, a to streamovací mód a lazy transformace formátu.
 
-Nakonec byl popsán celý proces testování aplikace a úkony s tím spojené. Také byl zmíněn způsob zdokumentování celého projektu, a nakonec jeho nasazení jakožto open-source projektu.
+Nakonec byl popsán celý proces testování aplikace a úkony s tím spojené. Také byl zmíněn způsob zdokumentování celého projektu, a nakonec jeho nasazení jakožto open-source projektu~\footnote{Projekt je veřeně dostupný zde: https://github.com/boumasim/RFExcel}.
 
 Zadání práce tak bylo úspěšně splněno. Do budoucna by bylo možné projekt dále rozšiřovat. Rozšíření se může týkat nových klíčových slov, uvedení nového tabulkového formátu. Dále je možnost v budoucnu díky striktnímu oddělení vrstev a komponent kompletně obměnit knihovny, na kterých sama tato knihovna stojí, pro manipulaci s jednotlivými souborovými formáty. Už nyní je nicméně knihovna ve funkční podobě. Umožňuje uživatelům unifikovaný způsob pro práci s formáty XLS, XLSX a CSV. Přináší možnost volby módu otevření souboru bez paměťových úniků. Přináší funkcionality, které jsou specializované pro testování obsáhlých souborů s daty v tabulkových formátech, přičemž stále dovoluje jejich modifikaci.
