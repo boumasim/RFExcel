@@ -39,12 +39,12 @@
 % paragraph - if passed, this optional argument sets paragraphs as the deepest level of headers, styles it, numbers it and adds it to Table of Content. Use with care! Normally, it is considered unwise to use it, since it is too deep.
 % colour: bw for black&white OR no option for default colour scheme
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[czech,bachelor,oneside]{ctufit-thesis}
+\documentclass[czech,bachelor,twoside,bw]{ctufit-thesis}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % FILL IN THIS INFORMATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\ctufittitle{Rozšíření Robotframework o knihovnu pro práci s excelem} % replace with the title of your thesis
+\ctufittitle{Rozšíření Robotframework o~knihovnu pro práci s excelem} % replace with the title of your thesis
 \ctufitauthorfull{Šimon Bouma} % replace with your full name (first name(s) and then family name(s) / surname(s)) including academic degrees
 \ctufitauthorsurnames{Bouma} % replace with your surname(s) / family name(s)
 \ctufitauthorgivennames{Šimon} % replace with your first name(s) / given name(s)
@@ -85,7 +85,7 @@
 }
 
 % uncomment the following to hide all hyperlinks
-%\hypersetup{hidelinks}
+\hypersetup{hidelinks}
 
 % uncomment the following to change the colour of all hyperlinks to CTU blue
 %\hypersetup{allbordercolors=decoration}
@@ -120,7 +120,7 @@
 
 \thispagestyle{empty}\maketitle\thispagestyle{empty}\cleardoublepage % do not remove these four commands
 
-\includepdf[pages={1-}]{text/text.tex} % replace this file with your thesis assignment generated from ProjectsFIT
+\includepdf[pages={1-}]{zadani_bp.pdf} % replace this file with your thesis assignment generated from ProjectsFIT
 
 \imprintpage % do not remove this command
 \stopTOCentries
@@ -158,8 +158,11 @@ počítačových programů, jež jsou její součástí či přílohou a vešker
 dokumentace (dále souhrnně jen „Dílo“), a to všem osobám, které si přejí Dílo užít.
 Tyto osoby jsou oprávněny Dílo užít jakýmkoli způsobem, který nesnižuje hodnotu
 Díla a za jakýmkoli účelem (včetně užití k výdělečným účelům). Toto oprávnění je
-časově, teritoriálně i množstevně neomezené. 
+časově, teritoriálně i množstevně neomezené.
 \end{declarationpage}
+
+\includepdf[]{prohlaseni.pdf}
+
 %%%%%%%%%%%%%%%%%%%
 % DECLARATION END
 %%%%%%%%%%%%%%%%%%%
@@ -176,7 +179,7 @@ Díla a za jakýmkoli účelem (včetně užití k výdělečným účelům). To
 \listoffigures % list of figures
 \begingroup
 \let\clearpage\relax
-\listoftables % list of tables. Remove if you do not have any.
+%\listoftables % list of tables. Remove if you do not have any.
 \thectufitlistingscommand{} % list of code listings. Remove if you do not have any.
 \thectufitlistofalgorithmscommand{} % list of algorithm pseudocodes defined using the algorithm package.
 \endgroup
@@ -193,24 +196,23 @@ Díla a za jakýmkoli účelem (včetně užití k výdělečným účelům). To
 \chapter{\thectufitabbreviationlabel}
 
 \begin{tabular}{rl}
-	UI    & User Interface \\
-    DIP   & Dependency Inversion Principle \\
-    OOP   & Object oriented programming \\
-    XML   & Extensible Markup Language \\
-    JSON  & JavaScript Object Notation \\
-    PyPI  & Python Package Index \\
-    RPA   & Robot Process Automation \\
-    HTTP  & HyperText Transfer Protocol \\
-    API   & Aplication Programing Interface \\
-    RF    & Robot Framework \\
-    DDT   & Data-Driven Tests \\
-    DOM   & Document Object Model \\
-    IDE   & Integrated Development Enviroment \\
+    API   & Application programming interface \\
     BIFF8 & Binary Interchange File Format version 8 \\
+    CI/CD & Continuous integration and continuous deployment \\
+    DDT   & Data-driven tests \\
     DF    & DataFrame \\
-    CI/CD & Continuous Integration and Continuous Deployment \\
-    PR    & Pull Request \\
-    
+    DIP   & Dependency inversion principle \\
+    DOM   & Document object model \\
+    HTTP  & Hypertext Transfer Protocol \\
+    IDE   & Integrated development environment \\
+    JSON  & JavaScript object notation \\
+    OOP   & Object-oriented programming \\
+    PR    & Pull request \\
+    PyPI  & Python Package Index \\
+    RF    & Robot Framework \\
+    RPA   & Robot process automation \\
+    UI    & User interface \\
+    XML   & Extensible Markup Language \\
 \end{tabular}
 %%%%%%%%%%%%%%%%%%%
 % ABBREVIATIONS END
